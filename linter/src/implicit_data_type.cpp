@@ -31,10 +31,45 @@ bool hasExplicitType(const FileContent* fC, NodeId dataDecl) {
   return false;
 }
 
+static std::vector<std::pair<uint32_t, uint32_t>> collectProceduralRanges(
+    const FileContent* fC, NodeId root) {
+  std::vector<std::pair<uint32_t, uint32_t>> ranges;
+
+  static const VObjectType proceduralTypes[] = {
+      VObjectType::paInitial_construct,
+      VObjectType::paAlways_construct,
+      VObjectType::paFinal_construct,
+  };
+
+  for (auto procType : proceduralTypes) {
+    for (NodeId block : fC->sl_collect_all(root, procType)) {
+      uint32_t startLine = fC->Line(block);
+      uint32_t endLine = fC->EndLine(block);
+      ranges.push_back({startLine, endLine});
+    }
+  }
+  return ranges;
+}
+
+static bool isPhantomNode(
+    const FileContent* fC, NodeId dataDecl,
+    const std::vector<std::pair<uint32_t, uint32_t>>& ranges) {
+  std::string varName = findVarName(fC, dataDecl);
+  if (varName.empty()) return true;
+
+  uint32_t declLine = fC->Line(dataDecl);
+  for (auto& [startLine, endLine] : ranges) {
+    if (declLine >= startLine && declLine <= endLine) return true;
+  }
+  return false;
+}
+
 void checkImplicitDataTypeInDeclaration(const FileContent* fC,
                                         ErrorContainer* errors,
                                         SymbolTable* symbols) {
   NodeId root = fC->getRootNode();
+
+  auto proceduralRanges = collectProceduralRanges(fC, root);
 
   auto dataDecls = fC->sl_collect_all(root, VObjectType::paData_declaration);
 
@@ -44,6 +79,7 @@ void checkImplicitDataTypeInDeclaration(const FileContent* fC,
     if (packedDims.empty()) continue;
 
     if (hasExplicitType(fC, dataDecl)) continue;
+    if (isPhantomNode(fC, dataDecl, proceduralRanges)) continue;
 
     std::string varName = findVarName(fC, dataDecl);
     NodeId where = packedDims.front();
