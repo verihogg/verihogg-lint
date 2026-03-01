@@ -14,6 +14,34 @@ using namespace SURELOG;
 
 namespace Analyzer {
 
+static bool eventExprHasEdge(const FileContent* fC, NodeId eventExprId) {
+  for (NodeId child = fC->Child(eventExprId); child;
+       child = fC->Sibling(child)) {
+    VObjectType t = fC->Type(child);
+    if (t == VObjectType::paEdge_Posedge || t == VObjectType::paEdge_Negedge)
+      return true;
+  }
+  return false;
+}
+
+static bool containsSelectInEventExpr(const FileContent* fC, NodeId node) {
+  if (!fC || !node) return false;
+
+  VObjectType t = fC->Type(node);
+
+  if (t == VObjectType::paEvent_expression && eventExprHasEdge(fC, node))
+    return false;
+
+  if (t == VObjectType::paSelect || t == VObjectType::paConstant_select)
+    return true;
+
+  for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
+    if (containsSelectInEventExpr(fC, child)) return true;
+  }
+
+  return false;
+}
+
 void checkSelectInEventControl(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
   if (!fC) return;
@@ -24,13 +52,9 @@ void checkSelectInEventControl(const FileContent* fC, ErrorContainer* errors,
   auto eventControls = fC->sl_collect_all(root, VObjectType::paEvent_control);
 
   for (NodeId eventControlId : eventControls) {
-    auto selects = fC->sl_collect_all(eventControlId, VObjectType::paSelect);
-    auto constantSelects =
-        fC->sl_collect_all(eventControlId, VObjectType::paConstant_select);
-
-    if (!selects.empty() || !constantSelects.empty()) {
-      std::string eventName = extractName(fC, eventControlId);
-      reportError(fC, eventControlId, eventName,
+    if (containsSelectInEventExpr(fC, eventControlId)) {
+      std::string name = extractName(fC, eventControlId);
+      reportError(fC, eventControlId, name,
                   ErrorDefinition::LINT_SELECT_IN_EVENT_CONTROL, errors,
                   symbols);
     }
