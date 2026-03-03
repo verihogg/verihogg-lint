@@ -31,6 +31,7 @@
 #include "select_in_event_control.h"
 #include "select_in_weight.h"
 #include "target_unpacked_array_concatenation.h"
+#include "type_casting.h"
 
 using namespace SURELOG;
 
@@ -61,6 +62,7 @@ void runAllRules(const FileContent* fC, ErrorContainer* errors,
   Analyzer::checkTargetUnpackedArrayConcatenation(fC, errors, symbols);
   Analyzer::checkInsideOperator(fC, errors, symbols);
   Analyzer::checkInsideOperatorRange(fC, errors, symbols);
+  Analyzer::checkTypeCasting(fC, errors, symbols);
 }
 
 void runAllRulesOnDesign(Design* design, const vpiHandle& UHDMdesign,
