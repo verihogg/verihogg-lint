@@ -7,7 +7,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: toxiccclub/surelint
+  IMAGE_NAME: verihogg/verihogg-lint
 
 permissions:
   contents: read
@@ -28,13 +28,13 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/toxiccclub/surelint
+          images: ghcr.io/verihogg/verihogg-lint
           tags: latest
 
       - name: Build and push
