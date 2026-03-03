@@ -64,6 +64,30 @@ The project is intended for static code analysis and checking compliance with co
 - `FOREACH_LOOP_CONDITION`
   Multidimensional array select not allowed in foreach loop condition
 
+- `SELECT_IN_WEIGHT`
+  Select in weight specification not allowed
+
+- `ASSIGNMENT_PATTERN`
+  Expecting assignment pattern '{…} instead of concatenation
+
+- `ASSIGNMENT_PATTERN_CONTEXT`
+  Assignment pattern not allowed outside assignment-like context (could not determine data type)
+
+- `SCALAR_ASSIGNMENT_PATTERN`
+  Variable of 1-bit scalar type # not allowed as target of assignment pattern
+
+- `TARGET_UNPACKED_ARRAY_CONCATENATION`
+  Unpacked array concatenation not allowed as target expression
+
+- `INSIDE_OPERATOR`
+  'inside' operator in constant expression not allowed
+
+- `INSIDE_OPERATOR_RANGE`
+  Expecting curly braces {} around 'inside' operator range
+
+- `TYPE_CASTING`
+  Expecting tick before type casting expression
+
 ---
 
 ## Project structure
