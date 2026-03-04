@@ -67,10 +67,10 @@ The project is intended for static code analysis and checking compliance with co
 - `SELECT_IN_WEIGHT`  
   Select in weight specification not allowed
 
-- `ASSIGNMENT_PATTERN`  
+- `ASSIGNMENT_PATTERN`(BUGS)  
   Expecting assignment pattern '{…} instead of concatenation
 
-- `ASSIGNMENT_PATTERN_CONTEXT`  
+- `ASSIGNMENT_PATTERN_CONTEXT`(BUGS)  
   Assignment pattern not allowed outside assignment-like context (could not determine data type)
 
 - `SCALAR_ASSIGNMENT_PATTERN`  

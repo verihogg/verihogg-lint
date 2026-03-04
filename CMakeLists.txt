@@ -15,36 +15,39 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 add_subdirectory(external/Surelog)
 
 set(LINTER_SRC
-    linter/src/lint.cpp
-    linter/src/linter_utils.cpp
-    linter/src/class_variable_lifetime.cpp
-    linter/src/dpi_decl_string.cpp
-    linter/src/fatal_rule.cpp
-    linter/src/hierarchical_interface_identifier.cpp
-    linter/src/implicit_data_type.cpp
-    linter/src/parameter_dynamic_array.cpp
-    linter/src/prototype_return_data_type.cpp
-    linter/src/repeat_in_sequence.cpp
-    linter/src/rule_dispatcher.cpp
-    linter/src/coverpoint_expression_type.cpp
-    linter/src/expression_covergroup.cpp
-    linter/src/concatenation_multiplier.cpp
-    linter/src/parametr_override.cpp
-    linter/src/multiple_dot_star_connection.cpp
-    linter/src/select_in_event_control.cpp
-    linter/src/empty_assignment_pattern.cpp
-    linter/src/missing_for_loop_initialization.cpp
-    linter/src/missing_for_loop_condition.cpp
-    linter/src/missing_for_loop_step.cpp
-    linter/src/foreach_loop_condition.cpp
-    linter/src/select_in_weight.cpp
-    linter/src/assignment_pattern.cpp
-    linter/src/assignment_pattern_context.cpp
-    linter/src/scalar_assignment_pattern.cpp
-    linter/src/target_array_unpacked_concatenation.cpp
-    linter/src/inside_operator.cpp
-    linter/src/inside_operator_range.cpp
-    linter/src/type_casting.cpp
+    linter/src/main/lint.cpp
+    linter/src/utils/ast_utils.cpp
+    linter/src/utils/location_utils.cpp
+    linter/src/utils/name_utils.cpp
+    linter/src/utils/string_utils.cpp
+    linter/src/rules/class_variable_lifetime.cpp
+    linter/src/rules/dpi_decl_string.cpp
+    linter/src/rules/fatal_rule.cpp
+    linter/src/rules/hierarchical_interface_identifier.cpp
+    linter/src/rules/implicit_data_type.cpp
+    linter/src/rules/parameter_dynamic_array.cpp
+    linter/src/rules/prototype_return_data_type.cpp
+    linter/src/rules/repeat_in_sequence.cpp
+    linter/src/main/rule_dispatcher.cpp
+    linter/src/rules/coverpoint_expression_type.cpp
+    linter/src/rules/expression_covergroup.cpp
+    linter/src/rules/concatenation_multiplier.cpp
+    linter/src/rules/parametr_override.cpp
+    linter/src/rules/multiple_dot_star_connection.cpp
+    linter/src/rules/select_in_event_control.cpp
+    linter/src/rules/empty_assignment_pattern.cpp
+    linter/src/rules/missing_for_loop_initialization.cpp
+    linter/src/rules/missing_for_loop_condition.cpp
+    linter/src/rules/missing_for_loop_step.cpp
+    linter/src/rules/foreach_loop_condition.cpp
+    linter/src/rules/select_in_weight.cpp
+    linter/src/rules/assignment_pattern.cpp
+    linter/src/rules/assignment_pattern_context.cpp
+    linter/src/rules/scalar_assignment_pattern.cpp
+    linter/src/rules/target_array_unpacked_concatenation.cpp
+    linter/src/rules/inside_operator.cpp
+    linter/src/rules/inside_operator_range.cpp
+    linter/src/rules/type_casting.cpp
 
 )
 
