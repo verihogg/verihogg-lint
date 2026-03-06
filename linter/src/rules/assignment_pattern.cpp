@@ -1,7 +1,7 @@
 #include "rules/assignment_pattern.h"
 
-#include <set>
 #include <string>
+#include <unordered_set>
 
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
@@ -17,7 +17,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
                              const std::string& varName) {
   if (varName.empty() || varName == "<unknown>") return false;
 
-  std::set<std::string> structTypeNames;
+  std::unordered_set<std::string> structTypeNames;
   auto typeDecls =
       fC->sl_collect_all(moduleRoot, VObjectType::paType_declaration);
   for (NodeId td : typeDecls) {
@@ -118,9 +118,7 @@ void checkAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto concats = fC->sl_collect_all(root, VObjectType::paConcatenation);
-
-  for (NodeId concat : concats) {
+  for (NodeId concat : fC->sl_collect_all(root, VObjectType::paConcatenation)) {
     if (!concat) continue;
 
     NodeId moduleRoot = findEnclosingModule(fC, concat);
@@ -143,7 +141,6 @@ void checkAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
       continue;
     }
 
-    // Case 2: plain concatenation {val, val} — wrong only for struct/array LHS
     if (isStructVariable(fC, moduleRoot, varName) ||
         isArrayVariable(fC, moduleRoot, varName)) {
       reportError(fC, concat, varName, ErrorDefinition::LINT_ASSIGNMENT_PATTERN,

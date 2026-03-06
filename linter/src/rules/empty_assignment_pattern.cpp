@@ -16,13 +16,11 @@ using namespace SURELOG;
 void checkEmptyAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
                                  SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
-
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto patterns = fC->sl_collect_all(root, VObjectType::paAssignment_pattern);
-
-  for (NodeId pat : patterns) {
+  for (NodeId pat :
+       fC->sl_collect_all(root, VObjectType::paAssignment_pattern)) {
     if (!pat) continue;
 
     if (fC->Child(pat)) continue;

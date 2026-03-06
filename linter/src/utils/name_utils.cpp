@@ -176,3 +176,15 @@ std::string findDirectRhsLhsName(const FileContent* fC, NodeId concatNode) {
   }
   return "<unknown>";
 }
+
+void collectNames(const FileContent* fC, NodeId root, VObjectType parentType,
+                  VObjectType assignType,
+                  std::unordered_set<std::string>& out) {
+  for (NodeId declId : fC->sl_collect_all(root, parentType)) {
+    for (NodeId assignId : fC->sl_collect_all(declId, assignType, false)) {
+      NodeId nameNode = fC->Child(assignId);
+      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
+        out.insert(std::string(fC->SymName(nameNode)));
+    }
+  }
+}

@@ -28,3 +28,6 @@ std::string extractVariableName(const FileContent* fC, NodeId parentNode);
 std::string extractParameterName(const FileContent* fC, NodeId parentNode);
 
 std::string findDirectRhsLhsName(const FileContent* fC, NodeId concatNode);
+
+void collectNames(const FileContent* fC, NodeId root, VObjectType parentType,
+                  VObjectType assignType, std::unordered_set<std::string>& out);

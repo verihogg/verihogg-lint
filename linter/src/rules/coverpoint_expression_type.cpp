@@ -1,6 +1,5 @@
 #include "rules/coverpoint_expression_type.h"
 
-#include <cstdint>
 #include <string>
 
 #include "Surelog/Design/Design.h"
@@ -8,31 +7,26 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
+#include "utils/location_utils.h"
 #include "utils/name_utils.h"
-#include"utils/location_utils.h"
 
 using namespace SURELOG;
 
-std::string getCoverpointName(const FileContent* fC, NodeId cpNode) {
-  return extractName(fC, cpNode);
-}
+static bool isIntegralType(VObjectType type) {
+  static constexpr std::array kIntegralTypes = {
+      VObjectType::paIntVec_TypeBit,
+      VObjectType::paIntVec_TypeLogic,
+      VObjectType::paIntegerAtomType_Int,
+      VObjectType::paIntegerAtomType_LongInt,
+      VObjectType::paIntegerAtomType_Shortint,
+      VObjectType::paIntegerAtomType_Byte,
+      VObjectType::paEnum_base_type,
+  };
+  return std::find(kIntegralTypes.begin(), kIntegralTypes.end(), type) !=
+         kIntegralTypes.end();
+};
 
-bool isIntegralType(VObjectType type) {
-  switch (type) {
-    case VObjectType::paIntVec_TypeBit:
-    case VObjectType::paIntVec_TypeLogic:
-    case VObjectType::paIntegerAtomType_Int:
-    case VObjectType::paIntegerAtomType_LongInt:
-    case VObjectType::paIntegerAtomType_Shortint:
-    case VObjectType::paIntegerAtomType_Byte:
-    case VObjectType::paEnum_base_type:
-      return true;
-    default:
-      return false;
-  }
-}
-
-VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
+static VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
   if (!exprNode) return VObjectType::slNoType;
 
   NodeId idNode = exprNode;
@@ -43,12 +37,10 @@ VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
 
   std::string varName = std::string(fC->SymName(idNode));
 
-  auto varDeclNodes = fC->sl_collect_all(fC->getRootNode(),
-                                         VObjectType::paVariable_declaration);
-  for (NodeId varDeclId : varDeclNodes) {
-    auto assignNodes = fC->sl_collect_all(
-        varDeclId, VObjectType::paVariable_decl_assignment, false);
-    for (NodeId assignId : assignNodes) {
+  for (NodeId varDeclId : fC->sl_collect_all(
+           fC->getRootNode(), VObjectType::paVariable_declaration)) {
+    for (NodeId assignId : fC->sl_collect_all(
+             varDeclId, VObjectType::paVariable_decl_assignment, false)) {
       NodeId nameNode = fC->Child(assignId);
       if (!nameNode) continue;
 
@@ -88,9 +80,10 @@ VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
   return VObjectType::slNoType;
 }
 
-void checkSingleCoverpoint(const FileContent* fC, NodeId cpId,
-                           ErrorContainer* errors, SymbolTable* symbols) {
-  NodeId exprNode;
+static void checkSingleCoverpoint(const FileContent* fC, NodeId cpId,
+                                  ErrorContainer* errors,
+                                  SymbolTable* symbols) {
+  NodeId exprNode = InvalidNodeId;
 
   for (NodeId child = fC->Child(cpId); child; child = fC->Sibling(child)) {
     if (fC->Type(child) == VObjectType::paPrimary ||
@@ -104,7 +97,7 @@ void checkSingleCoverpoint(const FileContent* fC, NodeId cpId,
   VObjectType varType = getVariableType(fC, exprNode);
 
   if (!isIntegralType(varType)) {
-    std::string cpName = getCoverpointName(fC, cpId);
+    std::string cpName = extractName(fC, cpId);
     reportError(fC, cpId, cpName,
                 ErrorDefinition::LINT_COVERPOINT_EXPRESSION_TYPE, errors,
                 symbols);
@@ -114,7 +107,10 @@ void checkSingleCoverpoint(const FileContent* fC, NodeId cpId,
 void checkCoverpointExpressionType(const FileContent* fC,
                                    ErrorContainer* errors,
                                    SymbolTable* symbols) {
+  if (!fC || !errors || !symbols) return;
   NodeId root = fC->getRootNode();
+  if (!root) return;
+
   auto coverpoints = fC->sl_collect_all(root, VObjectType::paCover_point);
 
   for (NodeId cpId : coverpoints) {

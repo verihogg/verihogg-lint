@@ -39,3 +39,11 @@ void reportError(const FileContent* fC, NodeId node,
   Error err(errorType, loc);
   errors->addError(err, false);
 }
+
+NodeId findArrayIdNode(const FileContent* fC, NodeId foreachKeyword) {
+  for (NodeId sib = fC->Sibling(foreachKeyword); sib; sib = fC->Sibling(sib)) {
+    if (fC->Type(sib) == VObjectType::paPs_or_hierarchical_array_identifier)
+      return sib;
+  }
+  return InvalidNodeId;
+}

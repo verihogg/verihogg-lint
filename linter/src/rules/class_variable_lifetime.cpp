@@ -1,6 +1,5 @@
 #include "rules/class_variable_lifetime.h"
 
-#include <cstdint>
 #include <string>
 
 #include "Surelog/Design/Design.h"
@@ -8,31 +7,24 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/name_utils.h"
 #include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 using namespace SURELOG;
 
-std::string findVariableName(const FileContent* fC, NodeId propId) {
-  return extractVariableName(fC, propId);
-}
-
 void checkClassVariableLifetime(const FileContent* fC, ErrorContainer* errors,
                                 SymbolTable* symbols) {
+  if (!fC || !errors || !symbols) return;
   NodeId root = fC->getRootNode();
+  if (!root) return;
 
-  auto classNodes = fC->sl_collect_all(root, VObjectType::paClass_declaration);
-
-  for (NodeId classId : classNodes) {
-    auto classProps =
-        fC->sl_collect_all(classId, VObjectType::paClass_property);
-
-    for (NodeId propId : classProps) {
-      auto autoNodes =
-          fC->sl_collect_all(propId, VObjectType::paLifetime_Automatic);
-
-      for (NodeId autoId : autoNodes) {
-        std::string varName = findVariableName(fC, propId);
+  for (NodeId classId :
+       fC->sl_collect_all(root, VObjectType::paClass_declaration)) {
+    for (NodeId propId :
+         fC->sl_collect_all(classId, VObjectType::paClass_property)) {
+      for (NodeId autoId :
+           fC->sl_collect_all(propId, VObjectType::paLifetime_Automatic)) {
+        std::string varName = extractVariableName(fC, propId);
         reportError(fC, autoId, varName,
                     ErrorDefinition::LINT_CLASS_VARIABLE_LIFETIME, errors,
                     symbols);

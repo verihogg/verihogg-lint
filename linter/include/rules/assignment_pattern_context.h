@@ -6,8 +6,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-using namespace SURELOG;
-
-void checkAssignmentPatternContext(const FileContent* fC,
-                                   ErrorContainer* errors,
-                                   SymbolTable* symbols);
+void checkAssignmentPatternContext(const SURELOG::FileContent* fC,
+                                   SURELOG::ErrorContainer* errors,
+                                   SURELOG::SymbolTable* symbols);

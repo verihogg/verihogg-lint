@@ -23,3 +23,5 @@ void reportError(const FileContent* fC, NodeId node,
                  const std::string& symbolName,
                  ErrorDefinition::ErrorType errorType, ErrorContainer* errors,
                  SymbolTable* symbols);
+
+NodeId findArrayIdNode(const FileContent* fC, NodeId foreachKeyword);

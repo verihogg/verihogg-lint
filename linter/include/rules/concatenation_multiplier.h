@@ -4,7 +4,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-using namespace SURELOG;
-
-void checkConcatenationMultiplier(const FileContent* fC, ErrorContainer* errors,
-                                  SymbolTable* symbols);
+void checkConcatenationMultiplier(const SURELOG::FileContent* fC,
+                                  SURELOG::ErrorContainer* errors,
+                                  SURELOG::SymbolTable* symbols);

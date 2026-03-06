@@ -1,6 +1,5 @@
 #include "rules/dpi_decl_string.h"
 
-#include <cstdint>
 #include <string>
 
 #include "Surelog/Design/Design.h"
@@ -8,18 +7,19 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/string_utils.h"
 #include "utils/location_utils.h"
+#include "utils/string_utils.h"
 
 using namespace SURELOG;
 
 void checkDpiDeclarationString(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
+  if (!fC || !errors || !symbols) return;
   NodeId root = fC->getRootNode();
+  if (!root) return;
 
-  auto dpiNodes = fC->sl_collect_all(root, VObjectType::paDpi_import_export);
-
-  for (NodeId dpiId : dpiNodes) {
+  for (NodeId dpiId :
+       fC->sl_collect_all(root, VObjectType::paDpi_import_export)) {
     NodeId importNode = fC->Child(dpiId);
     if (!importNode || fC->Type(importNode) != VObjectType::paIMPORT) continue;
 

@@ -1,6 +1,6 @@
 #include "rules/assignment_pattern_context.h"
 
-#include <string>
+#include <algorithm>
 
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
@@ -12,31 +12,34 @@
 using namespace SURELOG;
 
 static bool isHardWrapper(VObjectType type) {
-  switch (type) {
-    case VObjectType::paAssignment_pattern:
-    case VObjectType::paAssignment_pattern_expression:
-    case VObjectType::paConstant_assignment_pattern_expression:
-    case VObjectType::paPrimary:
-    case VObjectType::paConstant_primary:
-    case VObjectType::paExpression:
-    case VObjectType::paConstant_expression:
-    case VObjectType::paConstant_mintypmax_expression:
-    case VObjectType::paConstant_param_expression:
-      return true;
-    default:
-      return false;
-  }
+  static constexpr std::array kHardWrappers = {
+      VObjectType::paAssignment_pattern,
+      VObjectType::paAssignment_pattern_expression,
+      VObjectType::paConstant_assignment_pattern_expression,
+      VObjectType::paPrimary,
+      VObjectType::paConstant_primary,
+      VObjectType::paExpression,
+      VObjectType::paConstant_expression,
+      VObjectType::paConstant_mintypmax_expression,
+      VObjectType::paConstant_param_expression,
+  };
+  return std::find(kHardWrappers.begin(), kHardWrappers.end(), type) !=
+         kHardWrappers.end();
 }
 
 static bool isValidAssignmentContext(VObjectType type) {
-  return type == VObjectType::paOperator_assignment ||
-         type == VObjectType::paBlocking_assignment ||
-         type == VObjectType::paNonblocking_assignment ||
-         type == VObjectType::paNet_assignment ||
-         type == VObjectType::paNet_decl_assignment ||
-         type == VObjectType::paVariable_decl_assignment ||
-         type == VObjectType::paParam_assignment ||
-         type == VObjectType::paContinuous_assign;
+  static constexpr std::array kValidContexts = {
+      VObjectType::paOperator_assignment,
+      VObjectType::paBlocking_assignment,
+      VObjectType::paNonblocking_assignment,
+      VObjectType::paNet_assignment,
+      VObjectType::paNet_decl_assignment,
+      VObjectType::paVariable_decl_assignment,
+      VObjectType::paParam_assignment,
+      VObjectType::paContinuous_assign,
+  };
+  return std::find(kValidContexts.begin(), kValidContexts.end(), type) !=
+         kValidContexts.end();
 }
 
 static NodeId findDirectContext(const FileContent* fC, NodeId patternNode) {

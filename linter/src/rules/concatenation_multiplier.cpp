@@ -1,8 +1,8 @@
 #include "rules/concatenation_multiplier.h"
 
 #include <map>
-#include <set>
 #include <string>
+#include <unordered_set>
 
 #include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
@@ -10,87 +10,36 @@
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
 #include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 using namespace SURELOG;
 
-std::set<std::string> collectConstantParameters(const FileContent* fC) {
-  std::set<std::string> constants;
+std::unordered_set<std::string> collectConstantParameters(
+    const FileContent* fC) {
+  std::unordered_set<std::string> constants;
 
-  auto paramDecls = fC->sl_collect_all(fC->getRootNode(),
-                                       VObjectType::paParameter_declaration);
-  for (NodeId paramDeclId : paramDecls) {
-    auto paramAssigns =
-        fC->sl_collect_all(paramDeclId, VObjectType::paParam_assignment, false);
-    for (NodeId assignId : paramAssigns) {
-      NodeId nameNode = fC->Child(assignId);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-        std::string name = std::string(fC->SymName(nameNode));
-        constants.insert(name);
-      }
-    }
-  }
-
-  auto localParamDecls = fC->sl_collect_all(
-      fC->getRootNode(), VObjectType::paLocal_parameter_declaration);
-  for (NodeId localParamId : localParamDecls) {
-    auto paramAssigns = fC->sl_collect_all(
-        localParamId, VObjectType::paParam_assignment, false);
-    for (NodeId assignId : paramAssigns) {
-      NodeId nameNode = fC->Child(assignId);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-        std::string name = std::string(fC->SymName(nameNode));
-        constants.insert(name);
-      }
-    }
-  }
-
+  NodeId root = fC->getRootNode();
+  collectNames(fC, root, VObjectType::paParameter_declaration,
+               VObjectType::paParam_assignment, constants);
+  collectNames(fC, root, VObjectType::paLocal_parameter_declaration,
+               VObjectType::paParam_assignment, constants);
   return constants;
 }
 
-std::set<std::string> collectVariables(const FileContent* fC) {
-  std::set<std::string> variables;
+std::unordered_set<std::string> collectVariables(const FileContent* fC) {
+  std::unordered_set<std::string> variables;
 
-  auto varDecls = fC->sl_collect_all(fC->getRootNode(),
-                                     VObjectType::paVariable_declaration);
-  for (NodeId varDeclId : varDecls) {
-    auto varAssigns = fC->sl_collect_all(
-        varDeclId, VObjectType::paVariable_decl_assignment, false);
-    for (NodeId assignId : varAssigns) {
-      NodeId nameNode = fC->Child(assignId);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-        std::string name = std::string(fC->SymName(nameNode));
-        variables.insert(name);
-      }
-    }
-  }
-
-  auto dataDecls =
-      fC->sl_collect_all(fC->getRootNode(), VObjectType::paData_declaration);
-  for (NodeId dataDeclId : dataDecls) {
-    NodeId parent = fC->Parent(dataDeclId);
-    if (parent &&
-        (fC->Type(parent) == VObjectType::paParameter_declaration ||
-         fC->Type(parent) == VObjectType::paLocal_parameter_declaration)) {
-      continue;
-    }
-
-    auto varAssigns = fC->sl_collect_all(
-        dataDeclId, VObjectType::paVariable_decl_assignment, false);
-    for (NodeId assignId : varAssigns) {
-      NodeId nameNode = fC->Child(assignId);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-        std::string name = std::string(fC->SymName(nameNode));
-        variables.insert(name);
-      }
-    }
-  }
-
+  NodeId root = fC->getRootNode();
+  collectNames(fC, root, VObjectType::paVariable_declaration,
+               VObjectType::paVariable_decl_assignment, variables);
+  collectNames(fC, root, VObjectType::paData_declaration,
+               VObjectType::paVariable_decl_assignment, variables);
   return variables;
 }
 
 bool isConstantExpression(const FileContent* fC, NodeId node,
-                          const std::set<std::string>& constantParams,
-                          const std::set<std::string>& variables,
+                          const std::unordered_set<std::string>& constantParams,
+                          const std::unordered_set<std::string>& variables,
                           std::string* nonConstantVar = nullptr) {
   if (!node) return true;
 
@@ -197,8 +146,8 @@ bool isConstantExpression(const FileContent* fC, NodeId node,
 
 void checkSingleMultipleConcatenation(
     const FileContent* fC, NodeId multiConcatNode,
-    const std::set<std::string>& constantParams,
-    const std::set<std::string>& variables, ErrorContainer* errors,
+    const std::unordered_set<std::string>& constantParams,
+    const std::unordered_set<std::string>& variables, ErrorContainer* errors,
     SymbolTable* symbols) {
   if (!multiConcatNode) return;
 
@@ -221,13 +170,12 @@ void checkConcatenationMultiplier(const FileContent* fC, ErrorContainer* errors,
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  std::set<std::string> constantParams = collectConstantParameters(fC);
-  std::set<std::string> variables = collectVariables(fC);
+  std::unordered_set<std::string> constantParams =
+      collectConstantParameters(fC);
+  std::unordered_set<std::string> variables = collectVariables(fC);
 
-  auto multiConcatNodes =
-      fC->sl_collect_all(root, VObjectType::paMultiple_concatenation);
-
-  for (NodeId node : multiConcatNodes) {
+  for (NodeId node :
+       fC->sl_collect_all(root, VObjectType::paMultiple_concatenation)) {
     checkSingleMultipleConcatenation(fC, node, constantParams, variables,
                                      errors, symbols);
   }
