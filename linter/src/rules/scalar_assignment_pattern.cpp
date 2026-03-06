@@ -6,9 +6,9 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/name_utils.h"
-#include "utils/location_utils.h"
 #include "utils/ast_utils.h"
+#include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 using namespace SURELOG;
 
@@ -20,7 +20,8 @@ static bool is1BitScalarKeyword(VObjectType type) {
 
 static bool isScalarVariable(const FileContent* fC, NodeId root,
                              NodeId patternNode, const std::string& varName) {
-  if (varName.empty() || varName == "<unknown>") return false;
+  if (varName.empty() || varName == "<unknown>" || varName == "<indexed>")
+    return false;
 
   NodeId patternModule = findEnclosingModule(fC, patternNode);
 
@@ -83,7 +84,7 @@ void checkScalarAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
   for (NodeId pat : patterns) {
     if (!pat) continue;
 
-    std::string varName = findLhsVariableName(fC, pat);
+    std::string varName = findDirectRhsLhsName(fC, pat);
 
     if (isScalarVariable(fC, root, pat, varName)) {
       reportError(fC, pat, varName,

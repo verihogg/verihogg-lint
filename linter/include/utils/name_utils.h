@@ -27,6 +27,4 @@ std::string extractVariableName(const FileContent* fC, NodeId parentNode);
 //Используется для поиска имен параметров в декларациях.
 std::string extractParameterName(const FileContent* fC, NodeId parentNode);
 
-std::string findLhsVariableName(const FileContent* fC, NodeId startNode);
-
-
+std::string findDirectRhsLhsName(const FileContent* fC, NodeId concatNode);

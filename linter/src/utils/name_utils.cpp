@@ -93,10 +93,27 @@ std::string extractParameterName(const FileContent* fC, NodeId parentNode) {
   return "<unknown>";
 }
 
-std::string findLhsVariableName(const FileContent* fC, NodeId startNode) {
-  if (!fC || !startNode) return "<unknown>";
+bool lvalueHasIndex(const FileContent* fC, NodeId lvalueNode) {
+  for (NodeId ch = fC->Child(lvalueNode); ch; ch = fC->Sibling(ch)) {
+    VObjectType ct = fC->Type(ch);
 
-  NodeId current = startNode;
+    if (ct == VObjectType::paSelect) {
+      NodeId bitSel = fC->Child(ch);
+      if (bitSel && fC->Type(bitSel) == VObjectType::paBit_select)
+        if (fC->Child(bitSel)) return true;
+    }
+
+    if (ct == VObjectType::paConstant_select) {
+      NodeId bitSel = fC->Child(ch);
+      if (bitSel && fC->Type(bitSel) == VObjectType::paConstant_bit_select)
+        if (fC->Child(bitSel)) return true;
+    }
+  }
+  return false;
+}
+
+std::string findDirectRhsLhsName(const FileContent* fC, NodeId concatNode) {
+  NodeId current = fC->Parent(concatNode);
   while (current) {
     VObjectType type = fC->Type(current);
 
@@ -109,30 +126,53 @@ std::string findLhsVariableName(const FileContent* fC, NodeId startNode) {
         VObjectType ct = fC->Type(child);
         if (ct == VObjectType::paVariable_lvalue ||
             ct == VObjectType::paNet_lvalue) {
+          if (lvalueHasIndex(fC, child)) return "<indexed>";
           return extractName(fC, child);
         }
       }
-      break;
+      return "<unknown>";
     }
 
     if (type == VObjectType::paVariable_decl_assignment) {
       NodeId nameNode = fC->Child(current);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
+      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
         return std::string(fC->SymName(nameNode));
-      }
-      break;
+      return "<unknown>";
     }
 
     if (type == VObjectType::paNet_decl_assignment) {
       NodeId nameNode = fC->Child(current);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
+      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
         return std::string(fC->SymName(nameNode));
-      }
-      break;
+      return "<unknown>";
     }
 
-    current = fC->Parent(current);
-  }
+    if (type == VObjectType::paAssignment_pattern_expression ||
+        type == VObjectType::paConstant_assignment_pattern_expression ||
+        type == VObjectType::paPrimary ||
+        type == VObjectType::paConstant_primary ||
+        type == VObjectType::paConstant_expression ||
+        type == VObjectType::paConstant_mintypmax_expression ||
+        type == VObjectType::paConstant_param_expression) {
+      current = fC->Parent(current);
+      continue;
+    }
 
+    if (type == VObjectType::paPrimary || type == VObjectType::paExpression) {
+      if (type == VObjectType::paExpression) {
+        for (NodeId ch = fC->Child(current); ch; ch = fC->Sibling(ch)) {
+          VObjectType ct = fC->Type(ch);
+          if (ct != VObjectType::paExpression && ct != VObjectType::paPrimary &&
+              ct != VObjectType::paSelect && ct != VObjectType::paBit_select &&
+              ct != VObjectType::slStringConst)
+            return "<unknown>";
+        }
+      }
+      current = fC->Parent(current);
+      continue;
+    }
+
+    return "<unknown>";
+  }
   return "<unknown>";
 }

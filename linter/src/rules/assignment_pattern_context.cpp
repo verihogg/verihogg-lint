@@ -13,10 +13,12 @@ using namespace SURELOG;
 
 static bool isHardWrapper(VObjectType type) {
   switch (type) {
+    case VObjectType::paAssignment_pattern:
     case VObjectType::paAssignment_pattern_expression:
     case VObjectType::paConstant_assignment_pattern_expression:
     case VObjectType::paPrimary:
     case VObjectType::paConstant_primary:
+    case VObjectType::paExpression:
     case VObjectType::paConstant_expression:
     case VObjectType::paConstant_mintypmax_expression:
     case VObjectType::paConstant_param_expression:

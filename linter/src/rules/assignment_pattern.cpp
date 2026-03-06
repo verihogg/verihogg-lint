@@ -134,14 +134,16 @@ void checkAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
       }
     }
 
+    std::string varName = findDirectRhsLhsName(fC, concat);
+    if (varName == "<unknown>" || varName == "<indexed>") continue;
+
     if (hasLabel) {
-      std::string varName = findLhsVariableName(fC, concat);
       reportError(fC, concat, varName, ErrorDefinition::LINT_ASSIGNMENT_PATTERN,
                   errors, symbols);
       continue;
     }
 
-    std::string varName = findLhsVariableName(fC, concat);
+    // Case 2: plain concatenation {val, val} — wrong only for struct/array LHS
     if (isStructVariable(fC, moduleRoot, varName) ||
         isArrayVariable(fC, moduleRoot, varName)) {
       reportError(fC, concat, varName, ErrorDefinition::LINT_ASSIGNMENT_PATTERN,

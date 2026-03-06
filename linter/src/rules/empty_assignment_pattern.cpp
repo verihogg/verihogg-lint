@@ -8,8 +8,8 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/name_utils.h"
 #include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 using namespace SURELOG;
 
@@ -27,11 +27,10 @@ void checkEmptyAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
 
     if (fC->Child(pat)) continue;
 
-    std::string varName = findLhsVariableName(fC, pat);
+    std::string varName = findDirectRhsLhsName(fC, pat);
 
     reportError(fC, pat, varName,
                 ErrorDefinition::LINT_EMPTY_ASSIGNMENT_PATTERN, errors,
                 symbols);
   }
 }
-
