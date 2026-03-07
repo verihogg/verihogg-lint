@@ -17,6 +17,7 @@
 #include "missing_for_loop_condition.h"
 #include "missing_for_loop_initialization.h"
 #include "missing_for_loop_step.h"
+#include "multiple_bins.h"
 #include "multiple_dot_star_connection.h"
 #include "parameter_dynamic_array.h"
 #include "parameter_override.h"

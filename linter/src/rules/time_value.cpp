@@ -21,17 +21,17 @@ static void checkTimeLiteral(const FileContent* fC, NodeId timeLiteral,
   if (!timeUnit) return;
   if (fC->Type(timeUnit) != VObjectType::paTime_unit) return;
 
-  const auto endOfNumber = fC->EndColumn(intConst);
-  const auto startOfUnit = fC->Column(timeUnit);
+  const auto kEndOfNumber = fC->EndColumn(intConst);
+  const auto kStartOfUnit = fC->Column(timeUnit);
 
-  if (startOfUnit <= endOfNumber) return;
+  if (kStartOfUnit <= kEndOfNumber) return;
 
-  const auto number = fC->SymName(intConst);
-  const auto unit = fC->SymName(timeUnit);
+  const auto kNumber = fC->SymName(intConst);
+  const auto kUnit = fC->SymName(timeUnit);
 
   std::string badValue;
-  badValue.reserve(number.size() + 1 + unit.size());
-  badValue.append(number).append(1, ' ').append(unit);
+  badValue.reserve(kNumber.size() + 1 + kUnit.size());
+  badValue.append(kNumber).append(1, ' ').append(kUnit);
 
   reportError(fC, intConst, badValue, ErrorDefinition::LINT_TIME_VALUE, errors,
               symbols);

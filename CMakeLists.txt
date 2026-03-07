@@ -50,6 +50,7 @@ set(LINTER_SRC
     linter/src/rules/inside_operator_range.cpp
     linter/src/rules/type_casting.cpp
     linter/src/rules/time_value.cpp
+    linter/src/rules/multiple_bins.cpp
 
 )
 
