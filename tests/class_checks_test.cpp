@@ -1,5 +1,10 @@
 #include <gtest/gtest.h>
+#include <rules/duplicate_class.h>
+#include <rules/duplicate_constructor.h>
 #include <rules/extend_class.h>
+#include <rules/extern_constraint_undeclared.h>
+#include <rules/extern_function_undeclared.h>
+#include <rules/extern_task_undeclared.h>
 #include <utils/init.h>
 
 #include <filesystem>
@@ -16,7 +21,8 @@
 
 namespace fs = std::filesystem;
 
-const fs::path base_path = fs::current_path() / ".." / "..";
+const fs::path base_path =
+    fs::current_path() / ".." / ".." / "tests" / "ClassChecks";
 
 namespace {
 
@@ -48,7 +54,9 @@ void testCheckWithNoErrorsExpected(
         check_func) {
   std::vector<fs::path> paths(fs::directory_iterator{tests_path},
                               fs::directory_iterator{});
+
   for (auto& file_path : paths) {
+    std::cout << file_path << std::endl;
     auto symbols = std::make_unique<SymbolTable>();
     auto errors = std::make_unique<ErrorContainer>(symbols.get());
 
@@ -67,7 +75,9 @@ void testCheckWithErrorsExpected(
         check_func) {
   std::vector<fs::path> paths(fs::directory_iterator{tests_path},
                               fs::directory_iterator{});
+
   for (auto& file_path : paths) {
+    std::cout << file_path << std::endl;
     auto symbols = std::make_unique<SymbolTable>();
     auto errors = std::make_unique<ErrorContainer>(symbols.get());
 
@@ -75,28 +85,28 @@ void testCheckWithErrorsExpected(
         getFileContentFromPath(file_path, errors.get(), symbols.get());
     check_func(fC, errors.get(), symbols.get());
     errors->printMessages();
+
     auto errorVector = errors.get()->getErrors();
     ASSERT_NE(errorVector.size(), 0);
+    bool hasError = false;
     for (auto& error : errorVector) {
       ErrorDefinition::ErrorType type = error.getType();
       if (ignoreList.count(type) > 0) continue;
-      ASSERT_EQ(error.getType(), errorIdExpected);
+      hasError = true;
+      ASSERT_EQ(type, errorIdExpected);
     }
+    ASSERT_EQ(hasError, true);
   }
 }
 
-}  // namespace
-
-TEST(ExtendClassTest, NoErrors) {
-  const fs::path tests_path{base_path / "tests" / "ClassChecks" /
-                            "ExtendClass" / "NoError"};
+TEST(ExtendClassTest, NoError) {
+  const fs::path tests_path{base_path / "ExtendClass" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, checkExtendClass);
 }
 
 TEST(ExtendClassTest, RaiseError) {
-  const fs::path tests_path{base_path / "tests" / "ClassChecks" /
-                            "ExtendClass" / "RaiseError"};
+  const fs::path tests_path{base_path / "ExtendClass" / "RaiseError"};
 
   std::set<ErrorDefinition::ErrorType> ignoreList{
       ErrorDefinition::COMP_UNDEFINED_BASE_CLASS};
@@ -105,7 +115,93 @@ TEST(ExtendClassTest, RaiseError) {
                               ignoreList, checkExtendClass);
 }
 
+TEST(DuplicateClassTest, NoError) {
+  const fs::path tests_path{base_path / "DuplicateClass" / "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, checkDuplicateClass);
+}
+
+TEST(DuplicateClassTest, RaiseError) {
+  const fs::path tests_path{base_path / "DuplicateClass" / "RaiseError"};
+
+  std::set<ErrorDefinition::ErrorType> ignoreList{};
+
+  testCheckWithErrorsExpected(tests_path, ErrorDefinition::LINT_DUPLICATE_CLASS,
+                              ignoreList, checkDuplicateClass);
+}
+
+TEST(DuplicateConstructorTest, NoError) {
+  const fs::path tests_path{base_path / "DuplicateConstructor" / "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, checkDuplicateConstructor);
+}
+
+TEST(DuplicateConstructorTest, RaiseError) {
+  const fs::path tests_path{base_path / "DuplicateConstructor" / "RaiseError"};
+
+  std::set<ErrorDefinition::ErrorType> ignoreList{};
+
+  testCheckWithErrorsExpected(tests_path,
+                              ErrorDefinition::LINT_DUPLICATE_CONSTRUCTOR,
+                              ignoreList, checkDuplicateConstructor);
+}
+
+TEST(ExternConstraintUndeclaredTest, NoError) {
+  const fs::path tests_path{base_path / "ExternContraintUndeclared" /
+                            "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, checkExternConstraintUndeclared);
+}
+
+TEST(ExternConstraintUndeclaredTest, RaiseError) {
+  const fs::path tests_path{base_path / "ExternContraintUndeclared" /
+                            "RaiseError"};
+
+  std::set<ErrorDefinition::ErrorType> ignoreList{};
+
+  testCheckWithErrorsExpected(
+      tests_path, ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED,
+      ignoreList, checkExternConstraintUndeclared);
+}
+
+TEST(ExternFunctionUndeclaredTest, NoError) {
+  const fs::path tests_path{base_path / "ExternFunctionUndeclared" / "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, checkExternFunctionUndeclared);
+}
+
+TEST(ExternFunctionUndeclaredTest, RaiseError) {
+  const fs::path tests_path{base_path / "ExternFunctionUndeclared" /
+                            "RaiseError"};
+
+  std::set<ErrorDefinition::ErrorType> ignoreList{
+      ErrorDefinition::PA_SYNTAX_ERROR};
+
+  testCheckWithErrorsExpected(tests_path,
+                              ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED,
+                              ignoreList, checkExternFunctionUndeclared);
+}
+
+TEST(ExternTaskUndeclaredTest, NoError) {
+  const fs::path tests_path{base_path / "ExternTaskUndeclared" / "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, checkExternTaskUndeclared);
+}
+
+TEST(ExternTaskUndeclaredTest, RaiseError) {
+  const fs::path tests_path{base_path / "ExternTaskUndeclared" / "RaiseError"};
+
+  std::set<ErrorDefinition::ErrorType> ignoreList{
+      ErrorDefinition::PA_SYNTAX_ERROR};
+
+  testCheckWithErrorsExpected(tests_path,
+                              ErrorDefinition::LINT_EXTERN_TASK_UNDECLARED,
+                              ignoreList, checkExternTaskUndeclared);
+}
+
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
+
+}  // namespace

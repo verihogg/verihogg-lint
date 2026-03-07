@@ -29,6 +29,7 @@ void checkExternConstraintUndeclared(const FileContent* fC,
   for (auto& constrId : constrDeclarations) {
     NodeId stringId = fC->sl_get(constrId, VObjectType::paClass_scope);
     stringId = fC->sl_collect(stringId, VObjectType::slStringConst);
+
     const std::string constrName = getStringConst(fC, constrId);
     const std::string className =
         getPrefix(fC, constrId) + getStringConst(fC, stringId);
@@ -37,7 +38,8 @@ void checkExternConstraintUndeclared(const FileContent* fC,
     const NodeId classId = classes.at(className);
 
     const std::vector<NodeId> constrPrototypes =
-        fC->sl_collect_all(classId, VObjectType::paFunction_prototype);
+        fC->sl_collect_all(classId, VObjectType::paConstraint_prototype);
+
     for (auto& protoId : constrPrototypes) {
       const NodeId nameId = fC->sl_collect(protoId, VObjectType::slStringConst);
       const NodeId externId =
