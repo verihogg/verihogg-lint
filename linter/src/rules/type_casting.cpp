@@ -43,7 +43,7 @@ void checkTypeCasting(const FileContent* fC, ErrorContainer* errors,
     std::string_view typeName = extractName(fC, funcCallNode);
     if (typeName.empty()) continue;
 
-    if (userTypes.count(typeName)) {
+    if (userTypes.contains(typeName)) {
       reportError(fC, fC->Child(funcCallNode), typeName,
                   ErrorDefinition::LINT_TYPE_CASTING, errors, symbols);
     }

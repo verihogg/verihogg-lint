@@ -66,14 +66,14 @@ bool isConstantExpression(
   if (type == VObjectType::slStringConst) {
     std::string_view name = fC->SymName(node);
 
-    if (variables.count(name) > 0) {
+    if (variables.contains(name)) {
       if (nonConstantVar) {
         *nonConstantVar = name;
       }
       return false;
     }
 
-    if (constantParams.count(name) > 0) {
+    if (constantParams.contains(name)) {
       return true;
     }
 

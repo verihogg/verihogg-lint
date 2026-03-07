@@ -43,7 +43,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
 
     NodeId dtChild = fC->Child(dataType);
     if (dtChild && fC->Type(dtChild) == VObjectType::slStringConst &&
-        structTypeNames.count(fC->SymName(dtChild)))
+        structTypeNames.contains(fC->SymName(dtChild)))
       return true;
   }
 
@@ -70,7 +70,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
 
     NodeId firstCh = fC->Child(nd);
     if (firstCh && fC->Type(firstCh) == VObjectType::slStringConst &&
-        structTypeNames.count(fC->SymName(firstCh)))
+        structTypeNames.contains(fC->SymName(firstCh)))
       return true;
   }
 

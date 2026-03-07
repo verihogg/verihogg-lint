@@ -41,7 +41,7 @@ static std::string_view findFirstUnpackedVarInSubtree(
 
   if (fC->Type(node) == VObjectType::slStringConst) {
     std::string_view name = fC->SymName(node);
-    if (unpackedVars.count(name)) return name;
+    if (unpackedVars.contains(name)) return name;
   }
 
   for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {

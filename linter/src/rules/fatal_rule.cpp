@@ -25,7 +25,7 @@ void FatalListener::listen(const vpiHandle& design) {
 void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
                                        vpiHandle handle) {
   if (!object) return;
-  if (seen_.count(object)) return;
+  if (seen_.contains(object)) return;
   seen_.insert(object);
 
   if (object->VpiName() != "$fatal") return;

@@ -18,7 +18,7 @@ Location getLocation(const FileContent* fC, NodeId node,
                      const std::string_view& symbolName, SymbolTable* symbols) {
   if (!fC || !node || !symbols) {
     PathId fileId;
-    return Location(fileId, 0, 0, symbols->registerSymbol(symbolName));
+    return {fileId, 0, 0, symbols->registerSymbol(symbolName)};
   }
 
   PathId fileId = fC->getFileId(node);
@@ -26,7 +26,7 @@ Location getLocation(const FileContent* fC, NodeId node,
   uint32_t column = getColumnSafe(fC, node);
   SymbolId obj = symbols->registerSymbol(symbolName);
 
-  return Location(fileId, line, column, obj);
+  return {fileId, line, static_cast<uint16_t>(column), obj};
 }
 
 void reportError(const FileContent* fC, NodeId node,

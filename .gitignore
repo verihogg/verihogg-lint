@@ -22,6 +22,8 @@
 
 CMakeSettings.json
 
+fixes.yaml
+
 /compile_commands.json
 
 .envrc

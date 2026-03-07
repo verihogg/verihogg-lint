@@ -67,8 +67,8 @@ static void checkIdentifiersRecursive(
   if (fC->Type(node) == VObjectType::slStringConst) {
     std::string_view varName = fC->SymName(node);
 
-    if (moduleVars.count(varName) > 0) {
-      if (allowedArgs.count(varName) == 0) {
+    if (moduleVars.contains(varName)) {
+      if (!allowedArgs.contains(varName)) {
         reportError(fC, node, varName,
                     ErrorDefinition::LINT_COVERGROUP_EXPRESSION, errors,
                     symbols);

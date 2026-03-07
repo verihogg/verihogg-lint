@@ -20,8 +20,7 @@ static std::string_view getInsideContextName(const FileContent* fC,
 
   auto stringNodes =
       fC->sl_collect_all(leftOperand, VObjectType::slStringConst);
-  if (!stringNodes.empty())
-    return std::string_view(fC->SymName(stringNodes.front()));
+  if (!stringNodes.empty()) return fC->SymName(stringNodes.front());
 
   return "<unknown>";
 }
