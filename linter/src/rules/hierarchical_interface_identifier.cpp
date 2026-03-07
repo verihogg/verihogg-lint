@@ -1,7 +1,7 @@
 #include "rules/hierarchical_interface_identifier.h"
 
-#include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "Surelog/Design/Design.h"
@@ -13,21 +13,15 @@
 
 using namespace SURELOG;
 
-static std::vector<NodeId> collectStringConsts(const FileContent* fC,
-                                               NodeId node) {
-  std::vector<NodeId> out;
-  auto stringNodes = fC->sl_collect_all(node, VObjectType::slStringConst);
-  for (NodeId s : stringNodes) out.push_back(s);
-  return out;
-}
-
 static std::string joinNames(const FileContent* fC,
                              const std::vector<NodeId>& parts) {
   if (parts.empty()) return "<unknown>";
   std::string res;
-  for (size_t i = 0; i < parts.size(); ++i) {
-    if (i) res += ".";
-    res += std::string(fC->SymName(parts[i]));
+  bool first = true;
+  for (NodeId part : parts) {
+    if (!first) res += '.';
+    res += std::string(fC->SymName(part));
+    first = false;
   }
   return res;
 }
@@ -35,18 +29,17 @@ static std::string joinNames(const FileContent* fC,
 void checkHierarchicalInterfaceIdentifier(const FileContent* fC,
                                           ErrorContainer* errors,
                                           SymbolTable* symbols) {
+  if (!fC || !errors || !symbols) return;
   NodeId root = fC->getRootNode();
+  if (!root) return;
 
-  auto iidNodes = fC->sl_collect_all(root, VObjectType::paInterface_identifier);
+  for (NodeId iid :
+       fC->sl_collect_all(root, VObjectType::paInterface_identifier)) {
+    auto parts = fC->sl_collect_all(iid, VObjectType::slStringConst);
+    if (parts.size() <= 1) continue;
 
-  for (NodeId iid : iidNodes) {
-    auto parts = collectStringConsts(fC, iid);
-
-    if (parts.size() > 1) {
-      std::string fullName = joinNames(fC, parts);
-      reportError(fC, iid, fullName,
-                  ErrorDefinition::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER,
-                  errors, symbols);
-    }
+    reportError(fC, iid, joinNames(fC, parts),
+                ErrorDefinition::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
+                symbols);
   }
 }

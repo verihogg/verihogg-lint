@@ -1,37 +1,44 @@
 #include "rules/select_in_event_control.h"
 
-#include <cstdint>
-#include <string>
+#include <algorithm>
+#include <array>
+#include <string_view>
 
-#include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/name_utils.h"
 #include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 using namespace SURELOG;
 
+static constexpr std::array kEdgeTypes = {
+    VObjectType::paEdge_Posedge,
+    VObjectType::paEdge_Negedge,
+};
+
+static constexpr std::array kSelectTypes = {
+    VObjectType::paSelect,
+    VObjectType::paConstant_select,
+};
+
 static bool eventExprHasEdge(const FileContent* fC, NodeId eventExprId) {
-  for (NodeId child = fC->Child(eventExprId); child;
-       child = fC->Sibling(child)) {
-    VObjectType t = fC->Type(child);
-    if (t == VObjectType::paEdge_Posedge || t == VObjectType::paEdge_Negedge)
-      return true;
-  }
-  return false;
+  return std::ranges::any_of(kEdgeTypes, [&](VObjectType t) {
+    return !fC->sl_collect_all(eventExprId, t, false).empty();
+  });
 }
 
 static bool containsSelectInEventExpr(const FileContent* fC, NodeId node) {
-  if (!fC || !node) return false;
+  if (!node) return false;
 
   VObjectType t = fC->Type(node);
 
   if (t == VObjectType::paEvent_expression && eventExprHasEdge(fC, node))
     return false;
 
-  if (t == VObjectType::paSelect || t == VObjectType::paConstant_select)
+  if (std::ranges::any_of(kSelectTypes,
+                          [t](VObjectType st) { return st == t; }))
     return true;
 
   for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
@@ -43,20 +50,17 @@ static bool containsSelectInEventExpr(const FileContent* fC, NodeId node) {
 
 void checkSelectInEventControl(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
-  if (!fC) return;
+  if (!fC || !errors || !symbols) return;
 
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto eventControls = fC->sl_collect_all(root, VObjectType::paEvent_control);
-
-  for (NodeId eventControlId : eventControls) {
+  for (NodeId eventControlId :
+       fC->sl_collect_all(root, VObjectType::paEvent_control)) {
     if (containsSelectInEventExpr(fC, eventControlId)) {
-      std::string name = extractName(fC, eventControlId);
-      reportError(fC, eventControlId, name,
+      reportError(fC, eventControlId, extractName(fC, eventControlId),
                   ErrorDefinition::LINT_SELECT_IN_EVENT_CONTROL, errors,
                   symbols);
     }
   }
 }
-

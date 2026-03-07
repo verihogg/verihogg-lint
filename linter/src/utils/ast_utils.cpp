@@ -13,3 +13,9 @@ NodeId findEnclosingModule(const FileContent* fC, NodeId node) {
   }
   return InvalidNodeId;
 }
+
+bool hasSiblingOfType(const FileContent* fC, NodeId start, VObjectType type) {
+  for (NodeId tmp = fC->Sibling(start); tmp; tmp = fC->Sibling(tmp))
+    if (fC->Type(tmp) == type) return true;
+  return false;
+}

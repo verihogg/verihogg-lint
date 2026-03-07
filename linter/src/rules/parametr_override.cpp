@@ -1,19 +1,35 @@
-#include "rules/parameter_override.h"
+#include <algorithm>
+#include <array>
 
-#include <cstdint>
-#include <string>
-
-#include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/name_utils.h"
+#include "rules/parameter_override.h"
 #include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 using namespace SURELOG;
 
-bool isParameterOverrideValid(const FileContent* fC, NodeId instNode) {
+static constexpr std::array kLiteralTypes = {
+    VObjectType::slIntConst,
+    VObjectType::slRealConst,
+    VObjectType::slStringConst,
+    VObjectType::ppNumber,
+};
+
+static constexpr std::array kConstantTypes = {
+    VObjectType::paConstant_expression,
+    VObjectType::paPrimary_literal,
+    VObjectType::paConstant_primary,
+};
+
+static constexpr std::array kInstanceTypes = {
+    VObjectType::paHierarchical_instance,
+    VObjectType::paName_of_instance,
+};
+
+static bool isParameterOverrideValid(const FileContent* fC, NodeId instNode) {
   if (!fC || !instNode) return true;
 
   NodeId child = fC->Child(instNode);
@@ -24,37 +40,25 @@ bool isParameterOverrideValid(const FileContent* fC, NodeId instNode) {
 
   VObjectType secondType = fC->Type(secondChild);
 
-  if (secondType == VObjectType::slIntConst ||
-      secondType == VObjectType::slRealConst ||
-      secondType == VObjectType::slStringConst ||
-      secondType == VObjectType::ppNumber) {
+  if (std::ranges::any_of(kLiteralTypes, [secondType](VObjectType t) {
+        return t == secondType;
+      }))
     return false;
-  }
 
-  if (secondType == VObjectType::paConstant_expression ||
-      secondType == VObjectType::paPrimary_literal ||
-      secondType == VObjectType::paConstant_primary) {
+  if (std::ranges::any_of(kConstantTypes, [secondType](VObjectType t) {
+        return t == secondType;
+      })) {
     NodeId thirdChild = fC->Sibling(secondChild);
     if (thirdChild) {
       VObjectType thirdType = fC->Type(thirdChild);
-      if (thirdType == VObjectType::paHierarchical_instance ||
-          thirdType == VObjectType::paName_of_instance) {
+      if (std::ranges::any_of(kInstanceTypes, [thirdType](VObjectType t) {
+            return t == thirdType;
+          }))
         return false;
-      }
     }
   }
 
   return true;
-}
-
-void reportParameterOverrideError(const FileContent* fC, NodeId badNode,
-                                  ErrorContainer* errors,
-                                  SymbolTable* symbols) {
-  if (!fC || !badNode || !errors || !symbols) return;
-
-  std::string tokenName = extractName(fC, badNode);
-  reportError(fC, badNode, tokenName, ErrorDefinition::LINT_PARAMETR_OVERRIDE,
-              errors, symbols);
 }
 
 void checkParameterOverride(const FileContent* fC, ErrorContainer* errors,
@@ -64,19 +68,15 @@ void checkParameterOverride(const FileContent* fC, ErrorContainer* errors,
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto instantiations =
-      fC->sl_collect_all(root, VObjectType::paModule_instantiation);
+  for (NodeId inst :
+       fC->sl_collect_all(root, VObjectType::paModule_instantiation)) {
+    if (isParameterOverrideValid(fC, inst)) continue;
 
-  for (NodeId inst : instantiations) {
-    if (!inst) continue;
+    NodeId moduleName = fC->Child(inst);
+    NodeId badNode = moduleName ? fC->Sibling(moduleName) : NodeId{};
+    if (!badNode) badNode = inst;
 
-    if (!isParameterOverrideValid(fC, inst)) {
-      NodeId moduleName = fC->Child(inst);
-      NodeId badNode = fC->Sibling(moduleName);
-
-      if (!badNode) badNode = inst;
-
-      reportParameterOverrideError(fC, badNode, errors, symbols);
-    }
+    reportError(fC, badNode, extractName(fC, badNode),
+                ErrorDefinition::LINT_PARAMETR_OVERRIDE, errors, symbols);
   }
 }

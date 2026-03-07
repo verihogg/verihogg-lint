@@ -4,8 +4,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-using namespace SURELOG;
-
-void checkTargetUnpackedArrayConcatenation(const FileContent* fC,
-                                           ErrorContainer* errors,
-                                           SymbolTable* symbols);
+void checkTargetUnpackedArrayConcatenation(const SURELOG::FileContent* fC,
+                                           SURELOG::ErrorContainer* errors,
+                                           SURELOG::SymbolTable* symbols);

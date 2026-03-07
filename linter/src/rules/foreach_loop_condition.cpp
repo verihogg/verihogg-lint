@@ -1,6 +1,6 @@
 #include "rules/foreach_loop_condition.h"
 
-#include <string>
+#include <string_view>
 
 #include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
@@ -39,7 +39,7 @@ void checkForeachLoopCondition(const FileContent* fC, ErrorContainer* errors,
     if (countForeachDimensionGroups(fC, foreachNode) <= 1) continue;
 
     NodeId arrayIdNode = findArrayIdNode(fC, foreachNode);
-    std::string arrayName =
+    std::string_view arrayName =
         arrayIdNode ? extractName(fC, arrayIdNode, "unknown") : "unknown";
 
     reportError(fC, foreachNode, arrayName,

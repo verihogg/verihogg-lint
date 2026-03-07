@@ -1,15 +1,9 @@
 #pragma once
 
-#include <string>
-
-#include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
-#include "Surelog/SourceCompile/VObjectTypes.h"
+#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "Surelog/SourceCompile/SymbolTable.h"
 
-using namespace SURELOG;
-
-void checkParameterDynamicArray(const FileContent* fC, ErrorContainer* errors,
-                                SymbolTable* symbols);
-
-std::string findParamName(const FileContent* fC, NodeId paramDeclId);
-
+void checkParameterDynamicArray(const SURELOG::FileContent* fC,
+                                SURELOG::ErrorContainer* errors,
+                                SURELOG::SymbolTable* symbols);

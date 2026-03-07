@@ -5,26 +5,27 @@
 
 using namespace SURELOG;
 
-std::string extractName(const FileContent* fC, NodeId node,
-                        const std::string& defaultName) {
+std::string_view extractName(const FileContent* fC, NodeId node,
+                             const std::string_view& defaultName) {
   if (!fC || !node) return defaultName;
 
   auto stringNodes = fC->sl_collect_all(node, VObjectType::slStringConst);
   for (NodeId nameNode : stringNodes) {
     if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-      return std::string(fC->SymName(nameNode));
+      return fC->SymName(nameNode);
     }
   }
 
   NodeId child = fC->Child(node);
   if (child && fC->Type(child) == VObjectType::slStringConst) {
-    return std::string(fC->SymName(child));
+    return fC->SymName(child);
   }
 
   return defaultName;
 }
 
-std::string findForLoopVariableName(const FileContent* fC, NodeId forNode) {
+std::string_view findForLoopVariableName(const FileContent* fC,
+                                         NodeId forNode) {
   if (!fC || !forNode) return "<unknown>";
 
   NodeId forInit = InvalidNodeId;
@@ -43,21 +44,21 @@ std::string findForLoopVariableName(const FileContent* fC, NodeId forNode) {
   }
 
   if (forInit) {
-    std::string name = extractName(fC, forInit, "");
+    std::string_view name = extractName(fC, forInit, "");
     if (!name.empty()) return name;
   }
   if (condition) {
-    std::string name = extractName(fC, condition, "");
+    std::string_view name = extractName(fC, condition, "");
     if (!name.empty()) return name;
   }
   if (forStep) {
-    std::string name = extractName(fC, forStep, "");
+    std::string_view name = extractName(fC, forStep, "");
   }
 
   return "<unknown>";
 }
 
-std::string extractVariableName(const FileContent* fC, NodeId parentNode) {
+std::string_view extractVariableName(const FileContent* fC, NodeId parentNode) {
   if (!fC || !parentNode) return "<unknown>";
 
   auto listNodes = fC->sl_collect_all(
@@ -68,14 +69,15 @@ std::string extractVariableName(const FileContent* fC, NodeId parentNode) {
     for (NodeId assignNode : assignNodes) {
       NodeId nameNode = fC->Child(assignNode);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-        return std::string(fC->SymName(nameNode));
+        return fC->SymName(nameNode);
       }
     }
   }
   return "<unknown>";
 }
 
-std::string extractParameterName(const FileContent* fC, NodeId parentNode) {
+std::string_view extractParameterName(const FileContent* fC,
+                                      NodeId parentNode) {
   if (!fC || !parentNode) return "<unknown>";
 
   auto listNodes =
@@ -86,7 +88,7 @@ std::string extractParameterName(const FileContent* fC, NodeId parentNode) {
     for (NodeId assignNode : assignNodes) {
       NodeId nameNode = fC->Child(assignNode);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-        return std::string(fC->SymName(nameNode));
+        return fC->SymName(nameNode);
       }
     }
   }
@@ -112,7 +114,8 @@ bool lvalueHasIndex(const FileContent* fC, NodeId lvalueNode) {
   return false;
 }
 
-std::string findDirectRhsLhsName(const FileContent* fC, NodeId concatNode) {
+std::string_view findDirectRhsLhsName(const FileContent* fC,
+                                      NodeId concatNode) {
   NodeId current = fC->Parent(concatNode);
   while (current) {
     VObjectType type = fC->Type(current);
@@ -136,14 +139,14 @@ std::string findDirectRhsLhsName(const FileContent* fC, NodeId concatNode) {
     if (type == VObjectType::paVariable_decl_assignment) {
       NodeId nameNode = fC->Child(current);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
-        return std::string(fC->SymName(nameNode));
+        return fC->SymName(nameNode);
       return "<unknown>";
     }
 
     if (type == VObjectType::paNet_decl_assignment) {
       NodeId nameNode = fC->Child(current);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
-        return std::string(fC->SymName(nameNode));
+        return fC->SymName(nameNode);
       return "<unknown>";
     }
 
@@ -179,12 +182,12 @@ std::string findDirectRhsLhsName(const FileContent* fC, NodeId concatNode) {
 
 void collectNames(const FileContent* fC, NodeId root, VObjectType parentType,
                   VObjectType assignType,
-                  std::unordered_set<std::string>& out) {
+                  std::unordered_set<std::string_view>& out) {
   for (NodeId declId : fC->sl_collect_all(root, parentType)) {
     for (NodeId assignId : fC->sl_collect_all(declId, assignType, false)) {
       NodeId nameNode = fC->Child(assignId);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
-        out.insert(std::string(fC->SymName(nameNode)));
+        out.insert(fC->SymName(nameNode));
     }
   }
 }

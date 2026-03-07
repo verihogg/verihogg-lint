@@ -1,6 +1,6 @@
 #include "rules/coverpoint_expression_type.h"
 
-#include <string>
+#include <string_view>
 
 #include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
@@ -35,7 +35,7 @@ static VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
   }
   if (!idNode) return VObjectType::slNoType;
 
-  std::string varName = std::string(fC->SymName(idNode));
+  std::string_view varName = fC->SymName(idNode);
 
   for (NodeId varDeclId : fC->sl_collect_all(
            fC->getRootNode(), VObjectType::paVariable_declaration)) {
@@ -44,7 +44,7 @@ static VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
       NodeId nameNode = fC->Child(assignId);
       if (!nameNode) continue;
 
-      std::string declName = std::string(fC->SymName(nameNode));
+      std::string_view declName = fC->SymName(nameNode);
       if (declName == varName) {
         NodeId typeNode = fC->Child(varDeclId);
         if (typeNode) {
@@ -65,7 +65,7 @@ static VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
 
     if (!nameNode) continue;
 
-    if (std::string(fC->SymName(nameNode)) == varName) {
+    if (fC->SymName(nameNode) == varName) {
       NodeId dtNode = fC->Child(tfId);
       if (dtNode) {
         NodeId dataType = fC->Child(dtNode);
@@ -97,7 +97,7 @@ static void checkSingleCoverpoint(const FileContent* fC, NodeId cpId,
   VObjectType varType = getVariableType(fC, exprNode);
 
   if (!isIntegralType(varType)) {
-    std::string cpName = extractName(fC, cpId);
+    std::string_view cpName = extractName(fC, cpId);
     reportError(fC, cpId, cpName,
                 ErrorDefinition::LINT_COVERPOINT_EXPRESSION_TYPE, errors,
                 symbols);

@@ -1,7 +1,7 @@
 #include "rules/concatenation_multiplier.h"
 
 #include <map>
-#include <string>
+#include <string_view>
 #include <unordered_set>
 
 #include "Surelog/Design/Design.h"
@@ -14,9 +14,9 @@
 
 using namespace SURELOG;
 
-std::unordered_set<std::string> collectConstantParameters(
+std::unordered_set<std::string_view> collectConstantParameters(
     const FileContent* fC) {
-  std::unordered_set<std::string> constants;
+  std::unordered_set<std::string_view> constants;
 
   NodeId root = fC->getRootNode();
   collectNames(fC, root, VObjectType::paParameter_declaration,
@@ -26,8 +26,8 @@ std::unordered_set<std::string> collectConstantParameters(
   return constants;
 }
 
-std::unordered_set<std::string> collectVariables(const FileContent* fC) {
-  std::unordered_set<std::string> variables;
+std::unordered_set<std::string_view> collectVariables(const FileContent* fC) {
+  std::unordered_set<std::string_view> variables;
 
   NodeId root = fC->getRootNode();
   collectNames(fC, root, VObjectType::paVariable_declaration,
@@ -37,10 +37,11 @@ std::unordered_set<std::string> collectVariables(const FileContent* fC) {
   return variables;
 }
 
-bool isConstantExpression(const FileContent* fC, NodeId node,
-                          const std::unordered_set<std::string>& constantParams,
-                          const std::unordered_set<std::string>& variables,
-                          std::string* nonConstantVar = nullptr) {
+bool isConstantExpression(
+    const FileContent* fC, NodeId node,
+    const std::unordered_set<std::string_view>& constantParams,
+    const std::unordered_set<std::string_view>& variables,
+    std::string_view* nonConstantVar = nullptr) {
   if (!node) return true;
 
   VObjectType type = fC->Type(node);
@@ -63,7 +64,7 @@ bool isConstantExpression(const FileContent* fC, NodeId node,
   }
 
   if (type == VObjectType::slStringConst) {
-    std::string name = std::string(fC->SymName(node));
+    std::string_view name = fC->SymName(node);
 
     if (variables.count(name) > 0) {
       if (nonConstantVar) {
@@ -146,15 +147,15 @@ bool isConstantExpression(const FileContent* fC, NodeId node,
 
 void checkSingleMultipleConcatenation(
     const FileContent* fC, NodeId multiConcatNode,
-    const std::unordered_set<std::string>& constantParams,
-    const std::unordered_set<std::string>& variables, ErrorContainer* errors,
-    SymbolTable* symbols) {
+    const std::unordered_set<std::string_view>& constantParams,
+    const std::unordered_set<std::string_view>& variables,
+    ErrorContainer* errors, SymbolTable* symbols) {
   if (!multiConcatNode) return;
 
   NodeId multiplierExpr = fC->Child(multiConcatNode);
   if (!multiplierExpr) return;
 
-  std::string nonConstantVar;
+  std::string_view nonConstantVar;
   if (!isConstantExpression(fC, multiplierExpr, constantParams, variables,
                             &nonConstantVar)) {
     reportError(fC, multiplierExpr, nonConstantVar,
@@ -170,9 +171,9 @@ void checkConcatenationMultiplier(const FileContent* fC, ErrorContainer* errors,
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  std::unordered_set<std::string> constantParams =
+  std::unordered_set<std::string_view> constantParams =
       collectConstantParameters(fC);
-  std::unordered_set<std::string> variables = collectVariables(fC);
+  std::unordered_set<std::string_view> variables = collectVariables(fC);
 
   for (NodeId node :
        fC->sl_collect_all(root, VObjectType::paMultiple_concatenation)) {

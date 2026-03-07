@@ -1,47 +1,39 @@
 #include "rules/repeat_in_sequence.h"
 
-#include <cstdint>
-#include <string>
+#include <string_view>
 
-#include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 #include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/name_utils.h"
 #include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 using namespace SURELOG;
 
 void checkRepetitionInSequence(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
-  if (!fC) return;
+  if (!fC || !errors || !symbols) return;
 
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto seqDecls = fC->sl_collect_all(root, VObjectType::paSequence_declaration);
+  for (NodeId seqDeclId :
+       fC->sl_collect_all(root, VObjectType::paSequence_declaration)) {
+    std::string_view seqName = extractName(fC, seqDeclId);
 
-  for (NodeId seqDeclId : seqDecls) {
-    std::string seqName = extractName(fC, seqDeclId);
+    for (NodeId seqExprId :
+         fC->sl_collect_all(seqDeclId, VObjectType::paSequence_expr)) {
+      if (fC->sl_collect_all(seqExprId, VObjectType::paGoto_repetition).empty())
+        continue;
+      if (fC->sl_collect_all(seqExprId,
+                             VObjectType::paNon_consecutive_repetition)
+              .empty())
+        continue;
 
-    auto seqExprs = fC->sl_collect_all(seqDeclId, VObjectType::paSequence_expr);
-
-    for (NodeId seqExprId : seqExprs) {
-      auto gotoNodes =
-          fC->sl_collect_all(seqExprId, VObjectType::paGoto_repetition);
-      auto nonConsecNodes = fC->sl_collect_all(
-          seqExprId, VObjectType::paNon_consecutive_repetition);
-
-      bool hasGoto = !gotoNodes.empty();
-      bool hasNonConsec = !nonConsecNodes.empty();
-
-      if (hasGoto && hasNonConsec) {
-        reportError(fC, seqExprId, seqName,
-                    ErrorDefinition::LINT_REPETITION_IN_SEQUENCE, errors,
-                    symbols);
-      }
+      reportError(fC, seqExprId, seqName,
+                  ErrorDefinition::LINT_REPETITION_IN_SEQUENCE, errors,
+                  symbols);
     }
   }
 }
-

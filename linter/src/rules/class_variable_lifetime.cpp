@@ -1,6 +1,6 @@
 #include "rules/class_variable_lifetime.h"
 
-#include <string>
+#include <string_view>
 
 #include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
@@ -24,7 +24,7 @@ void checkClassVariableLifetime(const FileContent* fC, ErrorContainer* errors,
          fC->sl_collect_all(classId, VObjectType::paClass_property)) {
       for (NodeId autoId :
            fC->sl_collect_all(propId, VObjectType::paLifetime_Automatic)) {
-        std::string varName = extractVariableName(fC, propId);
+        std::string_view varName = extractVariableName(fC, propId);
         reportError(fC, autoId, varName,
                     ErrorDefinition::LINT_CLASS_VARIABLE_LIFETIME, errors,
                     symbols);

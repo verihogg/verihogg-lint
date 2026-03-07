@@ -1,5 +1,5 @@
-#include <set>
-#include <string>
+#include <string_view>
+#include <unordered_set>
 
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
@@ -10,22 +10,19 @@
 
 using namespace SURELOG;
 
-static std::set<std::string> collectUnpackedVarsInModule(const FileContent* fC,
-                                                         NodeId moduleNode) {
-  std::set<std::string> unpacked;
+static std::unordered_set<std::string_view> collectUnpackedVarsInModule(
+    const FileContent* fC, NodeId moduleNode) {
+  std::unordered_set<std::string_view> unpacked;
 
-  auto varDeclAssigns =
-      fC->sl_collect_all(moduleNode, VObjectType::paVariable_decl_assignment);
-
-  for (NodeId assignId : varDeclAssigns) {
+  for (NodeId assignId : fC->sl_collect_all(
+           moduleNode, VObjectType::paVariable_decl_assignment)) {
     NodeId nameNode = fC->Child(assignId);
     if (!nameNode || fC->Type(nameNode) != VObjectType::slStringConst) continue;
 
-    std::string name = std::string(fC->SymName(nameNode));
+    std::string_view name = fC->SymName(nameNode);
 
     for (NodeId sib = fC->Sibling(nameNode); sib; sib = fC->Sibling(sib)) {
       if (fC->Type(sib) != VObjectType::paVariable_dimension) continue;
-
       NodeId dimChild = fC->Child(sib);
       if (dimChild && fC->Type(dimChild) == VObjectType::paUnpacked_dimension) {
         unpacked.insert(name);
@@ -37,18 +34,19 @@ static std::set<std::string> collectUnpackedVarsInModule(const FileContent* fC,
   return unpacked;
 }
 
-static std::string findFirstUnpackedVarInSubtree(
+static std::string_view findFirstUnpackedVarInSubtree(
     const FileContent* fC, NodeId node,
-    const std::set<std::string>& unpackedVars) {
+    const std::unordered_set<std::string_view>& unpackedVars) {
   if (!node) return "";
 
   if (fC->Type(node) == VObjectType::slStringConst) {
-    std::string name = std::string(fC->SymName(node));
+    std::string_view name = fC->SymName(node);
     if (unpackedVars.count(name)) return name;
   }
 
   for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    std::string found = findFirstUnpackedVarInSubtree(fC, child, unpackedVars);
+    std::string_view found =
+        findFirstUnpackedVarInSubtree(fC, child, unpackedVars);
     if (!found.empty()) return found;
   }
 
@@ -57,44 +55,35 @@ static std::string findFirstUnpackedVarInSubtree(
 
 static void checkVariableLvalueConcatenations(
     const FileContent* fC, NodeId moduleNode,
-    const std::set<std::string>& unpackedVars, ErrorContainer* errors,
-    SymbolTable* symbols) {
-  auto lvalueNodes =
-      fC->sl_collect_all(moduleNode, VObjectType::paVariable_lvalue);
-
-  for (NodeId lvalueId : lvalueNodes) {
+    const std::unordered_set<std::string_view>& unpackedVars,
+    ErrorContainer* errors, SymbolTable* symbols) {
+  for (NodeId lvalueId :
+       fC->sl_collect_all(moduleNode, VObjectType::paVariable_lvalue)) {
     NodeId firstChild = fC->Child(lvalueId);
     if (!firstChild) continue;
 
     if (fC->Type(firstChild) != VObjectType::paVariable_lvalue) continue;
 
-    std::string foundVar =
-        findFirstUnpackedVarInSubtree(fC, lvalueId, unpackedVars);
-
-    if (!foundVar.empty()) {
+    if (auto foundVar =
+            findFirstUnpackedVarInSubtree(fC, lvalueId, unpackedVars);
+        !foundVar.empty())
       reportError(fC, lvalueId, foundVar,
                   ErrorDefinition::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
                   errors, symbols);
-    }
   }
 }
 
 static void checkNamedPortConnectionConcatenations(
     const FileContent* fC, NodeId moduleNode,
-    const std::set<std::string>& unpackedVars, ErrorContainer* errors,
-    SymbolTable* symbols) {
-  auto portConnNodes =
-      fC->sl_collect_all(moduleNode, VObjectType::paNamed_port_connection);
-
-  for (NodeId portConnId : portConnNodes) {
-    auto concatNodes =
-        fC->sl_collect_all(portConnId, VObjectType::paConcatenation);
-
-    for (NodeId concatId : concatNodes) {
-      std::string foundVar =
-          findFirstUnpackedVarInSubtree(fC, concatId, unpackedVars);
-
-      if (!foundVar.empty()) {
+    const std::unordered_set<std::string_view>& unpackedVars,
+    ErrorContainer* errors, SymbolTable* symbols) {
+  for (NodeId portConnId :
+       fC->sl_collect_all(moduleNode, VObjectType::paNamed_port_connection)) {
+    for (NodeId concatId :
+         fC->sl_collect_all(portConnId, VObjectType::paConcatenation)) {
+      if (auto foundVar =
+              findFirstUnpackedVarInSubtree(fC, concatId, unpackedVars);
+          !foundVar.empty()) {
         reportError(fC, concatId, foundVar,
                     ErrorDefinition::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
                     errors, symbols);
@@ -106,9 +95,7 @@ static void checkNamedPortConnectionConcatenations(
 
 static void checkSingleModule(const FileContent* fC, NodeId moduleNode,
                               ErrorContainer* errors, SymbolTable* symbols) {
-  std::set<std::string> unpackedVars =
-      collectUnpackedVarsInModule(fC, moduleNode);
-
+  auto unpackedVars = collectUnpackedVarsInModule(fC, moduleNode);
   if (unpackedVars.empty()) return;
 
   checkVariableLvalueConcatenations(fC, moduleNode, unpackedVars, errors,
@@ -126,10 +113,8 @@ void checkTargetUnpackedArrayConcatenation(const FileContent* fC,
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto moduleNodes =
-      fC->sl_collect_all(root, VObjectType::paModule_declaration);
-
-  for (NodeId moduleNode : moduleNodes) {
+  for (NodeId moduleNode :
+       fC->sl_collect_all(root, VObjectType::paModule_declaration)) {
     checkSingleModule(fC, moduleNode, errors, symbols);
   }
 }

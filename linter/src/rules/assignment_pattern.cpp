@@ -1,6 +1,6 @@
 #include "rules/assignment_pattern.h"
 
-#include <string>
+#include <string_view>
 #include <unordered_set>
 
 #include "Surelog/Design/FileContent.h"
@@ -14,10 +14,10 @@
 using namespace SURELOG;
 
 static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
-                             const std::string& varName) {
+                             const std::string_view& varName) {
   if (varName.empty() || varName == "<unknown>") return false;
 
-  std::unordered_set<std::string> structTypeNames;
+  std::unordered_set<std::string_view> structTypeNames;
   auto typeDecls =
       fC->sl_collect_all(moduleRoot, VObjectType::paType_declaration);
   for (NodeId td : typeDecls) {
@@ -25,7 +25,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
     if (fC->sl_collect_all(td, VObjectType::paStruct_union).empty()) continue;
     for (NodeId ch = fC->Child(td); ch; ch = fC->Sibling(ch)) {
       if (fC->Type(ch) == VObjectType::slStringConst)
-        structTypeNames.insert(std::string(fC->SymName(ch)));
+        structTypeNames.insert(fC->SymName(ch));
     }
   }
 
@@ -43,7 +43,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
 
     NodeId dtChild = fC->Child(dataType);
     if (dtChild && fC->Type(dtChild) == VObjectType::slStringConst &&
-        structTypeNames.count(std::string(fC->SymName(dtChild))))
+        structTypeNames.count(fC->SymName(dtChild)))
       return true;
   }
 
@@ -58,7 +58,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
     for (NodeId an : assignNodes) {
       NodeId nameNode = fC->Child(an);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst &&
-          std::string(fC->SymName(nameNode)) == varName) {
+          fC->SymName(nameNode) == varName) {
         nameMatch = true;
         break;
       }
@@ -70,7 +70,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
 
     NodeId firstCh = fC->Child(nd);
     if (firstCh && fC->Type(firstCh) == VObjectType::slStringConst &&
-        structTypeNames.count(std::string(fC->SymName(firstCh))))
+        structTypeNames.count(fC->SymName(firstCh)))
       return true;
   }
 
@@ -78,7 +78,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
 }
 
 static bool isArrayVariable(const FileContent* fC, NodeId moduleRoot,
-                            const std::string& varName) {
+                            const std::string_view& varName) {
   if (varName.empty() || varName == "<unknown>") return false;
 
   auto vdas =
@@ -87,7 +87,7 @@ static bool isArrayVariable(const FileContent* fC, NodeId moduleRoot,
     if (!vda) continue;
     NodeId nameNode = fC->Child(vda);
     if (!nameNode || fC->Type(nameNode) != VObjectType::slStringConst) continue;
-    if (std::string(fC->SymName(nameNode)) != varName) continue;
+    if (fC->SymName(nameNode) != varName) continue;
     if (!fC->sl_collect_all(vda, VObjectType::paUnpacked_dimension).empty())
       return true;
   }
@@ -103,7 +103,7 @@ static bool isArrayVariable(const FileContent* fC, NodeId moduleRoot,
     for (NodeId an : assignNodes) {
       NodeId nameNode = fC->Child(an);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst &&
-          std::string(fC->SymName(nameNode)) == varName)
+          fC->SymName(nameNode) == varName)
         return true;
     }
   }
@@ -132,7 +132,7 @@ void checkAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
       }
     }
 
-    std::string varName = findDirectRhsLhsName(fC, concat);
+    std::string_view varName = findDirectRhsLhsName(fC, concat);
     if (varName == "<unknown>" || varName == "<indexed>") continue;
 
     if (hasLabel) {

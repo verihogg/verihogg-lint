@@ -1,6 +1,7 @@
 #include "rules/assignment_pattern_context.h"
 
 #include <algorithm>
+#include <string_view>
 
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
@@ -60,7 +61,8 @@ static NodeId findDirectContext(const FileContent* fC, NodeId patternNode) {
   return current;
 }
 
-static std::string findContextName(const FileContent* fC, NodeId patternNode) {
+static std::string_view findContextName(const FileContent* fC,
+                                        NodeId patternNode) {
   NodeId current = fC->Parent(patternNode);
   while (current) {
     VObjectType type = fC->Type(current);
@@ -81,7 +83,7 @@ static std::string findContextName(const FileContent* fC, NodeId patternNode) {
     if (type == VObjectType::paExpression) {
       for (NodeId ch = fC->Child(current); ch; ch = fC->Sibling(ch)) {
         if (fC->Type(ch) != VObjectType::paExpression) continue;
-        std::string name = extractName(fC, ch, "");
+        std::string_view name = extractName(fC, ch, "");
         if (!name.empty()) return name;
       }
     }
@@ -89,7 +91,7 @@ static std::string findContextName(const FileContent* fC, NodeId patternNode) {
     if (type == VObjectType::paSubroutine_call) {
       NodeId nameNode = fC->Child(current);
       if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
-        return std::string(fC->SymName(nameNode));
+        return fC->SymName(nameNode);
     }
 
     current = fC->Parent(current);
@@ -114,7 +116,7 @@ void checkAssignmentPatternContext(const FileContent* fC,
 
     if (ctx && isValidAssignmentContext(fC->Type(ctx))) continue;
 
-    std::string name = findContextName(fC, pat);
+    std::string_view name = findContextName(fC, pat);
     reportError(fC, pat, name, ErrorDefinition::LINT_ASSIGNMENT_PATTERN_CONTEXT,
                 errors, symbols);
   }

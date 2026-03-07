@@ -1,6 +1,6 @@
 #include "rules/inside_operator_range.h"
 
-#include <string>
+#include <string_view>
 
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
@@ -10,21 +10,18 @@
 
 using namespace SURELOG;
 
-static std::string getInsideContextName(const FileContent* fC,
-                                        NodeId insideNode) {
+static std::string_view getInsideContextName(const FileContent* fC,
+                                             NodeId insideNode) {
   NodeId exprNode = fC->Parent(insideNode);
   if (!exprNode) return "<unknown>";
 
   NodeId leftOperand = fC->Child(exprNode);
   if (!leftOperand) return "<unknown>";
 
-  NodeId current = leftOperand;
-  while (current) {
-    if (fC->Type(current) == VObjectType::slStringConst) {
-      return std::string(fC->SymName(current));
-    }
-    current = fC->Child(current);
-  }
+  auto stringNodes =
+      fC->sl_collect_all(leftOperand, VObjectType::slStringConst);
+  if (!stringNodes.empty())
+    return std::string_view(fC->SymName(stringNodes.front()));
 
   return "<unknown>";
 }
@@ -40,12 +37,12 @@ static bool isValidInsideRange(const FileContent* fC, NodeId siblingNode) {
 
   if (sibType == VObjectType::paExpression) {
     NodeId primaryNode = fC->Child(siblingNode);
-    if (!primaryNode) return false;
-    if (fC->Type(primaryNode) != VObjectType::paPrimary) return false;
+    if (!primaryNode || fC->Type(primaryNode) != VObjectType::paPrimary)
+      return false;
 
     NodeId concatNode = fC->Child(primaryNode);
-    if (!concatNode) return false;
-    if (fC->Type(concatNode) == VObjectType::paConcatenation) return true;
+    if (concatNode && fC->Type(concatNode) == VObjectType::paConcatenation)
+      return true;
   }
 
   return false;
@@ -56,15 +53,11 @@ void checkInsideOperatorRange(const FileContent* fC, ErrorContainer* errors,
   if (!fC || !errors || !symbols) return;
 
   NodeId root = fC->getRootNode();
+  if (!root) return;
 
-  auto insideNodes = fC->sl_collect_all(root, VObjectType::paINSIDE);
-
-  for (NodeId insideId : insideNodes) {
-    NodeId siblingId = fC->Sibling(insideId);
-
-    if (!isValidInsideRange(fC, siblingId)) {
-      std::string varName = getInsideContextName(fC, insideId);
-      reportError(fC, insideId, varName,
+  for (NodeId insideId : fC->sl_collect_all(root, VObjectType::paINSIDE)) {
+    if (!isValidInsideRange(fC, fC->Sibling(insideId))) {
+      reportError(fC, insideId, getInsideContextName(fC, insideId),
                   ErrorDefinition::LINT_INSIDE_OPERATOR_RANGE, errors, symbols);
     }
   }

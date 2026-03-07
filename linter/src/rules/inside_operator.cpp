@@ -1,6 +1,8 @@
 #include "rules/inside_operator.h"
 
-#include <string>
+#include <algorithm>
+#include <array>
+#include <string_view>
 
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
@@ -10,21 +12,22 @@
 
 using namespace SURELOG;
 
-static std::string getConstantContextName(const FileContent* fC,
-                                          NodeId insideNode) {
-  NodeId current = fC->Parent(insideNode);
-  while (current) {
-    VObjectType type = fC->Type(current);
+static constexpr std::array kContextTable = {
+    std::pair{VObjectType::paUnpacked_dimension, "array dimension"},
+    std::pair{VObjectType::paConstant_param_expression, "parametr value"},
+    std::pair{VObjectType::paIf_generate_construct, "generate if condition"},
+};
 
-    if (type == VObjectType::paUnpacked_dimension) return "array dimension";
-    if (type == VObjectType::paConstant_param_expression)
-      return "parameter value";
-    if (type == VObjectType::paIf_generate_construct)
-      return "generate if condition";
-
-    current = fC->Parent(current);
+static std::string_view getConstantContextName(const FileContent* fC,
+                                               NodeId insideNode) {
+  for (NodeId cur = fC->Parent(insideNode); cur; cur = fC->Parent(cur)) {
+    VObjectType type = fC->Type(cur);
+    auto it = std::ranges::find_if(kContextTable, [type](const auto& entry) {
+      return entry.first == type;
+    });
+    if (it != kContextTable.end()) return it->second;
   }
-  return "constant expression";
+  return "constatnt expression";
 }
 
 void checkInsideOperator(const FileContent* fC, ErrorContainer* errors,
@@ -32,15 +35,14 @@ void checkInsideOperator(const FileContent* fC, ErrorContainer* errors,
   if (!fC || !errors || !symbols) return;
 
   NodeId root = fC->getRootNode();
+  if (!root) return;
 
-  auto insideNodes = fC->sl_collect_all(root, VObjectType::paINSIDE);
-
-  for (NodeId insideId : insideNodes) {
+  for (NodeId insideId : fC->sl_collect_all(root, VObjectType::paINSIDE)) {
     NodeId parentId = fC->Parent(insideId);
     if (!parentId) continue;
 
     if (fC->Type(parentId) == VObjectType::paConstant_expression) {
-      std::string contextName = getConstantContextName(fC, insideId);
+      std::string_view contextName = getConstantContextName(fC, insideId);
       reportError(fC, insideId, contextName,
                   ErrorDefinition::LINT_INSIDE_OPERATOR, errors, symbols);
     }

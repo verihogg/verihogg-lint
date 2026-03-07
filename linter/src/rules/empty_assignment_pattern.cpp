@@ -1,7 +1,6 @@
 #include "rules/empty_assignment_pattern.h"
 
-#include <cstdint>
-#include <string>
+#include <string_view>
 
 #include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
@@ -25,7 +24,7 @@ void checkEmptyAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
 
     if (fC->Child(pat)) continue;
 
-    std::string varName = findDirectRhsLhsName(fC, pat);
+    std::string_view varName = findDirectRhsLhsName(fC, pat);
 
     reportError(fC, pat, varName,
                 ErrorDefinition::LINT_EMPTY_ASSIGNMENT_PATTERN, errors,

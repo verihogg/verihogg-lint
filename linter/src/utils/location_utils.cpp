@@ -15,7 +15,7 @@ uint32_t getColumnSafe(const FileContent* fC, NodeId node) {
 }
 
 Location getLocation(const FileContent* fC, NodeId node,
-                     const std::string& symbolName, SymbolTable* symbols) {
+                     const std::string_view& symbolName, SymbolTable* symbols) {
   if (!fC || !node || !symbols) {
     PathId fileId;
     return Location(fileId, 0, 0, symbols->registerSymbol(symbolName));
@@ -30,7 +30,7 @@ Location getLocation(const FileContent* fC, NodeId node,
 }
 
 void reportError(const FileContent* fC, NodeId node,
-                 const std::string& symbolName,
+                 const std::string_view& symbolName,
                  ErrorDefinition::ErrorType errorType, ErrorContainer* errors,
                  SymbolTable* symbols) {
   if (!fC || !node || !errors || !symbols) return;
