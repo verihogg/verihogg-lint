@@ -47,6 +47,9 @@ static const std::array kAllRules = std::to_array<Rule>({
     {"TypeCasting", true, checkTypeCasting},
     {"TimeValue", true, checkTimeValue},
     {"MultipleBins", true, checkMultipleBins},
+    {"AssertionstatementAttributeInstance", true,
+     checkAssertionStatementAttributeInstance},
+    //{"SystemFunctionArguments", true, checkSystemFunctionArguments},
 
 });
 

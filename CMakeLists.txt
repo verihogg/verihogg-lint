@@ -51,6 +51,8 @@ set(LINTER_SRC
     linter/src/rules/type_casting.cpp
     linter/src/rules/time_value.cpp
     linter/src/rules/multiple_bins.cpp
+    linter/src/rules/assertion_statement_atribute_instance.cpp
+    #linter/src/rules/system_function_arguments.cpp
 
 )
 
