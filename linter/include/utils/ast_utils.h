@@ -13,3 +13,5 @@ using namespace SURELOG;
 NodeId findEnclosingModule(const FileContent* fC, NodeId node);
 
 bool hasSiblingOfType(const FileContent* fC, NodeId start, VObjectType type);
+
+NodeId findAncestorOfType(const FileContent* fC, NodeId node, VObjectType type);

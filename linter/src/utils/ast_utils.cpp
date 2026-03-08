@@ -19,3 +19,13 @@ bool hasSiblingOfType(const FileContent* fC, NodeId start, VObjectType type) {
     if (fC->Type(tmp) == type) return true;
   return false;
 }
+
+NodeId findAncestorOfType(const FileContent* fC, NodeId node,
+                          VObjectType type) {
+  NodeId current = fC->Parent(node);
+  while (current) {
+    if (fC->Type(current) == type) return current;
+    current = fC->Parent(current);
+  }
+  return InvalidNodeId;
+}
