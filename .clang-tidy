@@ -73,12 +73,12 @@ CheckOptions:
     value: k
 
   - key: readability-identifier-naming.LocalVariableCase
-    value: camelCase
+    value: сamelBack
   - key: readability-identifier-naming.ParameterCase
-    value: camelCase
+    value: camelBack
 
   - key: readability-identifier-naming.FunctionCase
-    value: camelCase
+    value: CamelCase
   - key: readability-identifier-naming.ClassCase
     value: CamelCase
   - key: readability-identifier-naming.StructCase

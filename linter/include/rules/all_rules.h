@@ -31,3 +31,4 @@
 #include "target_unpacked_array_concatenation.h"
 #include "time_value.h"
 #include "type_casting.h"
+#include "wildcard_operator.h"
