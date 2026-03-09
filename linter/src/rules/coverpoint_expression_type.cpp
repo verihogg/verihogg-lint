@@ -16,10 +16,13 @@ static bool isIntegralType(VObjectType type) {
   static constexpr std::array kIntegralTypes = {
       VObjectType::paIntVec_TypeBit,
       VObjectType::paIntVec_TypeLogic,
+      VObjectType::paIntVec_TypeReg,
       VObjectType::paIntegerAtomType_Int,
       VObjectType::paIntegerAtomType_LongInt,
       VObjectType::paIntegerAtomType_Shortint,
       VObjectType::paIntegerAtomType_Byte,
+      VObjectType::paIntegerAtomType_Integer,
+      VObjectType::paIntegerAtomType_Time,
       VObjectType::paEnum_base_type,
   };
   return std::find(kIntegralTypes.begin(), kIntegralTypes.end(), type) !=
@@ -56,6 +59,24 @@ static VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
       }
     }
   }
+
+  for (NodeId portDeclId : fC->sl_collect_all(
+           fC->getRootNode(), VObjectType::paAnsi_port_declaration)) {
+    NodeId header = fC->Child(portDeclId);
+    NodeId nameNode = header ? fC->Sibling(header) : InvalidNodeId;
+
+    if (!nameNode || fC->Type(nameNode) != VObjectType::slStringConst ||
+        fC->SymName(nameNode) != varName)
+      continue;
+
+    NodeId portDir = fC->Child(header);
+    NodeId netType = portDir ? fC->Sibling(portDir) : InvalidNodeId;
+    NodeId dataType = netType ? fC->Child(fC->Child(netType)) : InvalidNodeId;
+
+    if (NodeId base = dataType ? fC->Child(dataType) : InvalidNodeId)
+      return fC->Type(base);
+  }
+
   auto tfItems =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paTf_port_item);
   for (NodeId tfId : tfItems) {
