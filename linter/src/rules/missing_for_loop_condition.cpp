@@ -13,7 +13,7 @@
 
 using namespace SURELOG;
 
-void checkMissingForLoopCondition(const FileContent* fC, ErrorContainer* errors,
+void CheckMissingForLoopCondition(const FileContent* fC, ErrorContainer* errors,
                                   SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -21,8 +21,8 @@ void checkMissingForLoopCondition(const FileContent* fC, ErrorContainer* errors,
   if (!root) return;
 
   for (NodeId forNode : fC->sl_collect_all(root, VObjectType::paFOR)) {
-    if (hasSiblingOfType(fC, forNode, VObjectType::paExpression)) continue;
-    reportError(fC, forNode, findForLoopVariableName(fC, forNode),
+    if (HasSiblingOfType(fC, forNode, VObjectType::paExpression)) continue;
+    ReportError(fC, forNode, FindForLoopVariableName(fC, forNode),
                 ErrorDefinition::LINT_MISSING_FOR_LOOP_CONDITION, errors,
                 symbols);
   }

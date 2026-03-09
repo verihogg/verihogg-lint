@@ -17,7 +17,7 @@
 
 using namespace SURELOG;
 
-void FatalListener::listen(const vpiHandle& design) {
+void FatalListener::Listen(const vpiHandle& design) {
   if (!design) return;
   listenDesigns({design});
 }

@@ -10,7 +10,7 @@
 
 using namespace SURELOG;
 
-static std::string_view getInsideContextName(const FileContent* fC,
+static std::string_view GetInsideContextName(const FileContent* fC,
                                              NodeId insideNode) {
   NodeId exprNode = fC->Parent(insideNode);
   if (!exprNode) return "<unknown>";
@@ -25,7 +25,7 @@ static std::string_view getInsideContextName(const FileContent* fC,
   return "<unknown>";
 }
 
-static bool isValidInsideRange(const FileContent* fC, NodeId siblingNode) {
+static bool IsValidInsideRange(const FileContent* fC, NodeId siblingNode) {
   if (!siblingNode) return false;
 
   VObjectType sibType = fC->Type(siblingNode);
@@ -47,7 +47,7 @@ static bool isValidInsideRange(const FileContent* fC, NodeId siblingNode) {
   return false;
 }
 
-void checkInsideOperatorRange(const FileContent* fC, ErrorContainer* errors,
+void CheckInsideOperatorRange(const FileContent* fC, ErrorContainer* errors,
                               SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -55,8 +55,8 @@ void checkInsideOperatorRange(const FileContent* fC, ErrorContainer* errors,
   if (!root) return;
 
   for (NodeId insideId : fC->sl_collect_all(root, VObjectType::paINSIDE)) {
-    if (!isValidInsideRange(fC, fC->Sibling(insideId))) {
-      reportError(fC, insideId, getInsideContextName(fC, insideId),
+    if (!IsValidInsideRange(fC, fC->Sibling(insideId))) {
+      ReportError(fC, insideId, GetInsideContextName(fC, insideId),
                   ErrorDefinition::LINT_INSIDE_OPERATOR_RANGE, errors, symbols);
     }
   }

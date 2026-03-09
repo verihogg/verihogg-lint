@@ -29,7 +29,7 @@ static constexpr std::array kInstanceTypes = {
     VObjectType::paName_of_instance,
 };
 
-static bool isParameterOverrideValid(const FileContent* fC, NodeId instNode) {
+static bool IsParameterOverrideValid(const FileContent* fC, NodeId instNode) {
   if (!fC || !instNode) return true;
 
   NodeId child = fC->Child(instNode);
@@ -61,7 +61,7 @@ static bool isParameterOverrideValid(const FileContent* fC, NodeId instNode) {
   return true;
 }
 
-void checkParameterOverride(const FileContent* fC, ErrorContainer* errors,
+void CheckParameterOverride(const FileContent* fC, ErrorContainer* errors,
                             SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -70,13 +70,13 @@ void checkParameterOverride(const FileContent* fC, ErrorContainer* errors,
 
   for (NodeId inst :
        fC->sl_collect_all(root, VObjectType::paModule_instantiation)) {
-    if (isParameterOverrideValid(fC, inst)) continue;
+    if (IsParameterOverrideValid(fC, inst)) continue;
 
     NodeId moduleName = fC->Child(inst);
     NodeId badNode = moduleName ? fC->Sibling(moduleName) : NodeId{};
     if (!badNode) badNode = inst;
 
-    reportError(fC, badNode, extractName(fC, badNode),
+    ReportError(fC, badNode, ExtractName(fC, badNode),
                 ErrorDefinition::LINT_PARAMETR_OVERRIDE, errors, symbols);
   }
 }

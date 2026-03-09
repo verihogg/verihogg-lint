@@ -11,7 +11,7 @@
 
 using namespace SURELOG;
 
-static void checkTimeLiteral(const FileContent* fC, NodeId timeLiteral,
+static void CheckTimeLiteral(const FileContent* fC, NodeId timeLiteral,
                              ErrorContainer* errors, SymbolTable* symbols) {
   NodeId intConst = fC->Child(timeLiteral);
   if (!intConst) return;
@@ -33,11 +33,11 @@ static void checkTimeLiteral(const FileContent* fC, NodeId timeLiteral,
   badValue.reserve(kNumber.size() + 1 + kUnit.size());
   badValue.append(kNumber).append(1, ' ').append(kUnit);
 
-  reportError(fC, intConst, badValue, ErrorDefinition::LINT_TIME_VALUE, errors,
+  ReportError(fC, intConst, badValue, ErrorDefinition::LINT_TIME_VALUE, errors,
               symbols);
 }
 
-void checkTimeValue(const FileContent* fC, ErrorContainer* errors,
+void CheckTimeValue(const FileContent* fC, ErrorContainer* errors,
                     SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -46,6 +46,6 @@ void checkTimeValue(const FileContent* fC, ErrorContainer* errors,
 
   for (NodeId timeLiteral :
        fC->sl_collect_all(root, VObjectType::paTime_literal)) {
-    checkTimeLiteral(fC, timeLiteral, errors, symbols);
+    CheckTimeLiteral(fC, timeLiteral, errors, symbols);
   }
 }

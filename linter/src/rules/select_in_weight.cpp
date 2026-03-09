@@ -17,7 +17,7 @@ static constexpr std::array kSelectTypes = {
     VObjectType::paConstant_select,
 };
 
-static bool containsSelectInExpr(const FileContent* fC, NodeId node) {
+static bool ContainsSelectInExpr(const FileContent* fC, NodeId node) {
   if (!node) return false;
 
   VObjectType t = fC->Type(node);
@@ -29,12 +29,12 @@ static bool containsSelectInExpr(const FileContent* fC, NodeId node) {
     return true;
 
   for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    if (containsSelectInExpr(fC, child)) return true;
+    if (ContainsSelectInExpr(fC, child)) return true;
   }
 
   return false;
 }
-void checkSelectInWeight(const FileContent* fC, ErrorContainer* errors,
+void CheckSelectInWeight(const FileContent* fC, ErrorContainer* errors,
                          SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -50,8 +50,8 @@ void checkSelectInWeight(const FileContent* fC, ErrorContainer* errors,
     if (!weightExpr) continue;
     if (fC->Type(weightExpr) != VObjectType::paExpression) continue;
 
-    if (containsSelectInExpr(fC, weightExpr)) {
-      reportError(fC, rsRuleId, extractName(fC, rsProdList, "<unknown>"),
+    if (ContainsSelectInExpr(fC, weightExpr)) {
+      ReportError(fC, rsRuleId, ExtractName(fC, rsProdList, "<unknown>"),
                   ErrorDefinition::LINT_SELECT_IN_WEIGHT, errors, symbols);
     }
   }

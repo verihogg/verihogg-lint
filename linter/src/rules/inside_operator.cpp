@@ -18,7 +18,7 @@ static constexpr std::array kContextTable = {
     std::pair{VObjectType::paIf_generate_construct, "generate if condition"},
 };
 
-static std::string_view getConstantContextName(const FileContent* fC,
+static std::string_view GetConstantContextName(const FileContent* fC,
                                                NodeId insideNode) {
   for (NodeId cur = fC->Parent(insideNode); cur; cur = fC->Parent(cur)) {
     VObjectType type = fC->Type(cur);
@@ -30,7 +30,7 @@ static std::string_view getConstantContextName(const FileContent* fC,
   return "constatnt expression";
 }
 
-void checkInsideOperator(const FileContent* fC, ErrorContainer* errors,
+void CheckInsideOperator(const FileContent* fC, ErrorContainer* errors,
                          SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -42,8 +42,8 @@ void checkInsideOperator(const FileContent* fC, ErrorContainer* errors,
     if (!parentId) continue;
 
     if (fC->Type(parentId) == VObjectType::paConstant_expression) {
-      std::string_view contextName = getConstantContextName(fC, insideId);
-      reportError(fC, insideId, contextName,
+      std::string_view contextName = GetConstantContextName(fC, insideId);
+      ReportError(fC, insideId, contextName,
                   ErrorDefinition::LINT_INSIDE_OPERATOR, errors, symbols);
     }
   }

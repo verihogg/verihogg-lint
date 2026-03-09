@@ -54,29 +54,29 @@ static constexpr std::array kExpressionContextTypes = {
     VObjectType::paExpression,
 };
 
-static bool isHardWrapper(VObjectType type) {
+static bool IsHardWrapper(VObjectType type) {
   return std::ranges::find(kHardWrappers, type) != kHardWrappers.end();
 }
 
-static bool isValidAssignmentContext(VObjectType type) {
+static bool IsValidAssignmentContext(VObjectType type) {
   return std::ranges::find(kValidContexts, type) != kValidContexts.end();
 }
 
-static NodeId findDirectContext(const FileContent* fC, NodeId patternNode) {
+static NodeId FindDirectContext(const FileContent* fC, NodeId patternNode) {
   NodeId current = fC->Parent(patternNode);
-  while (current && isHardWrapper(fC->Type(current))) {
+  while (current && IsHardWrapper(fC->Type(current))) {
     current = fC->Parent(current);
   }
   return current;
 }
 
-static std::string_view findContextName(const FileContent* fC,
+static std::string_view FindContextName(const FileContent* fC,
                                         NodeId patternNode) {
   auto nameFromFirstChild = [&](NodeId node,
                                 VObjectType targetType) -> std::string_view {
     for (NodeId ch = fC->Child(node); ch; ch = fC->Sibling(ch)) {
       if (fC->Type(ch) != targetType) continue;
-      std::string_view name = extractName(fC, ch, "");
+      std::string_view name = ExtractName(fC, ch, "");
       if (!name.empty()) return name;
       break;
     }
@@ -92,7 +92,7 @@ static std::string_view findContextName(const FileContent* fC,
       for (NodeId ch = fC->Child(current); ch; ch = fC->Sibling(ch)) {
         if (std::ranges::find(kLvalueChildTypes, fC->Type(ch)) !=
             kLvalueChildTypes.end())
-          return extractName(fC, ch, "unknown");
+          return ExtractName(fC, ch, "unknown");
       }
     }
 
@@ -117,7 +117,7 @@ static std::string_view findContextName(const FileContent* fC,
   return "<unknown>";
 }
 
-void checkAssignmentPatternContext(const FileContent* fC,
+void CheckAssignmentPatternContext(const FileContent* fC,
                                    ErrorContainer* errors,
                                    SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
@@ -130,12 +130,12 @@ void checkAssignmentPatternContext(const FileContent* fC,
   for (NodeId pat : patterns) {
     if (!pat) continue;
 
-    NodeId ctx = findDirectContext(fC, pat);
+    NodeId ctx = FindDirectContext(fC, pat);
 
-    if (ctx && isValidAssignmentContext(fC->Type(ctx))) continue;
+    if (ctx && IsValidAssignmentContext(fC->Type(ctx))) continue;
 
-    std::string_view name = findContextName(fC, pat);
-    reportError(fC, pat, name, ErrorDefinition::LINT_ASSIGNMENT_PATTERN_CONTEXT,
+    std::string_view name = FindContextName(fC, pat);
+    ReportError(fC, pat, name, ErrorDefinition::LINT_ASSIGNMENT_PATTERN_CONTEXT,
                 errors, symbols);
   }
 }

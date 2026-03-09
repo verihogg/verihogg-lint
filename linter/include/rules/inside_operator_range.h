@@ -4,6 +4,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-void checkInsideOperatorRange(const SURELOG::FileContent* fC,
+void CheckInsideOperatorRange(const SURELOG::FileContent* fC,
                               SURELOG::ErrorContainer* errors,
                               SURELOG::SymbolTable* symbols);

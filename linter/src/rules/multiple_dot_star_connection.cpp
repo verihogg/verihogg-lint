@@ -17,11 +17,11 @@ struct DotStarResult {
   NodeId instanceNameNode;
 };
 
-static bool hasDotStarChild(const FileContent* fC, NodeId node) {
+static bool HasDotStarChild(const FileContent* fC, NodeId node) {
   return !fC->sl_collect_all(node, VObjectType::paDOTSTAR).empty();
 }
 
-static std::optional<DotStarResult> findMultipleDotStarConnections(
+static std::optional<DotStarResult> FindMultipleDotStarConnections(
     const FileContent* fC, NodeId instNode) {
   NodeId hierInst =
       fC->sl_collect(instNode, VObjectType::paHierarchical_instance);
@@ -38,7 +38,7 @@ static std::optional<DotStarResult> findMultipleDotStarConnections(
   int dotStarCount = 0;
   for (NodeId child = fC->Child(portList); child; child = fC->Sibling(child)) {
     if (fC->Type(child) != VObjectType::paNamed_port_connection) continue;
-    if (!hasDotStarChild(fC, child)) continue;
+    if (!HasDotStarChild(fC, child)) continue;
 
     if (++dotStarCount == 2) {
       NodeId dotStarNode = fC->sl_collect(child, VObjectType::paDOTSTAR);
@@ -49,7 +49,7 @@ static std::optional<DotStarResult> findMultipleDotStarConnections(
   return std::nullopt;
 }
 
-static void reportMultipleDotStarError(const FileContent* fC, NodeId badNode,
+static void ReportMultipleDotStarError(const FileContent* fC, NodeId badNode,
                                        NodeId instanceNameNode,
                                        ErrorContainer* errors,
                                        SymbolTable* symbols) {
@@ -57,15 +57,15 @@ static void reportMultipleDotStarError(const FileContent* fC, NodeId badNode,
 
   std::string_view instanceName = "unknown";
   if (instanceNameNode) {
-    instanceName = extractName(fC, instanceNameNode, "unknown");
+    instanceName = ExtractName(fC, instanceNameNode, "unknown");
   }
 
-  reportError(fC, badNode, instanceName,
+  ReportError(fC, badNode, instanceName,
               ErrorDefinition::LINT_MULTIPLE_DOT_STAR_CONNECTIONS, errors,
               symbols);
 }
 
-void checkMultipleDotStarConnections(const FileContent* fC,
+void CheckMultipleDotStarConnections(const FileContent* fC,
                                      ErrorContainer* errors,
                                      SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
@@ -75,15 +75,15 @@ void checkMultipleDotStarConnections(const FileContent* fC,
 
   for (NodeId inst :
        fC->sl_collect_all(root, VObjectType::paModule_instantiation)) {
-    auto result = findMultipleDotStarConnections(fC, inst);
+    auto result = FindMultipleDotStarConnections(fC, inst);
     if (!result) continue;
 
     std::string_view instanceName =
         result->instanceNameNode
-            ? extractName(fC, result->instanceNameNode, "unknown")
+            ? ExtractName(fC, result->instanceNameNode, "unknown")
             : "unknown";
 
-    reportError(fC, result->secondDotStarNode, instanceName,
+    ReportError(fC, result->secondDotStarNode, instanceName,
                 ErrorDefinition::LINT_MULTIPLE_DOT_STAR_CONNECTIONS, errors,
                 symbols);
   }

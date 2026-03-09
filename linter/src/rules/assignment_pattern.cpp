@@ -13,7 +13,7 @@
 
 using namespace SURELOG;
 
-static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
+static bool IsStructVariable(const FileContent* fC, NodeId moduleRoot,
                              const std::string_view& varName) {
   if (varName.empty() || varName == "<unknown>") return false;
 
@@ -33,7 +33,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
       fC->sl_collect_all(moduleRoot, VObjectType::paVariable_declaration);
   for (NodeId vd : varDecls) {
     if (!vd) continue;
-    if (extractVariableName(fC, vd) != varName) continue;
+    if (ExtractVariableName(fC, vd) != varName) continue;
 
     NodeId dataType = fC->Child(vd);
     if (!dataType) continue;
@@ -77,7 +77,7 @@ static bool isStructVariable(const FileContent* fC, NodeId moduleRoot,
   return false;
 }
 
-static bool isArrayVariable(const FileContent* fC, NodeId moduleRoot,
+static bool IsArrayVariable(const FileContent* fC, NodeId moduleRoot,
                             const std::string_view& varName) {
   if (varName.empty() || varName == "<unknown>") return false;
 
@@ -111,7 +111,7 @@ static bool isArrayVariable(const FileContent* fC, NodeId moduleRoot,
   return false;
 }
 
-void checkAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
+void CheckAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
                             SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -121,7 +121,7 @@ void checkAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
   for (NodeId concat : fC->sl_collect_all(root, VObjectType::paConcatenation)) {
     if (!concat) continue;
 
-    NodeId moduleRoot = findEnclosingModule(fC, concat);
+    NodeId moduleRoot = FindEnclosingModule(fC, concat);
     if (!moduleRoot) continue;
 
     bool hasLabel = false;
@@ -132,18 +132,18 @@ void checkAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
       }
     }
 
-    std::string_view varName = findDirectRhsLhsName(fC, concat);
+    std::string_view varName = FindDirectRhsLhsName(fC, concat);
     if (varName == "<unknown>" || varName == "<indexed>") continue;
 
     if (hasLabel) {
-      reportError(fC, concat, varName, ErrorDefinition::LINT_ASSIGNMENT_PATTERN,
+      ReportError(fC, concat, varName, ErrorDefinition::LINT_ASSIGNMENT_PATTERN,
                   errors, symbols);
       continue;
     }
 
-    if (isStructVariable(fC, moduleRoot, varName) ||
-        isArrayVariable(fC, moduleRoot, varName)) {
-      reportError(fC, concat, varName, ErrorDefinition::LINT_ASSIGNMENT_PATTERN,
+    if (IsStructVariable(fC, moduleRoot, varName) ||
+        IsArrayVariable(fC, moduleRoot, varName)) {
+      ReportError(fC, concat, varName, ErrorDefinition::LINT_ASSIGNMENT_PATTERN,
                   errors, symbols);
     }
   }

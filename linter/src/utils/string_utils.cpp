@@ -7,7 +7,7 @@
 
 using namespace SURELOG;
 
-std::string trim(const std::string& s) {
+std::string Trim(const std::string& s) {
   auto start = s.find_first_not_of(" \t\n\r");
   if (start == std::string::npos) return "";
   auto end = s.find_last_not_of(" \t\n\r");

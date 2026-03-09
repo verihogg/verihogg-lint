@@ -18,7 +18,7 @@ static constexpr std::array kBinTypes = {
     VObjectType::paBins_Illegal,
 };
 
-static std::unordered_set<std::string_view> getAllowedCovergroupArgs(
+static std::unordered_set<std::string_view> GetAllowedCovergroupArgs(
     const FileContent* fC, NodeId covergroupNode) {
   std::unordered_set<std::string_view> allowed;
 
@@ -39,7 +39,7 @@ static std::unordered_set<std::string_view> getAllowedCovergroupArgs(
   return allowed;
 }
 
-static std::unordered_set<std::string_view> getModuleVariables(
+static std::unordered_set<std::string_view> GetModuleVariables(
     const FileContent* fC) {
   std::unordered_set<std::string_view> moduleVars;
 
@@ -57,7 +57,7 @@ static std::unordered_set<std::string_view> getModuleVariables(
   return moduleVars;
 }
 
-static void checkIdentifiersRecursive(
+static void CheckIdentifiersRecursive(
     const FileContent* fC, NodeId node,
     const std::unordered_set<std::string_view>& allowedArgs,
     const std::unordered_set<std::string_view>& moduleVars,
@@ -69,7 +69,7 @@ static void checkIdentifiersRecursive(
 
     if (moduleVars.contains(varName)) {
       if (!allowedArgs.contains(varName)) {
-        reportError(fC, node, varName,
+        ReportError(fC, node, varName,
                     ErrorDefinition::LINT_COVERGROUP_EXPRESSION, errors,
                     symbols);
         return;
@@ -78,12 +78,12 @@ static void checkIdentifiersRecursive(
   }
 
   for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    checkIdentifiersRecursive(fC, child, allowedArgs, moduleVars, errors,
+    CheckIdentifiersRecursive(fC, child, allowedArgs, moduleVars, errors,
                               symbols);
   }
 }
 
-static void checkBinsInCoverpoint(
+static void CheckBinsInCoverpoint(
     const FileContent* fC, NodeId coverpointNode,
     const std::unordered_set<std::string_view>& allowedArgs,
     const std::unordered_set<std::string_view>& moduleVars,
@@ -111,26 +111,26 @@ static void checkBinsInCoverpoint(
       }
     }
 
-    checkIdentifiersRecursive(fC, binsOptId, allowedArgs, moduleVars, errors,
+    CheckIdentifiersRecursive(fC, binsOptId, allowedArgs, moduleVars, errors,
                               symbols);
   }
 }
 
-void checkCovergroupExpression(const FileContent* fC, ErrorContainer* errors,
+void CheckCovergroupExpression(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto moduleVars = getModuleVariables(fC);
+  auto moduleVars = GetModuleVariables(fC);
 
   for (NodeId cgId :
        fC->sl_collect_all(root, VObjectType::paCovergroup_declaration)) {
-    auto allowedArgs = getAllowedCovergroupArgs(fC, cgId);
+    auto allowedArgs = GetAllowedCovergroupArgs(fC, cgId);
     for (NodeId cpId :
          fC->sl_collect_all(cgId, VObjectType::paCover_point, false)) {
-      checkBinsInCoverpoint(fC, cpId, allowedArgs, moduleVars, errors, symbols);
+      CheckBinsInCoverpoint(fC, cpId, allowedArgs, moduleVars, errors, symbols);
     }
   }
 }

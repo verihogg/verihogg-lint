@@ -12,9 +12,9 @@
 
 using namespace SURELOG;
 
-static int countForeachDimensionGroups(const FileContent* fC,
+static int CountForeachDimensionGroups(const FileContent* fC,
                                        NodeId foreachKeyword) {
-  NodeId arrayIdNode = findArrayIdNode(fC, foreachKeyword);
+  NodeId arrayIdNode = FindArrayIdNode(fC, foreachKeyword);
   if (!arrayIdNode) return 0;
 
   int groups = 0;
@@ -26,7 +26,7 @@ static int countForeachDimensionGroups(const FileContent* fC,
   return groups;
 }
 
-void checkForeachLoopCondition(const FileContent* fC, ErrorContainer* errors,
+void CheckForeachLoopCondition(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -36,13 +36,13 @@ void checkForeachLoopCondition(const FileContent* fC, ErrorContainer* errors,
   for (NodeId foreachNode : fC->sl_collect_all(root, VObjectType::paFOREACH)) {
     if (!foreachNode) continue;
 
-    if (countForeachDimensionGroups(fC, foreachNode) <= 1) continue;
+    if (CountForeachDimensionGroups(fC, foreachNode) <= 1) continue;
 
-    NodeId arrayIdNode = findArrayIdNode(fC, foreachNode);
+    NodeId arrayIdNode = FindArrayIdNode(fC, foreachNode);
     std::string_view arrayName =
-        arrayIdNode ? extractName(fC, arrayIdNode, "unknown") : "unknown";
+        arrayIdNode ? ExtractName(fC, arrayIdNode, "unknown") : "unknown";
 
-    reportError(fC, foreachNode, arrayName,
+    ReportError(fC, foreachNode, arrayName,
                 ErrorDefinition::LINT_FOREACH_LOOP_CONDITION, errors, symbols);
   }
 }

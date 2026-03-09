@@ -5,7 +5,7 @@
 
 using namespace SURELOG;
 
-uint32_t getColumnSafe(const FileContent* fC, NodeId node) {
+uint32_t GetColumnSafe(const FileContent* fC, NodeId node) {
   if (!fC || !node) return 0;
   try {
     return fC->Column(node);
@@ -14,7 +14,7 @@ uint32_t getColumnSafe(const FileContent* fC, NodeId node) {
   }
 }
 
-Location getLocation(const FileContent* fC, NodeId node,
+Location GetLocation(const FileContent* fC, NodeId node,
                      const std::string_view& symbolName, SymbolTable* symbols) {
   if (!fC || !node || !symbols) {
     PathId fileId;
@@ -23,24 +23,24 @@ Location getLocation(const FileContent* fC, NodeId node,
 
   PathId fileId = fC->getFileId(node);
   uint32_t line = fC->Line(node);
-  uint32_t column = getColumnSafe(fC, node);
+  uint32_t column = GetColumnSafe(fC, node);
   SymbolId obj = symbols->registerSymbol(symbolName);
 
   return {fileId, line, static_cast<uint16_t>(column), obj};
 }
 
-void reportError(const FileContent* fC, NodeId node,
+void ReportError(const FileContent* fC, NodeId node,
                  const std::string_view& symbolName,
                  ErrorDefinition::ErrorType errorType, ErrorContainer* errors,
                  SymbolTable* symbols) {
   if (!fC || !node || !errors || !symbols) return;
 
-  Location loc = getLocation(fC, node, symbolName, symbols);
+  Location loc = GetLocation(fC, node, symbolName, symbols);
   Error err(errorType, loc);
   errors->addError(err, false);
 }
 
-NodeId findArrayIdNode(const FileContent* fC, NodeId foreachKeyword) {
+NodeId FindArrayIdNode(const FileContent* fC, NodeId foreachKeyword) {
   for (NodeId sib = fC->Sibling(foreachKeyword); sib; sib = fC->Sibling(sib)) {
     if (fC->Type(sib) == VObjectType::paPs_or_hierarchical_array_identifier)
       return sib;

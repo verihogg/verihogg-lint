@@ -2,6 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-void checkDpiDeclarationString(const SURELOG::FileContent* fC,
+void CheckDpiDeclarationString(const SURELOG::FileContent* fC,
                                SURELOG::ErrorContainer* errors,
                                SURELOG::SymbolTable* symbols);

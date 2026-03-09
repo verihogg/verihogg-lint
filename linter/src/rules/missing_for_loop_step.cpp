@@ -10,7 +10,7 @@
 
 using namespace SURELOG;
 
-void checkMissingForLoopStep(const FileContent* fC, ErrorContainer* errors,
+void CheckMissingForLoopStep(const FileContent* fC, ErrorContainer* errors,
                              SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -18,9 +18,9 @@ void checkMissingForLoopStep(const FileContent* fC, ErrorContainer* errors,
   if (!root) return;
 
   for (NodeId forNode : fC->sl_collect_all(root, VObjectType::paFOR)) {
-    if (hasSiblingOfType(fC, forNode, VObjectType::paFor_step)) continue;
+    if (HasSiblingOfType(fC, forNode, VObjectType::paFor_step)) continue;
 
-    reportError(fC, forNode, findForLoopVariableName(fC, forNode),
+    ReportError(fC, forNode, FindForLoopVariableName(fC, forNode),
                 ErrorDefinition::LINT_MISSING_FOR_LOOP_STEP, errors, symbols);
   }
 }

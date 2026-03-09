@@ -4,6 +4,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-void checkMissingForLoopStep(const SURELOG::FileContent* fC,
+void CheckMissingForLoopStep(const SURELOG::FileContent* fC,
                              SURELOG::ErrorContainer* errors,
                              SURELOG::SymbolTable* symbols);

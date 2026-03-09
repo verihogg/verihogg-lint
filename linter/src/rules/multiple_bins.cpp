@@ -18,14 +18,14 @@ static constexpr std::array kValueTypes = {
     VObjectType::slStringConst,
 };
 
-static bool valueHasWildcard(std::string_view val) {
+static bool ValueHasWildcard(std::string_view val) {
   static constexpr std::string_view kWildcardChars = "xXzZ?";
   return std::ranges::any_of(val, [](char c) {
     return kWildcardChars.find(c) != std::string_view::npos;
   });
 }
 
-static NodeId findWildcardInTransRangeList(const FileContent* fC, NodeId node) {
+static NodeId FindWildcardInTransRangeList(const FileContent* fC, NodeId node) {
   if (!node) return InvalidNodeId;
 
   VObjectType type = fC->Type(node);
@@ -36,18 +36,18 @@ static NodeId findWildcardInTransRangeList(const FileContent* fC, NodeId node) {
 
   if (std::ranges::any_of(kValueTypes,
                           [type](VObjectType t) { return t == type; })) {
-    if (valueHasWildcard(fC->SymName(node))) return node;
+    if (ValueHasWildcard(fC->SymName(node))) return node;
   }
 
   for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    NodeId found = findWildcardInTransRangeList(fC, child);
+    NodeId found = FindWildcardInTransRangeList(fC, child);
     if (found) return found;
   }
 
   return InvalidNodeId;
 }
 
-static NodeId findWildcardInTransList(const FileContent* fC, NodeId transList) {
+static NodeId FindWildcardInTransList(const FileContent* fC, NodeId transList) {
   if (!transList) return InvalidNodeId;
 
   for (NodeId transSet = fC->Child(transList); transSet;
@@ -58,7 +58,7 @@ static NodeId findWildcardInTransList(const FileContent* fC, NodeId transList) {
          transRange = fC->Sibling(transRange)) {
       if (fC->Type(transRange) != VObjectType::paTrans_range_list) continue;
 
-      NodeId wildcardNode = findWildcardInTransRangeList(fC, transRange);
+      NodeId wildcardNode = FindWildcardInTransRangeList(fC, transRange);
       if (wildcardNode) return wildcardNode;
     }
   }
@@ -66,7 +66,7 @@ static NodeId findWildcardInTransList(const FileContent* fC, NodeId transList) {
   return InvalidNodeId;
 }
 
-static std::string_view extractBinName(const FileContent* fC,
+static std::string_view ExtractBinName(const FileContent* fC,
                                        NodeId binsOrOptions) {
   if (!fC || !binsOrOptions) return "<unknown>";
 
@@ -83,7 +83,7 @@ static std::string_view extractBinName(const FileContent* fC,
   return "<unknown>";
 }
 
-static NodeId findTransListInBinsOrOptions(const FileContent* fC,
+static NodeId FindTransListInBinsOrOptions(const FileContent* fC,
                                            NodeId binsOrOptions) {
   if (!binsOrOptions) return InvalidNodeId;
   auto transLists =
@@ -91,7 +91,7 @@ static NodeId findTransListInBinsOrOptions(const FileContent* fC,
   return transLists.empty() ? InvalidNodeId : transLists.front();
 }
 
-void checkMultipleBins(const FileContent* fC, ErrorContainer* errors,
+void CheckMultipleBins(const FileContent* fC, ErrorContainer* errors,
                        SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -100,13 +100,13 @@ void checkMultipleBins(const FileContent* fC, ErrorContainer* errors,
 
   for (NodeId binsNode :
        fC->sl_collect_all(root, VObjectType::paBins_or_options)) {
-    NodeId transList = findTransListInBinsOrOptions(fC, binsNode);
+    NodeId transList = FindTransListInBinsOrOptions(fC, binsNode);
     if (!transList) continue;
 
-    NodeId wildcardNode = findWildcardInTransList(fC, transList);
+    NodeId wildcardNode = FindWildcardInTransList(fC, transList);
     if (!wildcardNode) continue;
 
-    reportError(fC, wildcardNode, extractBinName(fC, binsNode),
+    ReportError(fC, wildcardNode, ExtractBinName(fC, binsNode),
                 ErrorDefinition::LINT_MULTIPLE_BINS, errors, symbols);
   }
 }

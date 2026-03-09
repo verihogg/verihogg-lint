@@ -11,7 +11,7 @@
 
 using namespace SURELOG;
 
-void checkParameterDynamicArray(const FileContent* fC, ErrorContainer* errors,
+void CheckParameterDynamicArray(const FileContent* fC, ErrorContainer* errors,
                                 SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -28,7 +28,7 @@ void checkParameterDynamicArray(const FileContent* fC, ErrorContainer* errors,
           fC->sl_collect_all(decl, VObjectType::paUnsized_dimension);
       if (unsizedDims.empty()) continue;
       {
-        reportError(fC, unsizedDims.front(), extractParameterName(fC, decl),
+        ReportError(fC, unsizedDims.front(), ExtractParameterName(fC, decl),
                     ErrorDefinition::LINT_PARAMETR_DYNAMIC_ARRAY, errors,
                     symbols);
       }

@@ -4,6 +4,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-void checkForeachLoopCondition(const SURELOG::FileContent* fC,
+void CheckForeachLoopCondition(const SURELOG::FileContent* fC,
                                SURELOG::ErrorContainer* errors,
                                SURELOG::SymbolTable* symbols);

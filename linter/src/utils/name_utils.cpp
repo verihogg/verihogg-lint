@@ -5,7 +5,7 @@
 
 using namespace SURELOG;
 
-std::string_view extractName(const FileContent* fC, NodeId node,
+std::string_view ExtractName(const FileContent* fC, NodeId node,
                              const std::string_view& defaultName) {
   if (!fC || !node) return defaultName;
 
@@ -24,7 +24,7 @@ std::string_view extractName(const FileContent* fC, NodeId node,
   return defaultName;
 }
 
-std::string_view findForLoopVariableName(const FileContent* fC,
+std::string_view FindForLoopVariableName(const FileContent* fC,
                                          NodeId forNode) {
   if (!fC || !forNode) return "<unknown>";
 
@@ -44,21 +44,21 @@ std::string_view findForLoopVariableName(const FileContent* fC,
   }
 
   if (forInit) {
-    std::string_view name = extractName(fC, forInit, "");
+    std::string_view name = ExtractName(fC, forInit, "");
     if (!name.empty()) return name;
   }
   if (condition) {
-    std::string_view name = extractName(fC, condition, "");
+    std::string_view name = ExtractName(fC, condition, "");
     if (!name.empty()) return name;
   }
   if (forStep) {
-    std::string_view name = extractName(fC, forStep, "");
+    std::string_view name = ExtractName(fC, forStep, "");
   }
 
   return "<unknown>";
 }
 
-std::string_view extractVariableName(const FileContent* fC, NodeId parentNode) {
+std::string_view ExtractVariableName(const FileContent* fC, NodeId parentNode) {
   if (!fC || !parentNode) return "<unknown>";
 
   auto listNodes = fC->sl_collect_all(
@@ -76,7 +76,7 @@ std::string_view extractVariableName(const FileContent* fC, NodeId parentNode) {
   return "<unknown>";
 }
 
-std::string_view extractParameterName(const FileContent* fC,
+std::string_view ExtractParameterName(const FileContent* fC,
                                       NodeId parentNode) {
   if (!fC || !parentNode) return "<unknown>";
 
@@ -95,7 +95,7 @@ std::string_view extractParameterName(const FileContent* fC,
   return "<unknown>";
 }
 
-bool lvalueHasIndex(const FileContent* fC, NodeId lvalueNode) {
+bool LvalueHasIndex(const FileContent* fC, NodeId lvalueNode) {
   for (NodeId ch = fC->Child(lvalueNode); ch; ch = fC->Sibling(ch)) {
     VObjectType ct = fC->Type(ch);
 
@@ -114,7 +114,7 @@ bool lvalueHasIndex(const FileContent* fC, NodeId lvalueNode) {
   return false;
 }
 
-std::string_view findDirectRhsLhsName(const FileContent* fC,
+std::string_view FindDirectRhsLhsName(const FileContent* fC,
                                       NodeId concatNode) {
   NodeId current = fC->Parent(concatNode);
   while (current) {
@@ -129,8 +129,8 @@ std::string_view findDirectRhsLhsName(const FileContent* fC,
         VObjectType ct = fC->Type(child);
         if (ct == VObjectType::paVariable_lvalue ||
             ct == VObjectType::paNet_lvalue) {
-          if (lvalueHasIndex(fC, child)) return "<indexed>";
-          return extractName(fC, child);
+          if (LvalueHasIndex(fC, child)) return "<indexed>";
+          return ExtractName(fC, child);
         }
       }
       return "<unknown>";
@@ -180,7 +180,7 @@ std::string_view findDirectRhsLhsName(const FileContent* fC,
   return "<unknown>";
 }
 
-void collectNames(const FileContent* fC, NodeId root, VObjectType parentType,
+void CollectNames(const FileContent* fC, NodeId root, VObjectType parentType,
                   VObjectType assignType,
                   std::unordered_set<std::string_view>& out) {
   for (NodeId declId : fC->sl_collect_all(root, parentType)) {

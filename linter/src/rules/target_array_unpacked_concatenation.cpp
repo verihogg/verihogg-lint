@@ -10,7 +10,7 @@
 
 using namespace SURELOG;
 
-static std::unordered_set<std::string_view> collectUnpackedVarsInModule(
+static std::unordered_set<std::string_view> CollectUnpackedVarsInModule(
     const FileContent* fC, NodeId moduleNode) {
   std::unordered_set<std::string_view> unpacked;
 
@@ -34,7 +34,7 @@ static std::unordered_set<std::string_view> collectUnpackedVarsInModule(
   return unpacked;
 }
 
-static std::string_view findFirstUnpackedVarInSubtree(
+static std::string_view FindFirstUnpackedVarInSubtree(
     const FileContent* fC, NodeId node,
     const std::unordered_set<std::string_view>& unpackedVars) {
   if (!node) return "";
@@ -46,14 +46,14 @@ static std::string_view findFirstUnpackedVarInSubtree(
 
   for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
     std::string_view found =
-        findFirstUnpackedVarInSubtree(fC, child, unpackedVars);
+        FindFirstUnpackedVarInSubtree(fC, child, unpackedVars);
     if (!found.empty()) return found;
   }
 
   return "";
 }
 
-static void checkVariableLvalueConcatenations(
+static void CheckVariableLvalueConcatenations(
     const FileContent* fC, NodeId moduleNode,
     const std::unordered_set<std::string_view>& unpackedVars,
     ErrorContainer* errors, SymbolTable* symbols) {
@@ -65,15 +65,15 @@ static void checkVariableLvalueConcatenations(
     if (fC->Type(firstChild) != VObjectType::paVariable_lvalue) continue;
 
     if (auto foundVar =
-            findFirstUnpackedVarInSubtree(fC, lvalueId, unpackedVars);
+            FindFirstUnpackedVarInSubtree(fC, lvalueId, unpackedVars);
         !foundVar.empty())
-      reportError(fC, lvalueId, foundVar,
+      ReportError(fC, lvalueId, foundVar,
                   ErrorDefinition::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
                   errors, symbols);
   }
 }
 
-static void checkNamedPortConnectionConcatenations(
+static void CheckNamedPortConnectionConcatenations(
     const FileContent* fC, NodeId moduleNode,
     const std::unordered_set<std::string_view>& unpackedVars,
     ErrorContainer* errors, SymbolTable* symbols) {
@@ -82,9 +82,9 @@ static void checkNamedPortConnectionConcatenations(
     for (NodeId concatId :
          fC->sl_collect_all(portConnId, VObjectType::paConcatenation)) {
       if (auto foundVar =
-              findFirstUnpackedVarInSubtree(fC, concatId, unpackedVars);
+              FindFirstUnpackedVarInSubtree(fC, concatId, unpackedVars);
           !foundVar.empty()) {
-        reportError(fC, concatId, foundVar,
+        ReportError(fC, concatId, foundVar,
                     ErrorDefinition::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
                     errors, symbols);
         break;
@@ -93,19 +93,19 @@ static void checkNamedPortConnectionConcatenations(
   }
 }
 
-static void checkSingleModule(const FileContent* fC, NodeId moduleNode,
+static void CheckSingleModule(const FileContent* fC, NodeId moduleNode,
                               ErrorContainer* errors, SymbolTable* symbols) {
-  auto unpackedVars = collectUnpackedVarsInModule(fC, moduleNode);
+  auto unpackedVars = CollectUnpackedVarsInModule(fC, moduleNode);
   if (unpackedVars.empty()) return;
 
-  checkVariableLvalueConcatenations(fC, moduleNode, unpackedVars, errors,
+  CheckVariableLvalueConcatenations(fC, moduleNode, unpackedVars, errors,
                                     symbols);
 
-  checkNamedPortConnectionConcatenations(fC, moduleNode, unpackedVars, errors,
+  CheckNamedPortConnectionConcatenations(fC, moduleNode, unpackedVars, errors,
                                          symbols);
 }
 
-void checkTargetUnpackedArrayConcatenation(const FileContent* fC,
+void CheckTargetUnpackedArrayConcatenation(const FileContent* fC,
                                            ErrorContainer* errors,
                                            SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
@@ -115,6 +115,6 @@ void checkTargetUnpackedArrayConcatenation(const FileContent* fC,
 
   for (NodeId moduleNode :
        fC->sl_collect_all(root, VObjectType::paModule_declaration)) {
-    checkSingleModule(fC, moduleNode, errors, symbols);
+    CheckSingleModule(fC, moduleNode, errors, symbols);
   }
 }

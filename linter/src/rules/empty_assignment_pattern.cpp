@@ -12,7 +12,7 @@
 
 using namespace SURELOG;
 
-void checkEmptyAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
+void CheckEmptyAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
                                  SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
   NodeId root = fC->getRootNode();
@@ -24,9 +24,9 @@ void checkEmptyAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
 
     if (fC->Child(pat)) continue;
 
-    std::string_view varName = findDirectRhsLhsName(fC, pat);
+    std::string_view varName = FindDirectRhsLhsName(fC, pat);
 
-    reportError(fC, pat, varName,
+    ReportError(fC, pat, varName,
                 ErrorDefinition::LINT_EMPTY_ASSIGNMENT_PATTERN, errors,
                 symbols);
   }

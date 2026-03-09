@@ -11,26 +11,26 @@
 
 using namespace SURELOG;
 
-static bool hasReturnType(const FileContent* fC, NodeId typeNode) {
+static bool HasReturnType(const FileContent* fC, NodeId typeNode) {
   return !fC->sl_collect_all(typeNode, VObjectType::paFunction_data_type, false)
               .empty();
 }
 
-void checkFunctionPrototype(const FileContent* fC, NodeId protoId,
+void CheckFunctionPrototype(const FileContent* fC, NodeId protoId,
                             ErrorContainer* errors, SymbolTable* symbols) {
   auto ftypeNodes = fC->sl_collect_all(
       protoId, VObjectType::paFunction_data_type_or_implicit, false);
   if (ftypeNodes.empty()) return;
 
   NodeId typeNode = ftypeNodes.front();
-  if (!hasReturnType(fC, typeNode)) {
-    reportError(fC, typeNode, extractName(fC, typeNode),
+  if (!HasReturnType(fC, typeNode)) {
+    ReportError(fC, typeNode, ExtractName(fC, typeNode),
                 ErrorDefinition::LINT_PROTOTYPE_RETURN_DATA_TYPE, errors,
                 symbols);
   }
 }
 
-static std::vector<NodeId> collectPrototypes(const FileContent* fC,
+static std::vector<NodeId> CollectPrototypes(const FileContent* fC,
                                              NodeId parentNode,
                                              VObjectType childType) {
   std::vector<NodeId> result;
@@ -42,7 +42,7 @@ static std::vector<NodeId> collectPrototypes(const FileContent* fC,
   return result;
 }
 
-void checkPrototypeReturnDataType(const FileContent* fC, ErrorContainer* errors,
+void CheckPrototypeReturnDataType(const FileContent* fC, ErrorContainer* errors,
                                   SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -52,15 +52,15 @@ void checkPrototypeReturnDataType(const FileContent* fC, ErrorContainer* errors,
   for (NodeId classId :
        fC->sl_collect_all(root, VObjectType::paClass_declaration)) {
     for (NodeId protoId :
-         collectPrototypes(fC, classId, VObjectType::paClass_method)) {
-      checkFunctionPrototype(fC, protoId, errors, symbols);
+         CollectPrototypes(fC, classId, VObjectType::paClass_method)) {
+      CheckFunctionPrototype(fC, protoId, errors, symbols);
     }
   }
 
   for (NodeId ifaceId :
        fC->sl_collect_all(root, VObjectType::paInterface_declaration)) {
     for (NodeId protoId :
-         collectPrototypes(fC, ifaceId, VObjectType::paNon_port_interface_item))
-      checkFunctionPrototype(fC, protoId, errors, symbols);
+         CollectPrototypes(fC, ifaceId, VObjectType::paNon_port_interface_item))
+      CheckFunctionPrototype(fC, protoId, errors, symbols);
   }
 }

@@ -18,7 +18,7 @@ class FatalListener : public UHDM::VpiListener {
                 SURELOG::SymbolTable* symbols)
       : fC_(fC), errors_(errors), symbols_(symbols) {}
 
-  void listen(const vpiHandle& design);
+  void Listen(const vpiHandle& design);
 
   void enterSys_func_call(const UHDM::sys_func_call* object,
                           vpiHandle handle) override;

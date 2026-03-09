@@ -10,7 +10,7 @@
 
 using namespace SURELOG;
 
-void checkMissingForLoopInitialization(const FileContent* fC,
+void CheckMissingForLoopInitialization(const FileContent* fC,
                                        ErrorContainer* errors,
                                        SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
@@ -19,10 +19,10 @@ void checkMissingForLoopInitialization(const FileContent* fC,
   if (!root) return;
 
   for (NodeId forNode : fC->sl_collect_all(root, VObjectType::paFOR)) {
-    if (hasSiblingOfType(fC, forNode, VObjectType::paFor_initialization))
+    if (HasSiblingOfType(fC, forNode, VObjectType::paFor_initialization))
       continue;
 
-    reportError(fC, forNode, findForLoopVariableName(fC, forNode),
+    ReportError(fC, forNode, FindForLoopVariableName(fC, forNode),
                 ErrorDefinition::LINT_MISSING_FOR_LOOP_INITIALIZATION, errors,
                 symbols);
   }

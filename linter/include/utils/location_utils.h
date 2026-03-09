@@ -11,17 +11,17 @@
 using namespace SURELOG;
 
 //Безопасно извлекает номер столбца из узла, возвращая 0, если он недоступен.
-uint32_t getColumnSafe(const FileContent* fC, NodeId node);
+uint32_t GetColumnSafe(const FileContent* fC, NodeId node);
 
 //Создать объект Location из узла.
-Location getLocation(const FileContent* fC, NodeId node,
+Location GetLocation(const FileContent* fC, NodeId node,
                      const std::string_view& symbolName, SymbolTable* symbols);
 
 //Сообщить об ошибке линтинга в определенном месте узла.
 //Это основная функция отчетности об ошибках, используемая всеми правилами.
-void reportError(const FileContent* fC, NodeId node,
+void ReportError(const FileContent* fC, NodeId node,
                  const std::string_view& symbolName,
                  ErrorDefinition::ErrorType errorType, ErrorContainer* errors,
                  SymbolTable* symbols);
 
-NodeId findArrayIdNode(const FileContent* fC, NodeId foreachKeyword);
+NodeId FindArrayIdNode(const FileContent* fC, NodeId foreachKeyword);

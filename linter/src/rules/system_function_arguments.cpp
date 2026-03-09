@@ -19,7 +19,7 @@ static const std::unordered_map<std::string_view, int> kMaxArgs = {
     {"left", 2},     {"right", 2},
 };
 
-static int countArguments(const FileContent* fC, NodeId listOfArgs) {
+static int CountArguments(const FileContent* fC, NodeId listOfArgs) {
   if (!listOfArgs) return 0;
 
   int count = 0;
@@ -38,7 +38,7 @@ struct SysFuncCall {
   std::string funcName;
 };
 
-static bool extractFromDollarCall(const FileContent* fC, NodeId callNode,
+static bool ExtractFromDollarCall(const FileContent* fC, NodeId callNode,
                                   SysFuncCall& out) {
   NodeId dollarKw = fC->Child(callNode);
   if (!dollarKw || fC->Type(dollarKw) != VObjectType::paDollar_keyword) {
@@ -61,7 +61,7 @@ static bool extractFromDollarCall(const FileContent* fC, NodeId callNode,
   return true;
 }
 
-static bool extractFromSystemTask(const FileContent* fC, NodeId callNode,
+static bool ExtractFromSystemTask(const FileContent* fC, NodeId callNode,
                                   SysFuncCall& out) {
   NodeId taskNames = fC->Child(callNode);
   if (!taskNames || fC->Type(taskNames) != VObjectType::paSystem_task_names) {
@@ -89,13 +89,13 @@ static bool extractFromSystemTask(const FileContent* fC, NodeId callNode,
   return true;
 }
 
-static void checkCall(const FileContent* fC, const SysFuncCall& call,
+static void CheckCall(const FileContent* fC, const SysFuncCall& call,
                       ErrorContainer* errors, SymbolTable* symbols) {
   auto it = kMaxArgs.find(call.funcName);
   if (it == kMaxArgs.end()) return;
 
   int maxAllowed = it->second;
-  int actual = countArguments(fC, call.listArgs);
+  int actual = CountArguments(fC, call.listArgs);
 
   if (actual <= maxAllowed) return;
 
@@ -103,11 +103,11 @@ static void checkCall(const FileContent* fC, const SysFuncCall& call,
   std::string symbolName =
       "$" + call.funcName + " is " + std::to_string(maxAllowed);
 
-  reportError(fC, call.callNode, symbolName,
+  ReportError(fC, call.callNode, symbolName,
               ErrorDefinition::LINT_SYSTEM_FUNCTION_ARGUMENTS, errors, symbols);
 }
 
-void checkSystemFunctionArguments(const FileContent* fC, ErrorContainer* errors,
+void CheckSystemFunctionArguments(const FileContent* fC, ErrorContainer* errors,
                                   SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -117,22 +117,22 @@ void checkSystemFunctionArguments(const FileContent* fC, ErrorContainer* errors,
   for (NodeId node :
        fC->sl_collect_all(root, VObjectType::paComplex_func_call)) {
     SysFuncCall call;
-    if (extractFromDollarCall(fC, node, call)) {
-      checkCall(fC, call, errors, symbols);
+    if (ExtractFromDollarCall(fC, node, call)) {
+      CheckCall(fC, call, errors, symbols);
     }
   }
 
   for (NodeId node : fC->sl_collect_all(root, VObjectType::paSystem_task)) {
     SysFuncCall call;
-    if (extractFromSystemTask(fC, node, call)) {
-      checkCall(fC, call, errors, symbols);
+    if (ExtractFromSystemTask(fC, node, call)) {
+      CheckCall(fC, call, errors, symbols);
     }
   }
 
   for (NodeId node : fC->sl_collect_all(root, VObjectType::paSubroutine_call)) {
     SysFuncCall call;
-    if (extractFromDollarCall(fC, node, call)) {
-      checkCall(fC, call, errors, symbols);
+    if (ExtractFromDollarCall(fC, node, call)) {
+      CheckCall(fC, call, errors, symbols);
     }
   }
 }

@@ -11,7 +11,7 @@
 
 using namespace SURELOG;
 
-void checkRepetitionInSequence(const FileContent* fC, ErrorContainer* errors,
+void CheckRepetitionInSequence(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -20,7 +20,7 @@ void checkRepetitionInSequence(const FileContent* fC, ErrorContainer* errors,
 
   for (NodeId seqDeclId :
        fC->sl_collect_all(root, VObjectType::paSequence_declaration)) {
-    std::string_view seqName = extractName(fC, seqDeclId);
+    std::string_view seqName = ExtractName(fC, seqDeclId);
 
     for (NodeId seqExprId :
          fC->sl_collect_all(seqDeclId, VObjectType::paSequence_expr)) {
@@ -31,7 +31,7 @@ void checkRepetitionInSequence(const FileContent* fC, ErrorContainer* errors,
               .empty())
         continue;
 
-      reportError(fC, seqExprId, seqName,
+      ReportError(fC, seqExprId, seqName,
                   ErrorDefinition::LINT_REPETITION_IN_SEQUENCE, errors,
                   symbols);
     }

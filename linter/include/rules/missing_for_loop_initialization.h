@@ -4,6 +4,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-void checkMissingForLoopInitialization(const SURELOG::FileContent* fC,
+void CheckMissingForLoopInitialization(const SURELOG::FileContent* fC,
                                        SURELOG::ErrorContainer* errors,
                                        SURELOG::SymbolTable* symbols);

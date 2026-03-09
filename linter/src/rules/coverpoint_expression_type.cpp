@@ -12,7 +12,7 @@
 
 using namespace SURELOG;
 
-static bool isIntegralType(VObjectType type) {
+static bool IsIntegralType(VObjectType type) {
   static constexpr std::array kIntegralTypes = {
       VObjectType::paIntVec_TypeBit,
       VObjectType::paIntVec_TypeLogic,
@@ -29,7 +29,7 @@ static bool isIntegralType(VObjectType type) {
          kIntegralTypes.end();
 };
 
-static VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
+static VObjectType GetVariableType(const FileContent* fC, NodeId exprNode) {
   if (!exprNode) return VObjectType::slNoType;
 
   NodeId idNode = exprNode;
@@ -101,7 +101,7 @@ static VObjectType getVariableType(const FileContent* fC, NodeId exprNode) {
   return VObjectType::slNoType;
 }
 
-static void checkSingleCoverpoint(const FileContent* fC, NodeId cpId,
+static void CheckSingleCoverpoint(const FileContent* fC, NodeId cpId,
                                   ErrorContainer* errors,
                                   SymbolTable* symbols) {
   NodeId exprNode = InvalidNodeId;
@@ -115,17 +115,17 @@ static void checkSingleCoverpoint(const FileContent* fC, NodeId cpId,
   }
   if (!exprNode) return;
 
-  VObjectType varType = getVariableType(fC, exprNode);
+  VObjectType varType = GetVariableType(fC, exprNode);
 
-  if (!isIntegralType(varType)) {
-    std::string_view cpName = extractName(fC, cpId);
-    reportError(fC, cpId, cpName,
+  if (!IsIntegralType(varType)) {
+    std::string_view cpName = ExtractName(fC, cpId);
+    ReportError(fC, cpId, cpName,
                 ErrorDefinition::LINT_COVERPOINT_EXPRESSION_TYPE, errors,
                 symbols);
   }
 }
 
-void checkCoverpointExpressionType(const FileContent* fC,
+void CheckCoverpointExpressionType(const FileContent* fC,
                                    ErrorContainer* errors,
                                    SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
@@ -135,6 +135,6 @@ void checkCoverpointExpressionType(const FileContent* fC,
   auto coverpoints = fC->sl_collect_all(root, VObjectType::paCover_point);
 
   for (NodeId cpId : coverpoints) {
-    checkSingleCoverpoint(fC, cpId, errors, symbols);
+    CheckSingleCoverpoint(fC, cpId, errors, symbols);
   }
 }

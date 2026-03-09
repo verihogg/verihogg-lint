@@ -50,26 +50,26 @@ static constexpr std::array kVarDeclTypes = {
               VObjectType::paVariable_decl_assignment},
 };
 
-std::unordered_set<std::string_view> collectConstantParameters(
+std::unordered_set<std::string_view> CollectConstantParameters(
     const FileContent* fC) {
   std::unordered_set<std::string_view> constants;
 
   NodeId root = fC->getRootNode();
   for (const auto& [parentType, assignType] : kParamDeclTypes)
-    collectNames(fC, root, parentType, assignType, constants);
+    CollectNames(fC, root, parentType, assignType, constants);
   return constants;
 }
 
-std::unordered_set<std::string_view> collectVariables(const FileContent* fC) {
+std::unordered_set<std::string_view> CollectVariables(const FileContent* fC) {
   std::unordered_set<std::string_view> variables;
 
   NodeId root = fC->getRootNode();
   for (const auto& [parentType, assignType] : kVarDeclTypes)
-    collectNames(fC, root, parentType, assignType, variables);
+    CollectNames(fC, root, parentType, assignType, variables);
   return variables;
 }
 
-bool isConstantExpression(
+bool IsConstantExpression(
     const FileContent* fC, NodeId node,
     const std::unordered_set<std::string_view>& constantParams,
     const std::unordered_set<std::string_view>& variables,
@@ -90,7 +90,7 @@ bool isConstantExpression(
   }
 
   if (std::ranges::find(kPassThroughTypes, type) != kPassThroughTypes.end())
-    return isConstantExpression(fC, fC->Child(node), constantParams, variables,
+    return IsConstantExpression(fC, fC->Child(node), constantParams, variables,
                                 nonConstantVar);
 
   if (type == VObjectType::slStringConst) {
@@ -116,7 +116,7 @@ bool isConstantExpression(
         childType <= VObjectType::paUnary_Tilda)
       continue;
 
-    if (!isConstantExpression(fC, child, constantParams, variables,
+    if (!IsConstantExpression(fC, child, constantParams, variables,
                               nonConstantVar))
       return false;
   }
@@ -124,7 +124,7 @@ bool isConstantExpression(
   return true;
 }
 
-void checkSingleMultipleConcatenation(
+void CheckSingleMultipleConcatenation(
     const FileContent* fC, NodeId multiConcatNode,
     const std::unordered_set<std::string_view>& constantParams,
     const std::unordered_set<std::string_view>& variables,
@@ -135,27 +135,27 @@ void checkSingleMultipleConcatenation(
   if (!multiplierExpr) return;
 
   std::string_view nonConstantVar;
-  if (!isConstantExpression(fC, multiplierExpr, constantParams, variables,
+  if (!IsConstantExpression(fC, multiplierExpr, constantParams, variables,
                             &nonConstantVar)) {
-    reportError(fC, multiplierExpr, nonConstantVar,
+    ReportError(fC, multiplierExpr, nonConstantVar,
                 ErrorDefinition::LINT_CONCATENATION_MULTIPLIER, errors,
                 symbols);
   }
 }
 
-void checkConcatenationMultiplier(const FileContent* fC, ErrorContainer* errors,
+void CheckConcatenationMultiplier(const FileContent* fC, ErrorContainer* errors,
                                   SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto constantParams = collectConstantParameters(fC);
-  auto variables = collectVariables(fC);
+  auto constantParams = CollectConstantParameters(fC);
+  auto variables = CollectVariables(fC);
 
   for (NodeId node :
        fC->sl_collect_all(root, VObjectType::paMultiple_concatenation)) {
-    checkSingleMultipleConcatenation(fC, node, constantParams, variables,
+    CheckSingleMultipleConcatenation(fC, node, constantParams, variables,
                                      errors, symbols);
   }
 }

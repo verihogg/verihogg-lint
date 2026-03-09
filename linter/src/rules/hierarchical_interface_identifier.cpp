@@ -13,7 +13,7 @@
 
 using namespace SURELOG;
 
-static std::string joinNames(const FileContent* fC,
+static std::string JoinNames(const FileContent* fC,
                              const std::vector<NodeId>& parts) {
   if (parts.empty()) return "<unknown>";
   std::string res;
@@ -26,7 +26,7 @@ static std::string joinNames(const FileContent* fC,
   return res;
 }
 
-void checkHierarchicalInterfaceIdentifier(const FileContent* fC,
+void CheckHierarchicalInterfaceIdentifier(const FileContent* fC,
                                           ErrorContainer* errors,
                                           SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
@@ -38,7 +38,7 @@ void checkHierarchicalInterfaceIdentifier(const FileContent* fC,
     auto parts = fC->sl_collect_all(iid, VObjectType::slStringConst);
     if (parts.size() <= 1) continue;
 
-    reportError(fC, iid, joinNames(fC, parts),
+    ReportError(fC, iid, JoinNames(fC, parts),
                 ErrorDefinition::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
                 symbols);
   }

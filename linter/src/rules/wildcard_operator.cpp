@@ -9,7 +9,7 @@
 
 using namespace SURELOG;
 
-void checkWildcardOperators(const FileContent* fC, ErrorContainer* errors,
+void CheckWildcardOperators(const FileContent* fC, ErrorContainer* errors,
                             SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
@@ -24,15 +24,15 @@ void checkWildcardOperators(const FileContent* fC, ErrorContainer* errors,
     if (exprNode) {
       NodeId leftOperand = fC->Child(exprNode);
       if (leftOperand) {
-        symName = extractName(fC, leftOperand, "<unknown>");
+        symName = ExtractName(fC, leftOperand, "<unknown>");
       }
     }
 
-    reportError(fC, wildEq, symName,
+    ReportError(fC, wildEq, symName,
                 ErrorDefinition::LINT_WILDCARD_EQUALITY_OPERATOR, errors,
                 symbols);
 
-    reportError(fC, wildEq, symName,
+    ReportError(fC, wildEq, symName,
                 ErrorDefinition::LINT_WILDCARD_INEQUALITY_OPERATOR, errors,
                 symbols);
   }

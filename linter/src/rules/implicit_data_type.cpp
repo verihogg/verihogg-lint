@@ -15,10 +15,10 @@ using namespace SURELOG;
 struct LineRange {
   uint32_t start;
   uint32_t end;
-  bool includes(uint32_t line) const { return line >= start && line <= end; }
+  bool Includes(uint32_t line) const { return line >= start && line <= end; }
 };
 
-static bool hasExplicitType(const FileContent* fC, NodeId dataDecl) {
+static bool HasExplicitType(const FileContent* fC, NodeId dataDecl) {
   static constexpr std::array kExplicitTypeNodes = {
       VObjectType::paNet_type,          VObjectType::paData_type,
       VObjectType::paInteger_atom_type, VObjectType::paInteger_vector_type,
@@ -30,7 +30,7 @@ static bool hasExplicitType(const FileContent* fC, NodeId dataDecl) {
   });
 }
 
-static std::vector<LineRange> collectProceduralRanges(const FileContent* fC,
+static std::vector<LineRange> CollectProceduralRanges(const FileContent* fC,
                                                       NodeId root) {
   static constexpr std::array kProceduralTypes = {
       VObjectType::paInitial_construct,
@@ -47,23 +47,23 @@ static std::vector<LineRange> collectProceduralRanges(const FileContent* fC,
   return ranges;
 }
 
-static bool isPhantomNode(const FileContent* fC, NodeId dataDecl,
+static bool IsPhantomNode(const FileContent* fC, NodeId dataDecl,
                           const std::vector<LineRange>& ranges) {
-  if (extractVariableName(fC, dataDecl).empty()) return true;
+  if (ExtractVariableName(fC, dataDecl).empty()) return true;
 
   uint32_t declLine = fC->Line(dataDecl);
   return std::ranges::any_of(
-      ranges, [declLine](const LineRange& r) { return r.includes(declLine); });
+      ranges, [declLine](const LineRange& r) { return r.Includes(declLine); });
 }
 
-void checkImplicitDataTypeInDeclaration(const FileContent* fC,
+void CheckImplicitDataTypeInDeclaration(const FileContent* fC,
                                         ErrorContainer* errors,
                                         SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto proceduralRanges = collectProceduralRanges(fC, root);
+  auto proceduralRanges = CollectProceduralRanges(fC, root);
 
   for (NodeId dataDecl :
        fC->sl_collect_all(root, VObjectType::paData_declaration)) {
@@ -71,10 +71,10 @@ void checkImplicitDataTypeInDeclaration(const FileContent* fC,
         fC->sl_collect_all(dataDecl, VObjectType::paPacked_dimension);
     if (packedDims.empty()) continue;
 
-    if (hasExplicitType(fC, dataDecl)) continue;
-    if (isPhantomNode(fC, dataDecl, proceduralRanges)) continue;
+    if (HasExplicitType(fC, dataDecl)) continue;
+    if (IsPhantomNode(fC, dataDecl, proceduralRanges)) continue;
 
-    reportError(fC, packedDims.front(), extractVariableName(fC, dataDecl),
+    ReportError(fC, packedDims.front(), ExtractVariableName(fC, dataDecl),
                 ErrorDefinition::LINT_IMPLICIT_DATA_TYPE, errors, symbols);
   }
 }

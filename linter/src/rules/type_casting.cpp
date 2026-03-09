@@ -12,7 +12,7 @@
 
 using namespace SURELOG;
 
-static std::unordered_set<std::string_view> collectUserDefinedTypes(
+static std::unordered_set<std::string_view> CollectUserDefinedTypes(
     const FileContent* fC, NodeId root) {
   std::unordered_set<std::string_view> userTypes;
 
@@ -28,23 +28,23 @@ static std::unordered_set<std::string_view> collectUserDefinedTypes(
   return userTypes;
 }
 
-void checkTypeCasting(const FileContent* fC, ErrorContainer* errors,
+void CheckTypeCasting(const FileContent* fC, ErrorContainer* errors,
                       SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
 
   NodeId root = fC->getRootNode();
   if (!root) return;
 
-  auto userTypes = collectUserDefinedTypes(fC, root);
+  auto userTypes = CollectUserDefinedTypes(fC, root);
   if (userTypes.empty()) return;
 
   for (NodeId funcCallNode :
        fC->sl_collect_all(root, VObjectType::paComplex_func_call)) {
-    std::string_view typeName = extractName(fC, funcCallNode);
+    std::string_view typeName = ExtractName(fC, funcCallNode);
     if (typeName.empty()) continue;
 
     if (userTypes.contains(typeName)) {
-      reportError(fC, fC->Child(funcCallNode), typeName,
+      ReportError(fC, fC->Child(funcCallNode), typeName,
                   ErrorDefinition::LINT_TYPE_CASTING, errors, symbols);
     }
   }

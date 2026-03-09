@@ -12,7 +12,7 @@
 
 using namespace SURELOG;
 
-void checkDpiDeclarationString(const FileContent* fC, ErrorContainer* errors,
+void CheckDpiDeclarationString(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
   NodeId root = fC->getRootNode();
@@ -33,10 +33,10 @@ void checkDpiDeclarationString(const FileContent* fC, ErrorContainer* errors,
       dpiStr = dpiStr.substr(1, dpiStr.size() - 2);
     }
 
-    dpiStr = trim(dpiStr);
+    dpiStr = Trim(dpiStr);
 
     if (dpiStr != "DPI-C" && dpiStr != "DPI") {
-      reportError(fC, stringNode, dpiStr,
+      ReportError(fC, stringNode, dpiStr,
                   ErrorDefinition::LINT_DPI_DECLARATION_STRING, errors,
                   symbols);
     }

@@ -4,6 +4,6 @@
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
 
-void checkSelectInWeight(const SURELOG::FileContent* fC,
+void CheckSelectInWeight(const SURELOG::FileContent* fC,
                          SURELOG::ErrorContainer* errors,
                          SURELOG::SymbolTable* symbols);

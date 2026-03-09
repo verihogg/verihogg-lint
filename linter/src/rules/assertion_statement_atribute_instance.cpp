@@ -19,9 +19,9 @@ static constexpr std::array kValidAfterLabelTypes = {
     VObjectType::paAttribute_instance,
 };
 
-static bool checkModuleLevelCover(const FileContent* fC,
+static bool CheckModuleLevelCover(const FileContent* fC,
                                   NodeId coverPropertyStmt) {
-  NodeId assertionItem = findAncestorOfType(
+  NodeId assertionItem = FindAncestorOfType(
       fC, coverPropertyStmt, VObjectType::paConcurrent_assertion_item);
   if (!assertionItem) return false;
 
@@ -29,7 +29,7 @@ static bool checkModuleLevelCover(const FileContent* fC,
   if (!firstChild || fC->Type(firstChild) != VObjectType::slStringConst)
     return false;
 
-  NodeId moduleOrGenItem = findAncestorOfType(
+  NodeId moduleOrGenItem = FindAncestorOfType(
       fC, assertionItem, VObjectType::paModule_or_generate_item);
   if (!moduleOrGenItem) return false;
 
@@ -39,14 +39,14 @@ static bool checkModuleLevelCover(const FileContent* fC,
   return (fC->Type(firstItemChild) != VObjectType::paAttribute_instance);
 }
 
-static bool checkProceduralCover(const FileContent* fC,
+static bool CheckProceduralCover(const FileContent* fC,
                                  NodeId coverPropertyStmt) {
-  NodeId proceduralAssert = findAncestorOfType(
+  NodeId proceduralAssert = FindAncestorOfType(
       fC, coverPropertyStmt, VObjectType::paProcedural_assertion_statement);
   if (!proceduralAssert) return false;
 
   NodeId stmt =
-      findAncestorOfType(fC, proceduralAssert, VObjectType::paStatement);
+      FindAncestorOfType(fC, proceduralAssert, VObjectType::paStatement);
   if (!stmt) return false;
 
   NodeId firstChild = fC->Child(stmt);
@@ -64,7 +64,7 @@ static bool checkProceduralCover(const FileContent* fC,
       [afterLabelType](VObjectType t) { return t == afterLabelType; });
 }
 
-static std::string_view extractLabelName(const FileContent* fC,
+static std::string_view ExtractLabelName(const FileContent* fC,
                                          NodeId coverPropertyStmt) {
   auto getFirstStringConst = [&](NodeId node) -> std::string_view {
     NodeId child = fC->Child(node);
@@ -73,7 +73,7 @@ static std::string_view extractLabelName(const FileContent* fC,
     return {};
   };
 
-  NodeId assertionItem = findAncestorOfType(
+  NodeId assertionItem = FindAncestorOfType(
       fC, coverPropertyStmt, VObjectType::paConcurrent_assertion_item);
   if (assertionItem) {
     if (auto name = getFirstStringConst(assertionItem); !name.empty())
@@ -83,7 +83,7 @@ static std::string_view extractLabelName(const FileContent* fC,
   return "<unknown>";
 }
 
-void checkAssertionStatementAttributeInstance(const FileContent* fC,
+void CheckAssertionStatementAttributeInstance(const FileContent* fC,
                                               ErrorContainer* errors,
                                               SymbolTable* symbols) {
   if (!fC || !errors || !symbols) return;
@@ -94,17 +94,17 @@ void checkAssertionStatementAttributeInstance(const FileContent* fC,
   for (NodeId coverStmt :
        fC->sl_collect_all(root, VObjectType::paCover_property_statement)) {
     const bool kIsProcedural =
-        findAncestorOfType(fC, coverStmt,
+        FindAncestorOfType(fC, coverStmt,
                            VObjectType::paProcedural_assertion_statement) !=
         InvalidNodeId;
 
     const bool kHasViolation = kIsProcedural
-                                   ? checkProceduralCover(fC, coverStmt)
-                                   : checkModuleLevelCover(fC, coverStmt);
+                                   ? CheckProceduralCover(fC, coverStmt)
+                                   : CheckModuleLevelCover(fC, coverStmt);
 
     if (!kHasViolation) continue;
 
-    reportError(fC, coverStmt, extractLabelName(fC, coverStmt),
+    ReportError(fC, coverStmt, ExtractLabelName(fC, coverStmt),
                 ErrorDefinition::LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
                 errors, symbols);
   }
