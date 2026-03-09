@@ -49,7 +49,7 @@ static const std::array kAllRules = std::to_array<Rule>({
     {"MultipleBins", true, checkMultipleBins},
     {"AssertionstatementAttributeInstance", true,
      checkAssertionStatementAttributeInstance},
-    //{"SystemFunctionArguments", true, checkSystemFunctionArguments},
+    {"SystemFunctionArguments", true, checkSystemFunctionArguments},
 
 });
 
