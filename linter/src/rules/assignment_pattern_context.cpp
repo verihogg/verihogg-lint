@@ -62,30 +62,11 @@ static bool isValidAssignmentContext(VObjectType type) {
   return std::ranges::find(kValidContexts, type) != kValidContexts.end();
 }
 
-static bool isConditionalExpression(const FileContent* fC, NodeId exprNode) {
-  for (NodeId ch = fC->Child(exprNode); ch; ch = fC->Sibling(ch)) {
-    if (fC->Type(ch) == VObjectType::paQMARK) return true;
-  }
-  return false;
-}
-
 static NodeId findDirectContext(const FileContent* fC, NodeId patternNode) {
   NodeId current = fC->Parent(patternNode);
   while (current && isHardWrapper(fC->Type(current))) {
-    if (fC->Type(current) == VObjectType::paExpression &&
-        isConditionalExpression(fC, current))
-      return current;
     current = fC->Parent(current);
   }
-
-  if (current && fC->Type(current) == VObjectType::paExpression) {
-    NodeId parent = fC->Parent(current);
-    while (parent && fC->Type(parent) == VObjectType::paExpression)
-      parent = fC->Parent(parent);
-    if (parent && isValidAssignmentContext(fC->Type(parent))) return parent;
-    return current;
-  }
-
   return current;
 }
 
