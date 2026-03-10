@@ -88,6 +88,27 @@ The project is intended for static code analysis and checking compliance with co
 - `TYPE_CASTING`  
   Expecting tick before type casting expression
 
+- `TIME_VALUE`  
+  Unexpected white space between number and time value
+
+- `MULTIPLE_BINS`  
+  Specification of multiple bins dimension not allowed
+
+- `ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE`  
+  Expecting attribute instance after block identifier # for procedural assertion statement
+
+- `SYSTEM_FUNCTION_ARGUMENTS`  
+  Maximum number of arguments for # system function is #
+
+- `WILDCARD_EQUALITY_OPERATOR`  
+  Expecting wildcard operator '==?' instead of '=?='
+
+- `WILDCARD_INEQUALITY_OPERATOR`  
+  Expecting wildcard operator '!=?' instead of '!?='
+
+- `EXPONENT_FORMAT_TIME_VALUE`  
+  Unexpected exponent format for time value
+
 ---
 
 ## Project structure
