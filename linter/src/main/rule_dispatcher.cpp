@@ -51,6 +51,7 @@ static const std::array kAllRules = std::to_array<Rule>({
      CheckAssertionStatementAttributeInstance},
     {"SystemFunctionArguments", true, CheckSystemFunctionArguments},
     {"WildcardOperator", true, CheckWildcardOperators},
+    {"ExponentFormatTimeValue", true, CheckExponentFormatTimeValue},
 
 });
 

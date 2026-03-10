@@ -54,6 +54,7 @@ set(LINTER_SRC
     linter/src/rules/assertion_statement_atribute_instance.cpp
     linter/src/rules/system_function_arguments.cpp
     linter/src/rules/wildcard_operator.cpp
+    linter/src/rules/exponent_format_time_value.cpp
 
 )
 

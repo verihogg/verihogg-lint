@@ -9,6 +9,7 @@
 #include "coverpoint_expression_type.h"
 #include "dpi_decl_string.h"
 #include "empty_assignment_pattern.h"
+#include "exponent_format_time_value.h"
 #include "fatal_rule.h"
 #include "foreach_loop_condition.h"
 #include "hierarchical_interface_identifier.h"
