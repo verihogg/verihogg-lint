@@ -37,12 +37,13 @@ void checkExternFunctionUndeclared(const FileContent* fC,
     const NodeId classId = classes.at(className);
 
     const std::vector<NodeId> funcPrototypes =
-        fC->sl_collect_all(classId, VObjectType::paFunction_declaration);
+        fC->sl_collect_all(classId, VObjectType::paFunction_body_declaration);
+
     for (auto& protoId : funcPrototypes) {
-      const NodeId nameId = fC->sl_collect(protoId, VObjectType::slStringConst);
+      const std::string protoName = getStringConst(fC, protoId);
       const NodeId externId =
           fC->sl_collect(protoId, VObjectType::paExtern_qualifier);
-      const std::string protoName = getStringConst(fC, nameId);
+
       if (protoName == declName && externId == zeroId) {
         reportError(fC, classId, className,
                     ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED, errors,
