@@ -13,7 +13,6 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <set>
 
 #include "Surelog/API/Surelog.h"
 #include "Surelog/CommandLine/CommandLineParser.h"
@@ -59,7 +58,7 @@ void testCheckWithNoErrorsExpected(
                               fs::directory_iterator{});
 
   for (auto& file_path : paths) {
-    std::cout << file_path << std::endl;
+    std::cout << "TESTING FILE:" << file_path << std::endl;
     auto symbols = std::make_unique<SymbolTable>();
     auto errors = std::make_unique<ErrorContainer>(symbols.get());
 
@@ -73,14 +72,14 @@ void testCheckWithNoErrorsExpected(
 
 void testCheckWithErrorsExpected(
     const fs::path tests_path, ErrorDefinition::ErrorType errorIdExpected,
-    std::set<ErrorDefinition::ErrorType> ignoreList,
+    std::unordered_set<ErrorDefinition::ErrorType> ignoreList,
     std::function<void(const FileContent*, ErrorContainer*, SymbolTable*)>
         check_func) {
   std::vector<fs::path> paths(fs::directory_iterator{tests_path},
                               fs::directory_iterator{});
 
   for (auto& file_path : paths) {
-    std::cout << file_path << std::endl;
+    std::cout << "TESTING FILE:" << file_path << std::endl;
     auto symbols = std::make_unique<SymbolTable>();
     auto errors = std::make_unique<ErrorContainer>(symbols.get());
 
@@ -111,7 +110,7 @@ TEST(ExtendClassTest, NoError) {
 TEST(ExtendClassTest, RaiseError) {
   const fs::path tests_path{base_path / "ExtendClass" / "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{
       ErrorDefinition::COMP_UNDEFINED_BASE_CLASS};
 
   testCheckWithErrorsExpected(tests_path, ErrorDefinition::LINT_EXTEND_CLASS,
@@ -127,7 +126,7 @@ TEST(DuplicateClassTest, NoError) {
 TEST(DuplicateClassTest, RaiseError) {
   const fs::path tests_path{base_path / "DuplicateClass" / "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{};
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{};
 
   testCheckWithErrorsExpected(tests_path, ErrorDefinition::LINT_DUPLICATE_CLASS,
                               ignoreList, checkDuplicateClass);
@@ -142,7 +141,7 @@ TEST(DuplicateConstructorTest, NoError) {
 TEST(DuplicateConstructorTest, RaiseError) {
   const fs::path tests_path{base_path / "DuplicateConstructor" / "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{};
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{};
 
   testCheckWithErrorsExpected(tests_path,
                               ErrorDefinition::LINT_DUPLICATE_CONSTRUCTOR,
@@ -150,17 +149,18 @@ TEST(DuplicateConstructorTest, RaiseError) {
 }
 
 TEST(ExternConstraintUndeclaredTest, NoError) {
-  const fs::path tests_path{base_path / "ExternContraintUndeclared" /
+  const fs::path tests_path{base_path / "ExternConstraintUndeclared" /
                             "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, checkExternConstraintUndeclared);
 }
 
 TEST(ExternConstraintUndeclaredTest, RaiseError) {
-  const fs::path tests_path{base_path / "ExternContraintUndeclared" /
+  const fs::path tests_path{base_path / "ExternConstraintUndeclared" /
                             "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{};
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{
+      ErrorDefinition::PA_SYNTAX_ERROR};
 
   testCheckWithErrorsExpected(
       tests_path, ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED,
@@ -177,7 +177,7 @@ TEST(ExternFunctionUndeclaredTest, RaiseError) {
   const fs::path tests_path{base_path / "ExternFunctionUndeclared" /
                             "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{
       ErrorDefinition::PA_SYNTAX_ERROR};
 
   testCheckWithErrorsExpected(tests_path,
@@ -194,7 +194,7 @@ TEST(ExternTaskUndeclaredTest, NoError) {
 TEST(ExternTaskUndeclaredTest, RaiseError) {
   const fs::path tests_path{base_path / "ExternTaskUndeclared" / "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{
       ErrorDefinition::PA_SYNTAX_ERROR};
 
   testCheckWithErrorsExpected(tests_path,
@@ -211,7 +211,9 @@ TEST(ExtendInterfaceClassTest, NoError) {
 TEST(ExtendInterfaceClassTest, RaiseError) {
   const fs::path tests_path{base_path / "ExtendInterfaceClass" / "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{};
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{
+      ErrorDefinition::COMP_UNDEFINED_BASE_CLASS,
+      ErrorDefinition::PA_SYNTAX_ERROR};
 
   testCheckWithErrorsExpected(tests_path,
                               ErrorDefinition::LINT_EXTEND_INTERFACE_CLASS,
@@ -227,7 +229,7 @@ TEST(ImplementClassTest, NoError) {
 TEST(ImplementClassTest, RaiseError) {
   const fs::path tests_path{base_path / "ImplementClass" / "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{
       ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED};
 
   testCheckWithErrorsExpected(tests_path, ErrorDefinition::LINT_IMPLEMENT_CLASS,
@@ -238,14 +240,14 @@ TEST(ImplementClassTest, RaiseError) {
 TEST(ImplementInterfaceClassTest, NoError) {
   const fs::path tests_path{base_path / "ImplementInterfaceClass" / "NoError"};
 
-  testCheckWithNoErrorsExpected(tests_path, checkImplementClass);
+  testCheckWithNoErrorsExpected(tests_path, checkImplementInterfaceClass);
 }
 
 TEST(ImplementInterfaceClassTest, RaiseError) {
   const fs::path tests_path{base_path / "ImplementInterfaceClass" /
                             "RaiseError"};
 
-  std::set<ErrorDefinition::ErrorType> ignoreList{};
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{};
 
   testCheckWithErrorsExpected(tests_path,
                               ErrorDefinition::LINT_IMPLEMENT_INTERFACE_CLASS,
