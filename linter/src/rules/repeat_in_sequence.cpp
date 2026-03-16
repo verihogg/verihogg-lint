@@ -10,30 +10,40 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-void CheckRepetitionInSequence(const FileContent* fC, ErrorContainer* errors,
-                               SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckRepetitionInSequence(const SL::FileContent* fileContent,
+                               SL::ErrorContainer* errors,
+                               SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId seqDeclId :
-       fC->sl_collect_all(root, VObjectType::paSequence_declaration)) {
-    std::string_view seqName = ExtractName(fC, seqDeclId);
+  for (SL::NodeId seqDeclId : fileContent->sl_collect_all(
+           root, SL::VObjectType::paSequence_declaration)) {
+    std::string_view seqName = ExtractName(fileContent, seqDeclId);
 
-    for (NodeId seqExprId :
-         fC->sl_collect_all(seqDeclId, VObjectType::paSequence_expr)) {
-      if (fC->sl_collect_all(seqExprId, VObjectType::paGoto_repetition).empty())
+    for (SL::NodeId seqExprId : fileContent->sl_collect_all(
+             seqDeclId, SL::VObjectType::paSequence_expr)) {
+      if (fileContent
+              ->sl_collect_all(seqExprId, SL::VObjectType::paGoto_repetition)
+              .empty()) {
         continue;
-      if (fC->sl_collect_all(seqExprId,
-                             VObjectType::paNon_consecutive_repetition)
-              .empty())
+      }
+      if (fileContent
+              ->sl_collect_all(seqExprId,
+                               SL::VObjectType::paNon_consecutive_repetition)
+              .empty()) {
         continue;
+      }
 
-      ReportError(fC, seqExprId, seqName,
-                  ErrorDefinition::LINT_REPETITION_IN_SEQUENCE, errors,
+      ReportError(fileContent, seqExprId, seqName,
+                  SL::ErrorDefinition::LINT_REPETITION_IN_SEQUENCE, errors,
                   symbols);
     }
   }

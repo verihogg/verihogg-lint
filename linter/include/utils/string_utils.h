@@ -3,4 +3,4 @@
 #include <cstdint>
 #include <string>
 
-std::string Trim(const std::string& s);
+auto Trim(const std::string& str) -> std::string;

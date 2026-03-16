@@ -3,47 +3,53 @@
 #include <Surelog/Common/FileSystem.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-uint32_t GetColumnSafe(const FileContent* fC, NodeId node) {
-  if (!fC || !node) return 0;
+auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node) {
+  if (fileContent == nullptr || !node) {
+    return uint16_t{0};
+  }
   try {
-    return fC->Column(node);
+    return fileContent->Column(node);
   } catch (...) {
-    return 0;
+    return uint16_t{0};
   }
 }
 
-Location GetLocation(const FileContent* fC, NodeId node,
-                     const std::string_view& symbolName, SymbolTable* symbols) {
-  if (!fC || !node || !symbols) {
-    PathId fileId;
-    return {fileId, 0, 0, symbols->registerSymbol(symbolName)};
+auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
+                 const std::string_view& symbolName, SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || !node || symbols == nullptr) {
+    return SL::Location{SL::PathId{}, 0, 0,
+                        symbols->registerSymbol(symbolName)};
   }
 
-  PathId fileId = fC->getFileId(node);
-  uint32_t line = fC->Line(node);
-  uint32_t column = GetColumnSafe(fC, node);
-  SymbolId obj = symbols->registerSymbol(symbolName);
-
-  return {fileId, line, static_cast<uint16_t>(column), obj};
+  return SL::Location{fileContent->getFileId(node), fileContent->Line(node),
+                      static_cast<uint16_t>(GetColumnSafe(fileContent, node)),
+                      symbols->registerSymbol(symbolName)};
 }
 
-void ReportError(const FileContent* fC, NodeId node,
+void ReportError(const SL::FileContent* fileContent, SL::NodeId node,
                  const std::string_view& symbolName,
-                 ErrorDefinition::ErrorType errorType, ErrorContainer* errors,
-                 SymbolTable* symbols) {
-  if (!fC || !node || !errors || !symbols) return;
+                 SL::ErrorDefinition::ErrorType errorType,
+                 SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || !node || errors == nullptr ||
+      symbols == nullptr) {
+    return;
+  }
 
-  Location loc = GetLocation(fC, node, symbolName, symbols);
-  Error err(errorType, loc);
+  SL::Location loc = GetLocation(fileContent, node, symbolName, symbols);
+  SL::Error err(errorType, loc);
   errors->addError(err, false);
 }
 
-NodeId FindArrayIdNode(const FileContent* fC, NodeId foreachKeyword) {
-  for (NodeId sib = fC->Sibling(foreachKeyword); sib; sib = fC->Sibling(sib)) {
-    if (fC->Type(sib) == VObjectType::paPs_or_hierarchical_array_identifier)
+auto FindArrayIdNode(const SL::FileContent* fileContent,
+                     SL::NodeId foreachKeyword) -> SL::NodeId {
+  for (SL::NodeId sib = fileContent->Sibling(foreachKeyword); sib;
+       sib = fileContent->Sibling(sib)) {
+    if (fileContent->Type(sib) ==
+        SL::VObjectType::paPs_or_hierarchical_array_identifier) {
       return sib;
+    }
   }
-  return InvalidNodeId;
+  return SL::InvalidNodeId;
 }

@@ -11,42 +11,53 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-static std::unordered_set<std::string_view> CollectUserDefinedTypes(
-    const FileContent* fC, NodeId root) {
+static auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
+                                    SL::NodeId root)
+    -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> userTypes;
 
-  for (NodeId declNode :
-       fC->sl_collect_all(root, VObjectType::paType_declaration)) {
-    for (NodeId child :
-         fC->sl_collect_all(declNode, VObjectType::slStringConst, false)) {
-      std::string_view typeName = fC->SymName(child);
-      if (!typeName.empty()) userTypes.insert(typeName);
+  for (SL::NodeId declNode :
+       fileContent->sl_collect_all(root, SL::VObjectType::paType_declaration)) {
+    for (SL::NodeId child : fileContent->sl_collect_all(
+             declNode, SL::VObjectType::slStringConst, false)) {
+      std::string_view typeName = fileContent->SymName(child);
+      if (!typeName.empty()) {
+        userTypes.insert(typeName);
+      }
     }
   }
 
   return userTypes;
 }
 
-void CheckTypeCasting(const FileContent* fC, ErrorContainer* errors,
-                      SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckTypeCasting(const SL::FileContent* fileContent,
+                      SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  auto userTypes = CollectUserDefinedTypes(fC, root);
-  if (userTypes.empty()) return;
+  auto userTypes = CollectUserDefinedTypes(fileContent, root);
+  if (userTypes.empty()) {
+    return;
+  }
 
-  for (NodeId funcCallNode :
-       fC->sl_collect_all(root, VObjectType::paComplex_func_call)) {
-    std::string_view typeName = ExtractName(fC, funcCallNode);
-    if (typeName.empty()) continue;
+  for (SL::NodeId funcCallNode : fileContent->sl_collect_all(
+           root, SL::VObjectType::paComplex_func_call)) {
+    std::string_view typeName = ExtractName(fileContent, funcCallNode);
+    if (typeName.empty()) {
+      continue;
+    }
 
     if (userTypes.contains(typeName)) {
-      ReportError(fC, fC->Child(funcCallNode), typeName,
-                  ErrorDefinition::LINT_TYPE_CASTING, errors, symbols);
+      ReportError(fileContent, fileContent->Child(funcCallNode), typeName,
+                  SL::ErrorDefinition::LINT_TYPE_CASTING, errors, symbols);
     }
   }
 }

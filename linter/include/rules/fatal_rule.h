@@ -1,21 +1,21 @@
 #pragma once
 
-#include <Surelog/API/Surelog.h>
-#include <Surelog/Design/FileContent.h>
-#include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/SourceCompile/SymbolTable.h>
 #include <uhdm/VpiListener.h>
 #include <uhdm/uhdm.h>
 
 #include <vector>
 
-using namespace SURELOG;
+#include "Surelog/API/Surelog.h"
+#include "Surelog/Design/FileContent.h"
+#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "Surelog/SourceCompile/SymbolTable.h"
+
+namespace SL = SURELOG;
 
 class FatalListener : public UHDM::VpiListener {
  public:
-  FatalListener(const FileContent* fC, SURELOG::ErrorContainer* errors,
-                SURELOG::SymbolTable* symbols)
-      : fC_(fC), errors_(errors), symbols_(symbols) {}
+  FatalListener(SL::ErrorContainer* errors, SL::SymbolTable* symbols)
+      : errors_(errors), symbols_(symbols) {}
 
   void Listen(const vpiHandle& design);
 
@@ -24,7 +24,6 @@ class FatalListener : public UHDM::VpiListener {
 
  private:
   std::set<const UHDM::sys_func_call*> seen_;
-  const FileContent* fC_;
-  ErrorContainer* errors_;
-  SymbolTable* symbols_;
+  SL::ErrorContainer* errors_;
+  SL::SymbolTable* symbols_;
 };

@@ -1,27 +1,27 @@
 #pragma once
 
-#include <Surelog/Design/FileContent.h>
-#include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/SourceCompile/SymbolTable.h>
-#include <Surelog/SourceCompile/VObjectTypes.h>
-
 #include <cstdint>
 #include <string_view>
 
-using namespace SURELOG;
+#include "Surelog/Design/FileContent.h"
+#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "Surelog/SourceCompile/SymbolTable.h"
+#include "Surelog/SourceCompile/VObjectTypes.h"
 
-// Безопасно извлекает номер столбца из узла, возвращая 0, если он недоступен.
-uint32_t GetColumnSafe(const FileContent* fC, NodeId node);
+namespace SL = SURELOG;
+//Безопасно извлекает номер столбца из узла, возвращая 0, если он недоступен.
+auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node);
 
-// Создать объект Location из узла.
-Location GetLocation(const FileContent* fC, NodeId node,
-                     const std::string_view& symbolName, SymbolTable* symbols);
+//Создать объект Location из узла.
+auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
+                 const std::string_view& symbolName, SL::SymbolTable* symbols);
 
-// Сообщить об ошибке линтинга в определенном месте узла.
-// Это основная функция отчетности об ошибках, используемая всеми правилами.
-void ReportError(const FileContent* fC, NodeId node,
+//Сообщить об ошибке линтинга в определенном месте узла.
+//Это основная функция отчетности об ошибках, используемая всеми правилами.
+void ReportError(const SL::FileContent* fileContent, SL::NodeId node,
                  const std::string_view& symbolName,
-                 ErrorDefinition::ErrorType errorType, ErrorContainer* errors,
-                 SymbolTable* symbols);
+                 SL::ErrorDefinition::ErrorType errorType,
+                 SL::ErrorContainer* errors, SL::SymbolTable* symbols);
 
-NodeId FindArrayIdNode(const FileContent* fC, NodeId foreachKeyword);
+auto FindArrayIdNode(const SL::FileContent* fileContent,
+                     SL::NodeId foreachKeyword) -> SL::NodeId;

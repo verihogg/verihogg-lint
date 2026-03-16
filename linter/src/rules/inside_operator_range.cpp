@@ -9,56 +9,76 @@
 
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-static std::string_view GetInsideContextName(const FileContent* fC,
-                                             NodeId insideNode) {
-  NodeId exprNode = fC->Parent(insideNode);
-  if (!exprNode) return "<unknown>";
+static auto GetInsideContextName(const SL::FileContent* fileContent,
+                                 SL::NodeId insideNode) -> std::string_view {
+  SL::NodeId exprNode = fileContent->Parent(insideNode);
+  if (exprNode == SL::InvalidNodeId) {
+    return "<unknown>";
+  }
 
-  NodeId leftOperand = fC->Child(exprNode);
-  if (!leftOperand) return "<unknown>";
+  SL::NodeId leftOperand = fileContent->Child(exprNode);
+  if (leftOperand == SL::InvalidNodeId) {
+    return "<unknown>";
+  }
 
   auto stringNodes =
-      fC->sl_collect_all(leftOperand, VObjectType::slStringConst);
-  if (!stringNodes.empty()) return fC->SymName(stringNodes.front());
+      fileContent->sl_collect_all(leftOperand, SL::VObjectType::slStringConst);
+  if (!stringNodes.empty()) {
+    return fileContent->SymName(stringNodes.front());
+  }
 
   return "<unknown>";
 }
 
-static bool IsValidInsideRange(const FileContent* fC, NodeId siblingNode) {
-  if (!siblingNode) return false;
+static auto IsValidInsideRange(const SL::FileContent* fileContent,
+                               SL::NodeId siblingNode) -> bool {
+  if (siblingNode == SL::InvalidNodeId) {
+    return false;
+  }
 
-  VObjectType sibType = fC->Type(siblingNode);
+  SL::VObjectType sibType = fileContent->Type(siblingNode);
 
-  if (sibType == VObjectType::paOpen_range_list) {
+  if (sibType == SL::VObjectType::paOpen_range_list) {
     return true;
   }
 
-  if (sibType == VObjectType::paExpression) {
-    NodeId primaryNode = fC->Child(siblingNode);
-    if (!primaryNode || fC->Type(primaryNode) != VObjectType::paPrimary)
+  if (sibType == SL::VObjectType::paExpression) {
+    SL::NodeId primaryNode = fileContent->Child(siblingNode);
+    if (!primaryNode ||
+        fileContent->Type(primaryNode) != SL::VObjectType::paPrimary) {
       return false;
+    }
 
-    NodeId concatNode = fC->Child(primaryNode);
-    if (concatNode && fC->Type(concatNode) == VObjectType::paConcatenation)
+    SL::NodeId concatNode = fileContent->Child(primaryNode);
+    if (concatNode &&
+        fileContent->Type(concatNode) == SL::VObjectType::paConcatenation) {
       return true;
+    }
   }
 
   return false;
 }
 
-void CheckInsideOperatorRange(const FileContent* fC, ErrorContainer* errors,
-                              SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckInsideOperatorRange(const SL::FileContent* fileContent,
+                              SL::ErrorContainer* errors,
+                              SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (root == SL::InvalidNodeId) {
+    return;
+  }
 
-  for (NodeId insideId : fC->sl_collect_all(root, VObjectType::paINSIDE)) {
-    if (!IsValidInsideRange(fC, fC->Sibling(insideId))) {
-      ReportError(fC, insideId, GetInsideContextName(fC, insideId),
-                  ErrorDefinition::LINT_INSIDE_OPERATOR_RANGE, errors, symbols);
+  for (SL::NodeId insideId :
+       fileContent->sl_collect_all(root, SL::VObjectType::paINSIDE)) {
+    if (!IsValidInsideRange(fileContent, fileContent->Sibling(insideId))) {
+      ReportError(
+          fileContent, insideId, GetInsideContextName(fileContent, insideId),
+          SL::ErrorDefinition::LINT_INSIDE_OPERATOR_RANGE, errors, symbols);
     }
   }
 }

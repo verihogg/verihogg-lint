@@ -7,53 +7,85 @@
 
 #include <algorithm>
 #include <array>
+#include <stack>
 
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kSelectTypes = {
-    VObjectType::paSelect,
-    VObjectType::paConstant_select,
+    SL::VObjectType::paSelect,
+    SL::VObjectType::paConstant_select,
 };
 
-static bool ContainsSelectInExpr(const FileContent* fC, NodeId node) {
-  if (!node) return false;
+static auto ContainsSelectInExpr(const SL::FileContent* fileContent,
+                                 SL::NodeId node) -> bool {
+  if (!node) {
+    return false;
+  }
 
-  VObjectType t = fC->Type(node);
+  std::stack<SL::NodeId> worklist;
+  worklist.push(node);
 
-  if (t == VObjectType::paRs_code_block) return false;
+  while (!worklist.empty()) {
+    SL::NodeId node = worklist.top();
+    worklist.pop();
 
-  if (std::ranges::any_of(kSelectTypes,
-                          [t](VObjectType st) { return st == t; }))
-    return true;
+    SL::VObjectType type = fileContent->Type(node);
 
-  for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    if (ContainsSelectInExpr(fC, child)) return true;
+    if (type == SL::VObjectType::paRs_code_block) {
+      continue;
+    }
+
+    if (std::ranges::any_of(kSelectTypes, [type](SL::VObjectType selectType) {
+          return selectType == type;
+        })) {
+      return true;
+    }
+
+    for (SL::NodeId child = fileContent->Child(node); child;
+         child = fileContent->Sibling(child)) {
+      worklist.push(child);
+    }
   }
 
   return false;
 }
-void CheckSelectInWeight(const FileContent* fC, ErrorContainer* errors,
-                         SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckSelectInWeight(const SL::FileContent* fileContent,
+                         SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId rsRuleId : fC->sl_collect_all(root, VObjectType::paRs_rule)) {
-    NodeId rsProdList = fC->Child(rsRuleId);
-    if (!rsProdList) continue;
-    if (fC->Type(rsProdList) != VObjectType::paRs_production_list) continue;
+  for (SL::NodeId rsRuleId :
+       fileContent->sl_collect_all(root, SL::VObjectType::paRs_rule)) {
+    SL::NodeId rsProdList = fileContent->Child(rsRuleId);
+    if (!rsProdList) {
+      continue;
+    }
+    if (fileContent->Type(rsProdList) !=
+        SL::VObjectType::paRs_production_list) {
+      continue;
+    }
 
-    NodeId weightExpr = fC->Sibling(rsProdList);
-    if (!weightExpr) continue;
-    if (fC->Type(weightExpr) != VObjectType::paExpression) continue;
+    SL::NodeId weightExpr = fileContent->Sibling(rsProdList);
+    if (!weightExpr) {
+      continue;
+    }
+    if (fileContent->Type(weightExpr) != SL::VObjectType::paExpression) {
+      continue;
+    }
 
-    if (ContainsSelectInExpr(fC, weightExpr)) {
-      ReportError(fC, rsRuleId, ExtractName(fC, rsProdList, "<unknown>"),
-                  ErrorDefinition::LINT_SELECT_IN_WEIGHT, errors, symbols);
+    if (ContainsSelectInExpr(fileContent, weightExpr)) {
+      ReportError(fileContent, rsRuleId,
+                  ExtractName(fileContent, rsProdList, "<unknown>"),
+                  SL::ErrorDefinition::LINT_SELECT_IN_WEIGHT, errors, symbols);
     }
   }
 }

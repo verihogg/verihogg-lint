@@ -4,6 +4,6 @@
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 
-void CheckAssertionStatementAttributeInstance(const SURELOG::FileContent* fC,
-                                              SURELOG::ErrorContainer* errors,
-                                              SURELOG::SymbolTable* symbols);
+void CheckAssertionStatementAttributeInstance(
+    const SURELOG::FileContent* fileContent, SURELOG::ErrorContainer* errors,
+    SURELOG::SymbolTable* symbols);

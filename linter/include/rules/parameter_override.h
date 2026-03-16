@@ -4,6 +4,6 @@
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 
-void CheckParameterOverride(const SURELOG::FileContent* fC,
+void CheckParameterOverride(const SURELOG::FileContent* fileContent,
                             SURELOG::ErrorContainer* errors,
                             SURELOG::SymbolTable* symbols);

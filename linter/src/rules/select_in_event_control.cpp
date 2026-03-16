@@ -7,61 +7,84 @@
 
 #include <algorithm>
 #include <array>
+#include <stack>
 #include <string_view>
 
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kEdgeTypes = {
-    VObjectType::paEdge_Posedge,
-    VObjectType::paEdge_Negedge,
+    SL::VObjectType::paEdge_Posedge,
+    SL::VObjectType::paEdge_Negedge,
 };
 
 static constexpr std::array kSelectTypes = {
-    VObjectType::paSelect,
-    VObjectType::paConstant_select,
+    SL::VObjectType::paSelect,
+    SL::VObjectType::paConstant_select,
 };
 
-static bool EventExprHasEdge(const FileContent* fC, NodeId eventExprId) {
-  return std::ranges::any_of(kEdgeTypes, [&](VObjectType t) {
-    return !fC->sl_collect_all(eventExprId, t, false).empty();
+static auto EventExprHasEdge(const SL::FileContent* fileContent,
+                             SL::NodeId eventExprId) -> bool {
+  return std::ranges::any_of(kEdgeTypes, [&](SL::VObjectType type) {
+    return !fileContent->sl_collect_all(eventExprId, type, false).empty();
   });
 }
 
-static bool ContainsSelectInEventExpr(const FileContent* fC, NodeId node) {
-  if (!node) return false;
-
-  VObjectType t = fC->Type(node);
-
-  if (t == VObjectType::paEvent_expression && EventExprHasEdge(fC, node))
+static auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
+                                      SL::NodeId node) -> bool {
+  if (!node) {
     return false;
+  }
 
-  if (std::ranges::any_of(kSelectTypes,
-                          [t](VObjectType st) { return st == t; }))
-    return true;
+  std::stack<SL::NodeId> stack;
+  stack.push(node);
 
-  for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    if (ContainsSelectInEventExpr(fC, child)) return true;
+  while (!stack.empty()) {
+    SL::NodeId node = stack.top();
+    stack.pop();
+
+    SL::VObjectType type = fileContent->Type(node);
+
+    if (type == SL::VObjectType::paEvent_expression &&
+        EventExprHasEdge(fileContent, node)) {
+      continue;
+    }
+
+    if (std::ranges::any_of(kSelectTypes, [type](SL::VObjectType selectType) {
+          return selectType == type;
+        })) {
+      return true;
+    }
+
+    for (SL::NodeId child = fileContent->Child(node); child;
+         child = fileContent->Sibling(child)) {
+      stack.push(child);
+    }
   }
 
   return false;
 }
 
-void CheckSelectInEventControl(const FileContent* fC, ErrorContainer* errors,
-                               SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckSelectInEventControl(const SL::FileContent* fileContent,
+                               SL::ErrorContainer* errors,
+                               SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId eventControlId :
-       fC->sl_collect_all(root, VObjectType::paEvent_control)) {
-    if (ContainsSelectInEventExpr(fC, eventControlId)) {
-      ReportError(fC, eventControlId, ExtractName(fC, eventControlId),
-                  ErrorDefinition::LINT_SELECT_IN_EVENT_CONTROL, errors,
-                  symbols);
+  for (SL::NodeId eventControlId :
+       fileContent->sl_collect_all(root, SL::VObjectType::paEvent_control)) {
+    if (ContainsSelectInEventExpr(fileContent, eventControlId)) {
+      ReportError(
+          fileContent, eventControlId, ExtractName(fileContent, eventControlId),
+          SL::ErrorDefinition::LINT_SELECT_IN_EVENT_CONTROL, errors, symbols);
     }
   }
 }

@@ -8,155 +8,190 @@
 
 #include <algorithm>
 #include <array>
+#include <stack>
 #include <string_view>
+#include <type_traits>
 #include <unordered_set>
 
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kConstantTypes = {
-    VObjectType::paConstant_expression,
-    VObjectType::paConstant_primary,
-    VObjectType::paConstant_mintypmax_expression,
-    VObjectType::paConstant_param_expression,
-    VObjectType::paConstant_range,
+    SL::VObjectType::paConstant_expression,
+    SL::VObjectType::paConstant_primary,
+    SL::VObjectType::paConstant_mintypmax_expression,
+    SL::VObjectType::paConstant_param_expression,
+    SL::VObjectType::paConstant_range,
 };
 
 static constexpr std::array kLiteralTypes = {
-    VObjectType::slIntConst,
-    VObjectType::slRealConst,
-    VObjectType::paNumber_TickB0,
+    SL::VObjectType::slIntConst,
+    SL::VObjectType::slRealConst,
+    SL::VObjectType::paNumber_TickB0,
 };
 
 static constexpr std::array kPassThroughTypes = {
-    VObjectType::paPrimary_literal,
-    VObjectType::paPrimary,
-    VObjectType::paHierarchical_identifier,
-    VObjectType::paPs_or_hierarchical_identifier,
+    SL::VObjectType::paPrimary_literal,
+    SL::VObjectType::paPrimary,
+    SL::VObjectType::paHierarchical_identifier,
+    SL::VObjectType::paPs_or_hierarchical_identifier,
 };
 
 static constexpr std::array kParamDeclTypes = {
-    std::pair{VObjectType::paParameter_declaration,
-              VObjectType::paParam_assignment},
-    std::pair{VObjectType::paLocal_parameter_declaration,
-              VObjectType::paParam_assignment},
+    std::pair{SL::VObjectType::paParameter_declaration,
+              SL::VObjectType::paParam_assignment},
+    std::pair{SL::VObjectType::paLocal_parameter_declaration,
+              SL::VObjectType::paParam_assignment},
 };
 
 static constexpr std::array kVarDeclTypes = {
-    std::pair{VObjectType::paVariable_declaration,
-              VObjectType::paVariable_decl_assignment},
-    std::pair{VObjectType::paData_declaration,
-              VObjectType::paVariable_decl_assignment},
+    std::pair{SL::VObjectType::paVariable_declaration,
+              SL::VObjectType::paVariable_decl_assignment},
+    std::pair{SL::VObjectType::paData_declaration,
+              SL::VObjectType::paVariable_decl_assignment},
 };
 
-std::unordered_set<std::string_view> CollectConstantParameters(
-    const FileContent* fC) {
+auto CollectConstantParameters(const SL::FileContent* fileContent)
+    -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> constants;
 
-  NodeId root = fC->getRootNode();
-  for (const auto& [parentType, assignType] : kParamDeclTypes)
-    CollectNames(fC, root, parentType, assignType, constants);
+  SL::NodeId root = fileContent->getRootNode();
+  for (const auto& [parentType, assignType] : kParamDeclTypes) {
+    CollectNames(fileContent, root, parentType, assignType, constants);
+  }
   return constants;
 }
 
-std::unordered_set<std::string_view> CollectVariables(const FileContent* fC) {
+auto CollectVariables(const SL::FileContent* fileContent)
+    -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> variables;
 
-  NodeId root = fC->getRootNode();
-  for (const auto& [parentType, assignType] : kVarDeclTypes)
-    CollectNames(fC, root, parentType, assignType, variables);
+  SL::NodeId root = fileContent->getRootNode();
+  for (const auto& [parentType, assignType] : kVarDeclTypes) {
+    CollectNames(fileContent, root, parentType, assignType, variables);
+  }
   return variables;
 }
 
-bool IsConstantExpression(
-    const FileContent* fC, NodeId node,
-    const std::unordered_set<std::string_view>& constantParams,
-    const std::unordered_set<std::string_view>& variables,
-    std::string_view* nonConstantVar = nullptr) {
-  if (!node) return true;
+auto IsOperatorType(SL::VObjectType childType) -> bool {
+  using UnderlyingType = std::underlying_type_t<SL::VObjectType>;
+  const auto kVal = static_cast<UnderlyingType>(childType);
+  return kVal >= static_cast<UnderlyingType>(SL::VObjectType::paUnary_Minus) &&
+         kVal <= static_cast<UnderlyingType>(SL::VObjectType::paUnary_Tilda);
+}
 
-  VObjectType type = fC->Type(node);
-
-  if (std::ranges::find(kConstantTypes, type) != kConstantTypes.end())
-    return true;
-
-  if (std::ranges::find(kLiteralTypes, type) != kLiteralTypes.end())
-    return true;
-
-  if (type >= VObjectType::paNumber_1Tickb0 &&
-      type <= VObjectType::paNumber_1TickB1) {
-    return true;
-  }
-
-  if (std::ranges::find(kPassThroughTypes, type) != kPassThroughTypes.end())
-    return IsConstantExpression(fC, fC->Child(node), constantParams, variables,
-                                nonConstantVar);
-
-  if (type == VObjectType::slStringConst) {
-    std::string_view name = fC->SymName(node);
-
-    if (variables.contains(name)) {
-      if (nonConstantVar) {
-        *nonConstantVar = name;
-      }
-      return false;
+void EnqueueChildren(const SL::FileContent* fileContent, SL::NodeId node,
+                     std::stack<SL::NodeId>& workList) {
+  for (SL::NodeId child = fileContent->Child(node); child;
+       child = fileContent->Sibling(child)) {
+    if (!IsOperatorType(fileContent->Type(child))) {
+      workList.push(child);
     }
+  }
+}
+
+auto CheckIdentifier(std::string_view name,
+                     const std::unordered_set<std::string_view>& variables,
+                     std::string_view* nonConstantVar) -> bool {
+  if (!variables.contains(name)) {
+    return true;
+  }
+  if (nonConstantVar != nullptr) {
+    *nonConstantVar = name;
+  }
+  return false;
+}
+
+auto IsConstantExpression(const SL::FileContent* fileContent, SL::NodeId node,
+                          const std::unordered_set<std::string_view>& variables,
+                          std::string_view* nonConstantVar = nullptr) -> bool {
+  if (!node) {
     return true;
   }
 
-  for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    VObjectType childType = fC->Type(child);
+  std::stack<SL::NodeId> workList;
+  workList.push(node);
 
-    if (childType >= VObjectType::paBinOp_Plus &&
-        childType <= VObjectType::paEdge_descriptor)
+  while (!workList.empty()) {
+    const SL::NodeId kCurrent = workList.top();
+    workList.pop();
+
+    if (!kCurrent) {
       continue;
+    }
 
-    if (childType >= VObjectType::paUnary_Minus &&
-        childType <= VObjectType::paUnary_Tilda)
+    const SL::VObjectType kType = fileContent->Type(kCurrent);
+
+    if (std::ranges::find(kConstantTypes, kType) != kConstantTypes.end()) {
       continue;
+    }
 
-    if (!IsConstantExpression(fC, child, constantParams, variables,
-                              nonConstantVar))
-      return false;
+    if (std::ranges::find(kLiteralTypes, kType) != kLiteralTypes.end()) {
+      continue;
+    }
+
+    if (std::ranges::find(kPassThroughTypes, kType) !=
+        kPassThroughTypes.end()) {
+      workList.push(fileContent->Child(kCurrent));
+      continue;
+    }
+
+    if (kType == SL::VObjectType::slStringConst) {
+      if (!CheckIdentifier(fileContent->SymName(kCurrent), variables,
+                           nonConstantVar)) {
+        return false;
+      }
+      continue;
+    }
+
+    EnqueueChildren(fileContent, kCurrent, workList);
   }
 
   return true;
 }
 
 void CheckSingleMultipleConcatenation(
-    const FileContent* fC, NodeId multiConcatNode,
-    const std::unordered_set<std::string_view>& constantParams,
+    const SL::FileContent* fileContent, SL::NodeId multiConcatNode,
     const std::unordered_set<std::string_view>& variables,
-    ErrorContainer* errors, SymbolTable* symbols) {
-  if (!multiConcatNode) return;
+    SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (!multiConcatNode) {
+    return;
+  }
 
-  NodeId multiplierExpr = fC->Child(multiConcatNode);
-  if (!multiplierExpr) return;
+  SL::NodeId multiplierExpr = fileContent->Child(multiConcatNode);
+  if (!multiplierExpr) {
+    return;
+  }
 
   std::string_view nonConstantVar;
-  if (!IsConstantExpression(fC, multiplierExpr, constantParams, variables,
+  if (!IsConstantExpression(fileContent, multiplierExpr, variables,
                             &nonConstantVar)) {
-    ReportError(fC, multiplierExpr, nonConstantVar,
-                ErrorDefinition::LINT_CONCATENATION_MULTIPLIER, errors,
+    ReportError(fileContent, multiplierExpr, nonConstantVar,
+                SL::ErrorDefinition::LINT_CONCATENATION_MULTIPLIER, errors,
                 symbols);
   }
 }
 
-void CheckConcatenationMultiplier(const FileContent* fC, ErrorContainer* errors,
-                                  SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckConcatenationMultiplier(const SL::FileContent* fileContent,
+                                  SL::ErrorContainer* errors,
+                                  SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  auto constantParams = CollectConstantParameters(fC);
-  auto variables = CollectVariables(fC);
+  auto constantParams = CollectConstantParameters(fileContent);
+  auto variables = CollectVariables(fileContent);
 
-  for (NodeId node :
-       fC->sl_collect_all(root, VObjectType::paMultiple_concatenation)) {
-    CheckSingleMultipleConcatenation(fC, node, constantParams, variables,
-                                     errors, symbols);
+  for (SL::NodeId node : fileContent->sl_collect_all(
+           root, SL::VObjectType::paMultiple_concatenation)) {
+    CheckSingleMultipleConcatenation(fileContent, node, variables, errors,
+                                     symbols);
   }
 }

@@ -13,100 +13,128 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kValidAfterLabelTypes = {
-    VObjectType::paStatement_item,
-    VObjectType::paAttribute_instance,
+    SL::VObjectType::paStatement_item,
+    SL::VObjectType::paAttribute_instance,
 };
 
-static bool CheckModuleLevelCover(const FileContent* fC,
-                                  NodeId coverPropertyStmt) {
-  NodeId assertionItem = FindAncestorOfType(
-      fC, coverPropertyStmt, VObjectType::paConcurrent_assertion_item);
-  if (!assertionItem) return false;
-
-  NodeId firstChild = fC->Child(assertionItem);
-  if (!firstChild || fC->Type(firstChild) != VObjectType::slStringConst)
+static auto CheckModuleLevelCover(const SL::FileContent* fileContent,
+                                  SL::NodeId coverPropertyStmt) {
+  auto assertionItem =
+      FindAncestorOfType(fileContent, coverPropertyStmt,
+                         SL::VObjectType::paConcurrent_assertion_item);
+  if (!assertionItem) {
     return false;
+  }
 
-  NodeId moduleOrGenItem = FindAncestorOfType(
-      fC, assertionItem, VObjectType::paModule_or_generate_item);
-  if (!moduleOrGenItem) return false;
-
-  NodeId firstItemChild = fC->Child(moduleOrGenItem);
-  if (!firstItemChild) return true;
-
-  return (fC->Type(firstItemChild) != VObjectType::paAttribute_instance);
-}
-
-static bool CheckProceduralCover(const FileContent* fC,
-                                 NodeId coverPropertyStmt) {
-  NodeId proceduralAssert = FindAncestorOfType(
-      fC, coverPropertyStmt, VObjectType::paProcedural_assertion_statement);
-  if (!proceduralAssert) return false;
-
-  NodeId stmt =
-      FindAncestorOfType(fC, proceduralAssert, VObjectType::paStatement);
-  if (!stmt) return false;
-
-  NodeId firstChild = fC->Child(stmt);
-  if (!firstChild || fC->Type(firstChild) != VObjectType::slStringConst)
+  SL::NodeId firstChild = fileContent->Child(assertionItem);
+  if (!firstChild ||
+      fileContent->Type(firstChild) != SL::VObjectType::slStringConst) {
     return false;
+  }
 
-  NodeId afterLabel = fC->Sibling(firstChild);
-  if (!afterLabel) {
+  auto moduleOrGenItem = FindAncestorOfType(
+      fileContent, assertionItem, SL::VObjectType::paModule_or_generate_item);
+  if (!moduleOrGenItem) {
+    return false;
+  }
+
+  SL::NodeId firstItemChild = fileContent->Child(moduleOrGenItem);
+  if (!firstItemChild) {
     return true;
   }
 
-  VObjectType afterLabelType = fC->Type(afterLabel);
-  return std::ranges::any_of(
-      kValidAfterLabelTypes,
-      [afterLabelType](VObjectType t) { return t == afterLabelType; });
+  return (fileContent->Type(firstItemChild) !=
+          SL::VObjectType::paAttribute_instance);
 }
 
-static std::string_view ExtractLabelName(const FileContent* fC,
-                                         NodeId coverPropertyStmt) {
-  auto getFirstStringConst = [&](NodeId node) -> std::string_view {
-    NodeId child = fC->Child(node);
-    if (child && fC->Type(child) == VObjectType::slStringConst)
-      return fC->SymName(child);
+static auto CheckProceduralCover(const SL::FileContent* fileContent,
+                                 SL::NodeId coverPropertyStmt) {
+  SL::NodeId proceduralAssert =
+      FindAncestorOfType(fileContent, coverPropertyStmt,
+                         SL::VObjectType::paProcedural_assertion_statement);
+  if (!proceduralAssert) {
+    return false;
+  }
+
+  auto stmt = FindAncestorOfType(fileContent, proceduralAssert,
+                                 SL::VObjectType::paStatement);
+  if (!stmt) {
+    return false;
+  }
+
+  SL::NodeId firstChild = fileContent->Child(stmt);
+  if (!firstChild ||
+      fileContent->Type(firstChild) != SL::VObjectType::slStringConst) {
+    return false;
+  }
+
+  SL::NodeId afterLabel = fileContent->Sibling(firstChild);
+  if (!afterLabel) {
+    { return true; }
+  }
+
+  SL::VObjectType afterLabelType = fileContent->Type(afterLabel);
+  return std::ranges::any_of(kValidAfterLabelTypes,
+                             [afterLabelType](SL::VObjectType type) {
+                               return type == afterLabelType;
+                             });
+}
+
+static auto ExtractLabelName(const SL::FileContent* fileContent,
+                             SL::NodeId coverPropertyStmt) {
+  auto getFirstStringConst = [&](SL::NodeId node) -> std::string_view {
+    SL::NodeId child = fileContent->Child(node);
+    if (child && fileContent->Type(child) == SL::VObjectType::slStringConst) {
+      return fileContent->SymName(child);
+    }
     return {};
   };
 
-  NodeId assertionItem = FindAncestorOfType(
-      fC, coverPropertyStmt, VObjectType::paConcurrent_assertion_item);
+  auto assertionItem =
+      FindAncestorOfType(fileContent, coverPropertyStmt,
+                         SL::VObjectType::paConcurrent_assertion_item);
   if (assertionItem) {
-    if (auto name = getFirstStringConst(assertionItem); !name.empty())
+    if (auto name = getFirstStringConst(assertionItem); !name.empty()) {
       return name;
+    }
   }
 
-  return "<unknown>";
+  return static_cast<std::string_view>("<unknown>");
 }
 
-void CheckAssertionStatementAttributeInstance(const FileContent* fC,
-                                              ErrorContainer* errors,
-                                              SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckAssertionStatementAttributeInstance(
+    const SL::FileContent* fileContent, SL::ErrorContainer* errors,
+    SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId coverStmt :
-       fC->sl_collect_all(root, VObjectType::paCover_property_statement)) {
+  for (SL::NodeId coverStmt : fileContent->sl_collect_all(
+           root, SL::VObjectType::paCover_property_statement)) {
     const bool kIsProcedural =
-        FindAncestorOfType(fC, coverStmt,
-                           VObjectType::paProcedural_assertion_statement) !=
-        InvalidNodeId;
+        FindAncestorOfType(fileContent, coverStmt,
+                           SL::VObjectType::paProcedural_assertion_statement) !=
+        SL::InvalidNodeId;
 
-    const bool kHasViolation = kIsProcedural
-                                   ? CheckProceduralCover(fC, coverStmt)
-                                   : CheckModuleLevelCover(fC, coverStmt);
+    const bool kHasViolation =
+        kIsProcedural ? CheckProceduralCover(fileContent, coverStmt)
+                      : CheckModuleLevelCover(fileContent, coverStmt);
 
-    if (!kHasViolation) continue;
+    if (!kHasViolation) {
+      continue;
+    }
 
-    ReportError(fC, coverStmt, ExtractLabelName(fC, coverStmt),
-                ErrorDefinition::LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
-                errors, symbols);
+    ReportError(
+        fileContent, coverStmt, ExtractLabelName(fileContent, coverStmt),
+        SL::ErrorDefinition::LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
+        errors, symbols);
   }
 }

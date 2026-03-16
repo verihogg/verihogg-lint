@@ -10,74 +10,94 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kLiteralTypes = {
-    VObjectType::slIntConst,
-    VObjectType::slRealConst,
-    VObjectType::slStringConst,
-    VObjectType::ppNumber,
+    SL::VObjectType::slIntConst,
+    SL::VObjectType::slRealConst,
+    SL::VObjectType::slStringConst,
+    SL::VObjectType::ppNumber,
 };
 
 static constexpr std::array kConstantTypes = {
-    VObjectType::paConstant_expression,
-    VObjectType::paPrimary_literal,
-    VObjectType::paConstant_primary,
+    SL::VObjectType::paConstant_expression,
+    SL::VObjectType::paPrimary_literal,
+    SL::VObjectType::paConstant_primary,
 };
 
 static constexpr std::array kInstanceTypes = {
-    VObjectType::paHierarchical_instance,
-    VObjectType::paName_of_instance,
+    SL::VObjectType::paHierarchical_instance,
+    SL::VObjectType::paName_of_instance,
 };
 
-static bool IsParameterOverrideValid(const FileContent* fC, NodeId instNode) {
-  if (!fC || !instNode) return true;
+static auto IsParameterOverrideValid(const SL::FileContent* fileContent,
+                                     SL::NodeId instNode) -> bool {
+  if (fileContent == nullptr || !instNode) {
+    return true;
+  }
 
-  NodeId child = fC->Child(instNode);
-  if (!child) return true;
+  SL::NodeId child = fileContent->Child(instNode);
+  if (!child) {
+    return true;
+  }
 
-  NodeId secondChild = fC->Sibling(child);
-  if (!secondChild) return true;
+  SL::NodeId secondChild = fileContent->Sibling(child);
+  if (!secondChild) {
+    return true;
+  }
 
-  VObjectType secondType = fC->Type(secondChild);
+  SL::VObjectType secondType = fileContent->Type(secondChild);
 
-  if (std::ranges::any_of(kLiteralTypes, [secondType](VObjectType t) {
-        return t == secondType;
-      }))
-    return false;
-
-  if (std::ranges::any_of(kConstantTypes, [secondType](VObjectType t) {
-        return t == secondType;
+  if (std::ranges::any_of(kLiteralTypes, [secondType](SL::VObjectType type) {
+        return type == secondType;
       })) {
-    NodeId thirdChild = fC->Sibling(secondChild);
+    return false;
+  }
+
+  if (std::ranges::any_of(kConstantTypes, [secondType](SL::VObjectType type) {
+        return type == secondType;
+      })) {
+    SL::NodeId thirdChild = fileContent->Sibling(secondChild);
     if (thirdChild) {
-      VObjectType thirdType = fC->Type(thirdChild);
-      if (std::ranges::any_of(kInstanceTypes, [thirdType](VObjectType t) {
-            return t == thirdType;
-          }))
+      SL::VObjectType thirdType = fileContent->Type(thirdChild);
+      if (std::ranges::any_of(kInstanceTypes,
+                              [thirdType](SL::VObjectType type) {
+                                return type == thirdType;
+                              })) {
         return false;
+      }
     }
   }
 
   return true;
 }
 
-void CheckParameterOverride(const FileContent* fC, ErrorContainer* errors,
-                            SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckParameterOverride(const SL::FileContent* fileContent,
+                            SL::ErrorContainer* errors,
+                            SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId inst :
-       fC->sl_collect_all(root, VObjectType::paModule_instantiation)) {
-    if (IsParameterOverrideValid(fC, inst)) continue;
+  for (SL::NodeId inst : fileContent->sl_collect_all(
+           root, SL::VObjectType::paModule_instantiation)) {
+    if (IsParameterOverrideValid(fileContent, inst)) {
+      continue;
+    }
 
-    NodeId moduleName = fC->Child(inst);
-    NodeId badNode = moduleName ? fC->Sibling(moduleName) : NodeId{};
-    if (!badNode) badNode = inst;
+    SL::NodeId moduleName = fileContent->Child(inst);
+    SL::NodeId badNode =
+        moduleName ? fileContent->Sibling(moduleName) : SL::NodeId{};
+    if (!badNode) {
+      badNode = inst;
+    }
 
-    ReportError(fC, badNode, ExtractName(fC, badNode),
-                ErrorDefinition::LINT_PARAMETR_OVERRIDE, errors, symbols);
+    ReportError(fileContent, badNode, ExtractName(fileContent, badNode),
+                SL::ErrorDefinition::LINT_PARAMETR_OVERRIDE, errors, symbols);
   }
 }

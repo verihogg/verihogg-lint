@@ -10,43 +10,58 @@
 
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-static void CheckTimeLiteral(const FileContent* fC, NodeId timeLiteral,
-                             ErrorContainer* errors, SymbolTable* symbols) {
-  NodeId intConst = fC->Child(timeLiteral);
-  if (!intConst) return;
-  if (fC->Type(intConst) != VObjectType::slIntConst) return;
+static void CheckTimeLiteral(const SL::FileContent* fileContent,
+                             SL::NodeId timeLiteral, SL::ErrorContainer* errors,
+                             SL::SymbolTable* symbols) {
+  SL::NodeId intConst = fileContent->Child(timeLiteral);
+  if (!intConst) {
+    return;
+  }
+  if (fileContent->Type(intConst) != SL::VObjectType::slIntConst) {
+    return;
+  }
 
-  NodeId timeUnit = fC->Sibling(intConst);
-  if (!timeUnit) return;
-  if (fC->Type(timeUnit) != VObjectType::paTime_unit) return;
+  SL::NodeId timeUnit = fileContent->Sibling(intConst);
+  if (!timeUnit) {
+    return;
+  }
+  if (fileContent->Type(timeUnit) != SL::VObjectType::paTime_unit) {
+    return;
+  }
 
-  const auto kEndOfNumber = fC->EndColumn(intConst);
-  const auto kStartOfUnit = fC->Column(timeUnit);
+  const auto kEndOfNumber = fileContent->EndColumn(intConst);
+  const auto kStartOfUnit = fileContent->Column(timeUnit);
 
-  if (kStartOfUnit <= kEndOfNumber) return;
+  if (kStartOfUnit <= kEndOfNumber) {
+    return;
+  }
 
-  const auto kNumber = fC->SymName(intConst);
-  const auto kUnit = fC->SymName(timeUnit);
+  const auto kNumber = fileContent->SymName(intConst);
+  const auto kUnit = fileContent->SymName(timeUnit);
 
   std::string badValue;
   badValue.reserve(kNumber.size() + 1 + kUnit.size());
   badValue.append(kNumber).append(1, ' ').append(kUnit);
 
-  ReportError(fC, intConst, badValue, ErrorDefinition::LINT_TIME_VALUE, errors,
-              symbols);
+  ReportError(fileContent, intConst, badValue,
+              SL::ErrorDefinition::LINT_TIME_VALUE, errors, symbols);
 }
 
-void CheckTimeValue(const FileContent* fC, ErrorContainer* errors,
-                    SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckTimeValue(const SL::FileContent* fileContent,
+                    SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId timeLiteral :
-       fC->sl_collect_all(root, VObjectType::paTime_literal)) {
-    CheckTimeLiteral(fC, timeLiteral, errors, symbols);
+  for (SL::NodeId timeLiteral :
+       fileContent->sl_collect_all(root, SL::VObjectType::paTime_literal)) {
+    CheckTimeLiteral(fileContent, timeLiteral, errors, symbols);
   }
 }

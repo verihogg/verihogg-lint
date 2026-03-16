@@ -6,15 +6,18 @@
 
 #include <array>
 #include <functional>
+#include <string_view>
 
 #include "rules/all_rules.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 struct Rule {
-  std::string name;
+  std::string_view name;
   bool enabled = true;
-  std::function<void(const FileContent*, ErrorContainer*, SymbolTable*)> check;
+  std::function<void(const SL::FileContent*, SL::ErrorContainer*,
+                     SL::SymbolTable*)>
+      check;
 };
 
 static const std::array kAllRules = std::to_array<Rule>({
@@ -56,23 +59,29 @@ static const std::array kAllRules = std::to_array<Rule>({
 
 });
 
-void runAllRules(const FileContent* fC, ErrorContainer* errors,
-                 SymbolTable* symbols) {
+void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
+                 SL::SymbolTable* symbols) {
   for (const auto& rule : kAllRules) {
-    if (!rule.enabled) continue;
-    rule.check(fC, errors, symbols);
+    if (!rule.enabled) {
+      continue;
+    }
+    rule.check(fileContent, errors, symbols);
   }
 }
 
-void runAllRulesOnDesign(Design* design, const vpiHandle& UHDMdesign,
-                         ErrorContainer* errors, SymbolTable* symbols) {
-  if (!design) return;
+void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
+                         SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (design == nullptr) {
+    return;
+  }
 
-  for (auto& [name, fC] : design->getAllFileContents()) {
-    if (!fC) continue;
+  for (auto& [name, fileContent] : design->getAllFileContents()) {
+    if (fileContent == nullptr) {
+      continue;
+    }
 
-    runAllRules(fC, errors, symbols);
-    FatalListener listener(fC, errors, symbols);
-    listener.Listen(UHDMdesign);
+    RunAllRules(fileContent, errors, symbols);
+    FatalListener listener(errors, symbols);
+    listener.Listen(uhdmDesign);
   }
 }

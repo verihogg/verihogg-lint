@@ -11,24 +11,33 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-void CheckEmptyAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
-                                 SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+void CheckEmptyAssignmentPattern(const SL::FileContent* fileContent,
+                                 SL::ErrorContainer* errors,
+                                 SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId pat :
-       fC->sl_collect_all(root, VObjectType::paAssignment_pattern)) {
-    if (!pat) continue;
+  for (SL::NodeId pat : fileContent->sl_collect_all(
+           root, SL::VObjectType::paAssignment_pattern)) {
+    if (!pat) {
+      continue;
+    }
 
-    if (fC->Child(pat)) continue;
+    if (fileContent->Child(pat)) {
+      continue;
+    }
 
-    std::string_view varName = FindDirectRhsLhsName(fC, pat);
+    std::string_view varName = FindDirectRhsLhsName(fileContent, pat);
 
-    ReportError(fC, pat, varName,
-                ErrorDefinition::LINT_EMPTY_ASSIGNMENT_PATTERN, errors,
+    ReportError(fileContent, pat, varName,
+                SL::ErrorDefinition::LINT_EMPTY_ASSIGNMENT_PATTERN, errors,
                 symbols);
   }
 }

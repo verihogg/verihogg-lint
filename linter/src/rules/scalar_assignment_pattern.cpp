@@ -13,52 +13,71 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-static bool Is1BitScalarKeyword(VObjectType type) {
+static auto Is1BitScalarKeyword(SL::VObjectType type) -> bool {
   static constexpr std::array kScalarTypes = {
-      VObjectType::paIntVec_TypeBit,
-      VObjectType::paIntVec_TypeLogic,
-      VObjectType::paIntVec_TypeReg,
+      SL::VObjectType::paIntVec_TypeBit,
+      SL::VObjectType::paIntVec_TypeLogic,
+      SL::VObjectType::paIntVec_TypeReg,
   };
-  return std::ranges::any_of(kScalarTypes,
-                             [type](VObjectType t) { return t == type; });
+  return std::ranges::any_of(kScalarTypes, [type](SL::VObjectType vObjectType) {
+    return vObjectType == type;
+  });
 }
 
-static bool IsScalarVariable(const FileContent* fC, NodeId root,
-                             NodeId patternNode,
-                             const std::string_view& varName) {
-  if (varName.empty() || varName == "<unknown>" || varName == "<indexed>")
+static auto IsScalarVariable(const SL::FileContent* fileContent,
+                             SL::NodeId root, const std::string_view& varName,
+                             SL::NodeId patternNode) -> bool {
+  if (varName.empty() || varName == "<unknown>" || varName == "<indexed>") {
     return false;
+  }
 
-  NodeId patternModule = FindEnclosingModule(fC, patternNode);
+  SL::NodeId patternModule = FindEnclosingModule(fileContent, patternNode);
 
-  for (NodeId vd :
-       fC->sl_collect_all(root, VObjectType::paVariable_declaration)) {
-    if (FindEnclosingModule(fC, vd) != patternModule) continue;
-    if (ExtractVariableName(fC, vd) != varName) continue;
-
-    NodeId dataType = fC->Child(vd);
-    if (!dataType) continue;
-
-    NodeId typeKeyword = fC->Child(dataType);
-    if (!typeKeyword || !Is1BitScalarKeyword(fC->Type(typeKeyword))) continue;
-
-    if (HasSiblingOfType(fC, typeKeyword, VObjectType::paPacked_dimension))
+  for (SL::NodeId varDecl : fileContent->sl_collect_all(
+           root, SL::VObjectType::paVariable_declaration)) {
+    if (FindEnclosingModule(fileContent, varDecl) != patternModule) {
       continue;
+    }
+    if (ExtractVariableName(fileContent, varDecl) != varName) {
+      continue;
+    }
+
+    SL::NodeId dataType = fileContent->Child(varDecl);
+    if (dataType == SL::InvalidNodeId) {
+      continue;
+    }
+
+    SL::NodeId typeKeyword = fileContent->Child(dataType);
+    if (typeKeyword == SL::InvalidNodeId ||
+        !Is1BitScalarKeyword(fileContent->Type(typeKeyword))) {
+      continue;
+    }
+
+    if (HasSiblingOfType(fileContent, typeKeyword,
+                         SL::VObjectType::paPacked_dimension)) {
+      continue;
+    }
 
     bool hasUnpacked = false;
-    for (NodeId vda :
-         fC->sl_collect_all(vd, VObjectType::paVariable_decl_assignment)) {
-      NodeId nameNode = fC->Child(vda);
-      if (!nameNode) continue;
-      if (HasSiblingOfType(fC, nameNode, VObjectType::paUnpacked_dimension) ||
-          HasSiblingOfType(fC, nameNode, VObjectType::paVariable_dimension)) {
+    for (SL::NodeId vda : fileContent->sl_collect_all(
+             varDecl, SL::VObjectType::paVariable_decl_assignment)) {
+      SL::NodeId nameNode = fileContent->Child(vda);
+      if (nameNode == SL::InvalidNodeId) {
+        continue;
+      }
+      if (HasSiblingOfType(fileContent, nameNode,
+                           SL::VObjectType::paUnpacked_dimension) ||
+          HasSiblingOfType(fileContent, nameNode,
+                           SL::VObjectType::paVariable_dimension)) {
         hasUnpacked = true;
         break;
       }
     }
-    if (hasUnpacked) continue;
+    if (hasUnpacked) {
+      continue;
+    }
 
     return true;
   }
@@ -66,19 +85,23 @@ static bool IsScalarVariable(const FileContent* fC, NodeId root,
   return false;
 }
 
-void CheckScalarAssignmentPattern(const FileContent* fC, ErrorContainer* errors,
-                                  SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckScalarAssignmentPattern(const SL::FileContent* fileContent,
+                                  SL::ErrorContainer* errors,
+                                  SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
-
-  for (NodeId pat :
-       fC->sl_collect_all(root, VObjectType::paAssignment_pattern)) {
-    std::string_view varName = FindDirectRhsLhsName(fC, pat);
-    if (IsScalarVariable(fC, root, pat, varName)) {
-      ReportError(fC, pat, varName,
-                  ErrorDefinition::LINT_SCALAR_ASSIGNMENT_PATTERN, errors,
+  for (SL::NodeId pat : fileContent->sl_collect_all(
+           root, SL::VObjectType::paAssignment_pattern)) {
+    std::string_view varName = FindDirectRhsLhsName(fileContent, pat);
+    if (IsScalarVariable(fileContent, root, varName, pat)) {
+      ReportError(fileContent, pat, varName,
+                  SL::ErrorDefinition::LINT_SCALAR_ASSIGNMENT_PATTERN, errors,
                   symbols);
     }
   }

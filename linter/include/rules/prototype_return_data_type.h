@@ -4,6 +4,6 @@
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 
-void CheckPrototypeReturnDataType(const SURELOG::FileContent* fC,
+void CheckPrototypeReturnDataType(const SURELOG::FileContent* fileContent,
                                   SURELOG::ErrorContainer* errors,
                                   SURELOG::SymbolTable* symbols);

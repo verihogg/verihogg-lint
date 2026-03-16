@@ -10,27 +10,35 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-void CheckParameterDynamicArray(const FileContent* fC, ErrorContainer* errors,
-                                SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckParameterDynamicArray(const SL::FileContent* fileContent,
+                                SL::ErrorContainer* errors,
+                                SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (root == SL::InvalidNodeId) {
+    return;
+  }
 
   static constexpr std::array kDeclTypes = {
-      VObjectType::paParameter_declaration,
-      VObjectType::paLocal_parameter_declaration,
+      SL::VObjectType::paParameter_declaration,
+      SL::VObjectType::paLocal_parameter_declaration,
   };
   for (auto declType : kDeclTypes) {
-    for (NodeId decl : fC->sl_collect_all(root, declType)) {
-      auto unsizedDims =
-          fC->sl_collect_all(decl, VObjectType::paUnsized_dimension);
-      if (unsizedDims.empty()) continue;
+    for (SL::NodeId decl : fileContent->sl_collect_all(root, declType)) {
+      auto unsizedDims = fileContent->sl_collect_all(
+          decl, SL::VObjectType::paUnsized_dimension);
+      if (unsizedDims.empty()) {
+        continue;
+      }
       {
-        ReportError(fC, unsizedDims.front(), ExtractParameterName(fC, decl),
-                    ErrorDefinition::LINT_PARAMETR_DYNAMIC_ARRAY, errors,
+        ReportError(fileContent, unsizedDims.front(),
+                    ExtractParameterName(fileContent, decl),
+                    SL::ErrorDefinition::LINT_PARAMETR_DYNAMIC_ARRAY, errors,
                     symbols);
       }
     }

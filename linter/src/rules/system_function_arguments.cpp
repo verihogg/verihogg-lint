@@ -1,32 +1,45 @@
 #include "rules/system_function_arguments.h"
 
-#include <Surelog/Design/FileContent.h>
-#include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/SourceCompile/SymbolTable.h>
-#include <Surelog/SourceCompile/VObjectTypes.h>
-
+#include <algorithm>
+#include <array>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 
+#include "Surelog/Design/FileContent.h"
+#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "Surelog/SourceCompile/SymbolTable.h"
+#include "Surelog/SourceCompile/VObjectTypes.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-static const std::unordered_map<std::string_view, int> kMaxArgs = {
-    {"typename", 1}, {"bits", 1},  {"isunknown", 1}, {"signed", 1},
-    {"unsigned", 1}, {"size", 2},  {"high", 2},      {"low", 2},
-    {"left", 2},     {"right", 2},
-};
+static constexpr std::array<std::pair<std::string_view, int>, 10> kMaxArgs = {{
+    {"typename", 1},
+    {"bits", 1},
+    {"isunknown", 1},
+    {"signed", 1},
+    {"unsigned", 1},
+    {"size", 2},
+    {"high", 2},
+    {"low", 2},
+    {"left", 2},
+    {"right", 2},
+}};
 
-static int CountArguments(const FileContent* fC, NodeId listOfArgs) {
-  if (!listOfArgs) return 0;
+static auto CountArguments(const SL::FileContent* fileContent,
+                           SL::NodeId listOfArgs) -> int {
+  if (!listOfArgs) {
+    return 0;
+  }
 
   int count = 0;
-  for (NodeId ch = fC->Child(listOfArgs); ch; ch = fC->Sibling(ch)) {
-    VObjectType t = fC->Type(ch);
-    if (t == VObjectType::paExpression || t == VObjectType::paArgument) {
+  for (SL::NodeId chr = fileContent->Child(listOfArgs); chr;
+       chr = fileContent->Sibling(chr)) {
+    SL::VObjectType type = fileContent->Type(chr);
+    if (type == SL::VObjectType::paExpression ||
+        type == SL::VObjectType::paArgument) {
       ++count;
     }
   }
@@ -34,52 +47,60 @@ static int CountArguments(const FileContent* fC, NodeId listOfArgs) {
 }
 
 struct SysFuncCall {
-  NodeId callNode;
-  NodeId listArgs;
+  SL::NodeId callNode;
+  SL::NodeId listArgs;
   std::string funcName;
 };
 
-static bool ExtractFromDollarCall(const FileContent* fC, NodeId callNode,
-                                  SysFuncCall& out) {
-  NodeId dollarKw = fC->Child(callNode);
-  if (!dollarKw || fC->Type(dollarKw) != VObjectType::paDollar_keyword) {
-    return false;
+static auto ExtractFromDollarCall(const SL::FileContent* fileContent,
+                                  SL::NodeId callNode, SysFuncCall& out)
+    -> bool {
+  SL::NodeId dollarKw = fileContent->Child(callNode);
+  if (!dollarKw ||
+      fileContent->Type(dollarKw) != SL::VObjectType::paDollar_keyword) {
+    { return false; }
   }
 
-  NodeId nameNode = fC->Sibling(dollarKw);
-  if (!nameNode || fC->Type(nameNode) != VObjectType::slStringConst) {
-    return false;
+  SL::NodeId nameNode = fileContent->Sibling(dollarKw);
+  if (!nameNode ||
+      fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
+    { return false; }
   }
 
-  NodeId listArgs = fC->Sibling(nameNode);
-  if (!listArgs || fC->Type(listArgs) != VObjectType::paList_of_arguments) {
-    return false;
+  SL::NodeId listArgs = fileContent->Sibling(nameNode);
+  if (!listArgs ||
+      fileContent->Type(listArgs) != SL::VObjectType::paList_of_arguments) {
+    { return false; }
   }
 
   out.callNode = callNode;
   out.listArgs = listArgs;
-  out.funcName = std::string(fC->SymName(nameNode));
+  out.funcName = std::string(fileContent->SymName(nameNode));
   return true;
 }
 
-static bool ExtractFromSystemTask(const FileContent* fC, NodeId callNode,
-                                  SysFuncCall& out) {
-  NodeId taskNames = fC->Child(callNode);
-  if (!taskNames || fC->Type(taskNames) != VObjectType::paSystem_task_names) {
+static auto ExtractFromSystemTask(const SL::FileContent* fileContent,
+                                  SL::NodeId callNode, SysFuncCall& out)
+    -> bool {
+  SL::NodeId taskNames = fileContent->Child(callNode);
+  if (!taskNames ||
+      fileContent->Type(taskNames) != SL::VObjectType::paSystem_task_names) {
     return false;
   }
 
-  NodeId nameNode = fC->Child(taskNames);
-  if (!nameNode || fC->Type(nameNode) != VObjectType::slStringConst) {
+  SL::NodeId nameNode = fileContent->Child(taskNames);
+  if (!nameNode ||
+      fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
     return false;
   }
 
-  NodeId listArgs = fC->Sibling(taskNames);
-  if (!listArgs || fC->Type(listArgs) != VObjectType::paList_of_arguments) {
+  SL::NodeId listArgs = fileContent->Sibling(taskNames);
+  if (!listArgs ||
+      fileContent->Type(listArgs) != SL::VObjectType::paList_of_arguments) {
     return false;
   }
 
-  std::string_view rawName = fC->SymName(nameNode);
+  std::string_view rawName = fileContent->SymName(nameNode);
   std::string funcName = (!rawName.empty() && rawName[0] == '$')
                              ? std::string(rawName.substr(1))
                              : std::string(rawName);
@@ -90,50 +111,63 @@ static bool ExtractFromSystemTask(const FileContent* fC, NodeId callNode,
   return true;
 }
 
-static void CheckCall(const FileContent* fC, const SysFuncCall& call,
-                      ErrorContainer* errors, SymbolTable* symbols) {
-  auto it = kMaxArgs.find(call.funcName);
-  if (it == kMaxArgs.end()) return;
+static void CheckCall(const SL::FileContent* fileContent,
+                      const SysFuncCall& call, SL::ErrorContainer* errors,
+                      SL::SymbolTable* symbols) {
+  const auto* const kEntry = std::ranges::find_if(
+      kMaxArgs, [&](const auto& pair) { return pair.first == call.funcName; });
+  if (kEntry == kMaxArgs.end()) {
+    return;
+  }
 
-  int maxAllowed = it->second;
-  int actual = CountArguments(fC, call.listArgs);
+  int maxAllowed = kEntry->second;
+  int actual = static_cast<int>(CountArguments(fileContent, call.listArgs));
 
-  if (actual <= maxAllowed) return;
+  if (actual <= maxAllowed) {
+    return;
+  }
 
-  // Формируем единый символ: "$typename is 1"
   std::string symbolName =
       "$" + call.funcName + " is " + std::to_string(maxAllowed);
 
-  ReportError(fC, call.callNode, symbolName,
-              ErrorDefinition::LINT_SYSTEM_FUNCTION_ARGUMENTS, errors, symbols);
+  ReportError(fileContent, call.callNode, symbolName,
+              SL::ErrorDefinition::LINT_SYSTEM_FUNCTION_ARGUMENTS, errors,
+              symbols);
 }
 
-void CheckSystemFunctionArguments(const FileContent* fC, ErrorContainer* errors,
-                                  SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckSystemFunctionArguments(const SL::FileContent* fileContent,
+                                  SL::ErrorContainer* errors,
+                                  SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId node :
-       fC->sl_collect_all(root, VObjectType::paComplex_func_call)) {
+  for (SL::NodeId node : fileContent->sl_collect_all(
+           root, SL::VObjectType::paComplex_func_call)) {
     SysFuncCall call;
-    if (ExtractFromDollarCall(fC, node, call)) {
-      CheckCall(fC, call, errors, symbols);
+    if (ExtractFromDollarCall(fileContent, node, call)) {
+      CheckCall(fileContent, call, errors, symbols);
     }
   }
 
-  for (NodeId node : fC->sl_collect_all(root, VObjectType::paSystem_task)) {
+  for (SL::NodeId node :
+       fileContent->sl_collect_all(root, SL::VObjectType::paSystem_task)) {
     SysFuncCall call;
-    if (ExtractFromSystemTask(fC, node, call)) {
-      CheckCall(fC, call, errors, symbols);
+    if (ExtractFromSystemTask(fileContent, node, call)) {
+      CheckCall(fileContent, call, errors, symbols);
     }
   }
 
-  for (NodeId node : fC->sl_collect_all(root, VObjectType::paSubroutine_call)) {
+  for (SL::NodeId node :
+       fileContent->sl_collect_all(root, SL::VObjectType::paSubroutine_call)) {
     SysFuncCall call;
-    if (ExtractFromDollarCall(fC, node, call)) {
-      CheckCall(fC, call, errors, symbols);
+    if (ExtractFromDollarCall(fileContent, node, call)) {
+      CheckCall(fileContent, call, errors, symbols);
     }
   }
 }

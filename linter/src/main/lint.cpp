@@ -1,17 +1,16 @@
-#include <Surelog/API/Surelog.h>
-#include <Surelog/CommandLine/CommandLineParser.h>
-
 #include <iostream>
 #include <memory>
 
+#include "Surelog/API/Surelog.h"
+#include "Surelog/CommandLine/CommandLineParser.h"
 #include "main/rule_dispatcher.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-int main(int argc, const char** argv) {
-  auto symbolTable = std::make_unique<SymbolTable>();
-  auto errors = std::make_unique<ErrorContainer>(symbolTable.get());
-  auto clp = std::make_unique<CommandLineParser>(
+auto main(int argc, const char** argv) -> int {
+  auto symbolTable = std::make_unique<SL::SymbolTable>();
+  auto errors = std::make_unique<SL::ErrorContainer>(symbolTable.get());
+  auto clp = std::make_unique<SL::CommandLineParser>(
       errors.get(), symbolTable.get(), false, false);
 
   clp->noPython();
@@ -25,27 +24,27 @@ int main(int argc, const char** argv) {
   clp->setFilterWarning();
 
   bool success = clp->parseCommandLine(argc, argv);
-  Design* the_design = nullptr;
-  scompiler* compiler = nullptr;
-  vpiHandle UHDMdesign = nullptr;
+  SL::Design* theDesign = nullptr;
+  SL::scompiler* compiler = nullptr;
+  vpiHandle uhdmDesign = nullptr;
 
   if (success && !clp->help()) {
     try {
       compiler = start_compiler(clp.get());
-      the_design = get_design(compiler);
-      UHDMdesign = get_uhdm_design(compiler);
+      theDesign = get_design(compiler);
+      uhdmDesign = get_uhdm_design(compiler);
     } catch (const std::exception& e) {
       std::cerr << "Compiler error: " << e.what() << '\n';
       return 1;
     }
   }
 
-  if (!the_design && !UHDMdesign) {
+  if (theDesign == nullptr && uhdmDesign == nullptr) {
     std::cerr << "No design created" << std::endl;
     return 1;
   }
 
-  runAllRulesOnDesign(the_design, UHDMdesign, errors.get(), symbolTable.get());
+  RunAllRulesOnDesign(theDesign, uhdmDesign, errors.get(), symbolTable.get());
 
   errors->printMessages(clp->muteStdout());
 

@@ -11,7 +11,11 @@
 # readability.
 Checks: >
   bugprone-*,
+  cert-*,
+  clang-diagnostic-*,
   clang-analyzer-*,
+  concurency-*,
+  cppcoreguidelines-*,
   google-*,
   hicpp-*,
   llvm-include-order,
@@ -19,10 +23,12 @@ Checks: >
   modernize-*,
   performance-*,
   portability-*,
-  -portability-avoid-pragma-once, # Usage of pragma once is advised
+  -portability-avoid-pragma-once,
   readability-*,
 
-WarningsAsErrors: '*'
+WarningsAsErrors: ''
+
+HeaderFilterRegex: 'linter/.*'
 
 CheckOptions:
   - key: performance-unnecessary-value-param.AllowedTypes

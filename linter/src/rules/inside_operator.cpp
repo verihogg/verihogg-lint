@@ -11,41 +11,53 @@
 
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kContextTable = {
-    std::pair{VObjectType::paUnpacked_dimension, "array dimension"},
-    std::pair{VObjectType::paConstant_param_expression, "parametr value"},
-    std::pair{VObjectType::paIf_generate_construct, "generate if condition"},
+    std::pair{SL::VObjectType::paUnpacked_dimension, "array dimension"},
+    std::pair{SL::VObjectType::paConstant_param_expression, "parametr value"},
+    std::pair{SL::VObjectType::paIf_generate_construct,
+              "generate if condition"},
 };
 
-static std::string_view GetConstantContextName(const FileContent* fC,
-                                               NodeId insideNode) {
-  for (NodeId cur = fC->Parent(insideNode); cur; cur = fC->Parent(cur)) {
-    VObjectType type = fC->Type(cur);
-    auto it = std::ranges::find_if(kContextTable, [type](const auto& entry) {
-      return entry.first == type;
-    });
-    if (it != kContextTable.end()) return it->second;
+static auto GetConstantContextName(const SL::FileContent* fileContent,
+                                   SL::NodeId insideNode) -> std::string_view {
+  for (SL::NodeId cur = fileContent->Parent(insideNode); cur;
+       cur = fileContent->Parent(cur)) {
+    SL::VObjectType type = fileContent->Type(cur);
+    const auto* iter = std::ranges::find_if(
+        kContextTable,
+        [type](const auto& entry) { return entry.first == type; });
+    if (iter != kContextTable.end()) {
+      return iter->second;
+    }
   }
   return "constatnt expression";
 }
 
-void CheckInsideOperator(const FileContent* fC, ErrorContainer* errors,
-                         SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckInsideOperator(const SL::FileContent* fileContent,
+                         SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId insideId : fC->sl_collect_all(root, VObjectType::paINSIDE)) {
-    NodeId parentId = fC->Parent(insideId);
-    if (!parentId) continue;
+  for (SL::NodeId insideId :
+       fileContent->sl_collect_all(root, SL::VObjectType::paINSIDE)) {
+    SL::NodeId parentId = fileContent->Parent(insideId);
+    if (!parentId) {
+      continue;
+    }
 
-    if (fC->Type(parentId) == VObjectType::paConstant_expression) {
-      std::string_view contextName = GetConstantContextName(fC, insideId);
-      ReportError(fC, insideId, contextName,
-                  ErrorDefinition::LINT_INSIDE_OPERATOR, errors, symbols);
+    if (fileContent->Type(parentId) == SL::VObjectType::paConstant_expression) {
+      std::string_view contextName =
+          GetConstantContextName(fileContent, insideId);
+      ReportError(fileContent, insideId, contextName,
+                  SL::ErrorDefinition::LINT_INSIDE_OPERATOR, errors, symbols);
     }
   }
 }

@@ -5,11 +5,11 @@
 
 #include <string>
 
-using namespace SURELOG;
-
-std::string Trim(const std::string& s) {
-  auto start = s.find_first_not_of(" \t\n\r");
-  if (start == std::string::npos) return "";
-  auto end = s.find_last_not_of(" \t\n\r");
-  return s.substr(start, end - start + 1);
+auto Trim(const std::string& str) -> std::string {
+  auto start = str.find_first_not_of(" \t\n\r");
+  if (start == std::string::npos) {
+    return "";
+  }
+  auto end = str.find_last_not_of(" \t\n\r");
+  return str.substr(start, end - start + 1);
 }

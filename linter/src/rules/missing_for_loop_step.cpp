@@ -9,19 +9,28 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-void CheckMissingForLoopStep(const FileContent* fC, ErrorContainer* errors,
-                             SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckMissingForLoopStep(const SL::FileContent* fileContent,
+                             SL::ErrorContainer* errors,
+                             SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId forNode : fC->sl_collect_all(root, VObjectType::paFOR)) {
-    if (HasSiblingOfType(fC, forNode, VObjectType::paFor_step)) continue;
+  for (SL::NodeId forNode :
+       fileContent->sl_collect_all(root, SL::VObjectType::paFOR)) {
+    if (HasSiblingOfType(fileContent, forNode, SL::VObjectType::paFor_step)) {
+      continue;
+    }
 
-    ReportError(fC, forNode, FindForLoopVariableName(fC, forNode),
-                ErrorDefinition::LINT_MISSING_FOR_LOOP_STEP, errors, symbols);
+    ReportError(
+        fileContent, forNode, FindForLoopVariableName(fileContent, forNode),
+        SL::ErrorDefinition::LINT_MISSING_FOR_LOOP_STEP, errors, symbols);
   }
 }

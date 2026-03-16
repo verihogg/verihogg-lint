@@ -8,33 +8,38 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-void CheckWildcardOperators(const FileContent* fC, ErrorContainer* errors,
-                            SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckWildcardOperators(const SL::FileContent* fileContent,
+                            SL::ErrorContainer* errors,
+                            SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  for (NodeId wildEq :
-       fC->sl_collect_all(root, VObjectType::paBinOp_WildEqual)) {
-    NodeId exprNode = fC->Parent(wildEq);
+  for (SL::NodeId wildEq :
+       fileContent->sl_collect_all(root, SL::VObjectType::paBinOp_WildEqual)) {
+    SL::NodeId exprNode = fileContent->Parent(wildEq);
     std::string_view symName = "<unknown>";
 
     if (exprNode) {
-      NodeId leftOperand = fC->Child(exprNode);
+      SL::NodeId leftOperand = fileContent->Child(exprNode);
       if (leftOperand) {
-        symName = ExtractName(fC, leftOperand, "<unknown>");
+        symName = ExtractName(fileContent, leftOperand, "<unknown>");
       }
     }
 
-    ReportError(fC, wildEq, symName,
-                ErrorDefinition::LINT_WILDCARD_EQUALITY_OPERATOR, errors,
+    ReportError(fileContent, wildEq, symName,
+                SL::ErrorDefinition::LINT_WILDCARD_EQUALITY_OPERATOR, errors,
                 symbols);
 
-    ReportError(fC, wildEq, symName,
-                ErrorDefinition::LINT_WILDCARD_INEQUALITY_OPERATOR, errors,
+    ReportError(fileContent, wildEq, symName,
+                SL::ErrorDefinition::LINT_WILDCARD_INEQUALITY_OPERATOR, errors,
                 symbols);
   }
 }

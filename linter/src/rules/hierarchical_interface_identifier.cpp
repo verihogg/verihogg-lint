@@ -12,35 +12,46 @@
 
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-static std::string JoinNames(const FileContent* fC,
-                             const std::vector<NodeId>& parts) {
-  if (parts.empty()) return "<unknown>";
+static auto JoinNames(const SL::FileContent* fileContent,
+                      const std::vector<SL::NodeId>& parts) -> std::string {
+  if (parts.empty()) {
+    return "<unknown>";
+  }
   std::string res;
   bool first = true;
-  for (NodeId part : parts) {
-    if (!first) res += '.';
-    res += std::string(fC->SymName(part));
+  for (SL::NodeId part : parts) {
+    if (!first) {
+      res += '.';
+    }
+    res += std::string(fileContent->SymName(part));
     first = false;
   }
   return res;
 }
 
-void CheckHierarchicalInterfaceIdentifier(const FileContent* fC,
-                                          ErrorContainer* errors,
-                                          SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
+                                          SL::ErrorContainer* errors,
+                                          SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
+  SL::NodeId root = fileContent->getRootNode();
+  if (root == SL::InvalidNodeId) {
+    return;
+  }
 
-  for (NodeId iid :
-       fC->sl_collect_all(root, VObjectType::paInterface_identifier)) {
-    auto parts = fC->sl_collect_all(iid, VObjectType::slStringConst);
-    if (parts.size() <= 1) continue;
+  for (SL::NodeId iid : fileContent->sl_collect_all(
+           root, SL::VObjectType::paInterface_identifier)) {
+    auto parts =
+        fileContent->sl_collect_all(iid, SL::VObjectType::slStringConst);
+    if (parts.size() <= 1) {
+      continue;
+    }
 
-    ReportError(fC, iid, JoinNames(fC, parts),
-                ErrorDefinition::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
-                symbols);
+    ReportError(fileContent, iid, JoinNames(fileContent, parts),
+                SL::ErrorDefinition::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER,
+                errors, symbols);
   }
 }

@@ -5,33 +5,35 @@
 
 #include <algorithm>
 #include <array>
+#include <stack>
 #include <string_view>
 #include <unordered_set>
 
 #include "rules/covergroup_expression.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kBinTypes = {
-    VObjectType::paBins_Bins,
-    VObjectType::paBins_Ignore,
-    VObjectType::paBins_Illegal,
+    SL::VObjectType::paBins_Bins,
+    SL::VObjectType::paBins_Ignore,
+    SL::VObjectType::paBins_Illegal,
 };
 
-static std::unordered_set<std::string_view> GetAllowedCovergroupArgs(
-    const FileContent* fC, NodeId covergroupNode) {
+static auto GetAllowedCovergroupArgs(const SL::FileContent* fileContent,
+                                     SL::NodeId covergroupNode)
+    -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> allowed;
 
-  for (NodeId eventId : fC->sl_collect_all(
-           covergroupNode, VObjectType::paCoverage_event, false)) {
-    for (NodeId tfListId :
-         fC->sl_collect_all(eventId, VObjectType::paTf_port_list, false)) {
-      for (NodeId tfId :
-           fC->sl_collect_all(tfListId, VObjectType::paTf_port_item, false)) {
-        for (NodeId nameNode :
-             fC->sl_collect_all(tfId, VObjectType::slStringConst, false)) {
-          allowed.insert(fC->SymName(nameNode));
+  for (SL::NodeId eventId : fileContent->sl_collect_all(
+           covergroupNode, SL::VObjectType::paCoverage_event, false)) {
+    for (SL::NodeId tfListId : fileContent->sl_collect_all(
+             eventId, SL::VObjectType::paTf_port_list, false)) {
+      for (SL::NodeId tfId : fileContent->sl_collect_all(
+               tfListId, SL::VObjectType::paTf_port_item, false)) {
+        for (SL::NodeId nameNode : fileContent->sl_collect_all(
+                 tfId, SL::VObjectType::slStringConst, false)) {
+          allowed.insert(fileContent->SymName(nameNode));
         }
       }
     }
@@ -40,17 +42,19 @@ static std::unordered_set<std::string_view> GetAllowedCovergroupArgs(
   return allowed;
 }
 
-static std::unordered_set<std::string_view> GetModuleVariables(
-    const FileContent* fC) {
+static auto GetModuleVariables(const SL::FileContent* fileContent)
+    -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> moduleVars;
 
-  for (NodeId varDeclId : fC->sl_collect_all(
-           fC->getRootNode(), VObjectType::paVariable_declaration)) {
-    for (NodeId assignId : fC->sl_collect_all(
-             varDeclId, VObjectType::paVariable_decl_assignment, false)) {
-      NodeId nameNode = fC->Child(assignId);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst) {
-        moduleVars.insert(fC->SymName(nameNode));
+  for (SL::NodeId varDeclId :
+       fileContent->sl_collect_all(fileContent->getRootNode(),
+                                   SL::VObjectType::paVariable_declaration)) {
+    for (SL::NodeId assignId : fileContent->sl_collect_all(
+             varDeclId, SL::VObjectType::paVariable_decl_assignment, false)) {
+      SL::NodeId nameNode = fileContent->Child(assignId);
+      if (nameNode &&
+          fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
+        moduleVars.insert(fileContent->SymName(nameNode));
       }
     }
   }
@@ -59,79 +63,101 @@ static std::unordered_set<std::string_view> GetModuleVariables(
 }
 
 static void CheckIdentifiersRecursive(
-    const FileContent* fC, NodeId node,
+    const SL::FileContent* fileContent, SL::NodeId node,
     const std::unordered_set<std::string_view>& allowedArgs,
     const std::unordered_set<std::string_view>& moduleVars,
-    ErrorContainer* errors, SymbolTable* symbols) {
-  if (!node) return;
-
-  if (fC->Type(node) == VObjectType::slStringConst) {
-    std::string_view varName = fC->SymName(node);
-
-    if (moduleVars.contains(varName)) {
-      if (!allowedArgs.contains(varName)) {
-        ReportError(fC, node, varName,
-                    ErrorDefinition::LINT_COVERGROUP_EXPRESSION, errors,
-                    symbols);
-        return;
-      }
-    }
+    SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (node == SL::InvalidNodeId) {
+    return;
   }
 
-  for (NodeId child = fC->Child(node); child; child = fC->Sibling(child)) {
-    CheckIdentifiersRecursive(fC, child, allowedArgs, moduleVars, errors,
-                              symbols);
+  std::stack<SL::NodeId> stack;
+  stack.push(node);
+
+  while (!stack.empty()) {
+    SL::NodeId current = stack.top();
+    stack.pop();
+
+    if (fileContent->Type(current) == SL::VObjectType::slStringConst) {
+      std::string_view varName = fileContent->SymName(current);
+      if (moduleVars.contains(varName) && !allowedArgs.contains(varName)) {
+        ReportError(fileContent, current, varName,
+                    SL::ErrorDefinition::LINT_COVERGROUP_EXPRESSION, errors,
+                    symbols);
+        continue;
+      }
+    }
+
+    std::stack<SL::NodeId> children;
+    for (SL::NodeId child = fileContent->Child(current); child;
+         child = fileContent->Sibling(child)) {
+      children.push(child);
+    }
+    while (!children.empty()) {
+      stack.push(children.top());
+      children.pop();
+    }
   }
 }
 
 static void CheckBinsInCoverpoint(
-    const FileContent* fC, NodeId coverpointNode,
+    const SL::FileContent* fileContent, SL::NodeId coverpointNode,
     const std::unordered_set<std::string_view>& allowedArgs,
     const std::unordered_set<std::string_view>& moduleVars,
-    ErrorContainer* errors, SymbolTable* symbols) {
-  if (!coverpointNode) return;
+    SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+  if (coverpointNode == SL::InvalidNodeId) {
+    return;
+  }
 
-  for (NodeId binsOptId : fC->sl_collect_all(
-           coverpointNode, VObjectType::paBins_or_options, false)) {
+  for (SL::NodeId binsOptId : fileContent->sl_collect_all(
+           coverpointNode, SL::VObjectType::paBins_or_options, false)) {
     bool foundBinType = false;
     std::string_view binName = "unknown";
 
-    for (NodeId n = fC->Child(binsOptId); n; n = fC->Sibling(n)) {
-      VObjectType t = fC->Type(n);
+    for (SL::NodeId node = fileContent->Child(binsOptId); node;
+         node = fileContent->Sibling(node)) {
+      SL::VObjectType type = fileContent->Type(node);
 
-      if (std::ranges::any_of(kBinTypes,
-                              [t](VObjectType bt) { return bt == t; })) {
+      if (std::ranges::any_of(kBinTypes, [type](SL::VObjectType binType) {
+            return binType == type;
+          })) {
         foundBinType = true;
         continue;
       }
 
-      if (foundBinType && t == VObjectType::slStringConst &&
+      if (foundBinType && type == SL::VObjectType::slStringConst &&
           binName == "<unknown>") {
-        binName = fC->SymName(n);
+        binName = fileContent->SymName(node);
         continue;
       }
     }
 
-    CheckIdentifiersRecursive(fC, binsOptId, allowedArgs, moduleVars, errors,
-                              symbols);
+    CheckIdentifiersRecursive(fileContent, binsOptId, allowedArgs, moduleVars,
+                              errors, symbols);
   }
 }
 
-void CheckCovergroupExpression(const FileContent* fC, ErrorContainer* errors,
-                               SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckCovergroupExpression(const SL::FileContent* fileContent,
+                               SL::ErrorContainer* errors,
+                               SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (root == SL::InvalidNodeId) {
+    return;
+  }
 
-  auto moduleVars = GetModuleVariables(fC);
+  auto moduleVars = GetModuleVariables(fileContent);
 
-  for (NodeId cgId :
-       fC->sl_collect_all(root, VObjectType::paCovergroup_declaration)) {
-    auto allowedArgs = GetAllowedCovergroupArgs(fC, cgId);
-    for (NodeId cpId :
-         fC->sl_collect_all(cgId, VObjectType::paCover_point, false)) {
-      CheckBinsInCoverpoint(fC, cpId, allowedArgs, moduleVars, errors, symbols);
+  for (SL::NodeId cgId : fileContent->sl_collect_all(
+           root, SL::VObjectType::paCovergroup_declaration)) {
+    auto allowedArgs = GetAllowedCovergroupArgs(fileContent, cgId);
+    for (SL::NodeId cpId : fileContent->sl_collect_all(
+             cgId, SL::VObjectType::paCover_point, false)) {
+      CheckBinsInCoverpoint(fileContent, cpId, allowedArgs, moduleVars, errors,
+                            symbols);
     }
   }
 }

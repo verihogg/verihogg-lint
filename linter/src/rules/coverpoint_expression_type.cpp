@@ -11,130 +11,195 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
-static bool IsIntegralType(VObjectType type) {
+static auto IsIntegralType(SL::VObjectType type) -> bool {
   static constexpr std::array kIntegralTypes = {
-      VObjectType::paIntVec_TypeBit,
-      VObjectType::paIntVec_TypeLogic,
-      VObjectType::paIntVec_TypeReg,
-      VObjectType::paIntegerAtomType_Int,
-      VObjectType::paIntegerAtomType_LongInt,
-      VObjectType::paIntegerAtomType_Shortint,
-      VObjectType::paIntegerAtomType_Byte,
-      VObjectType::paIntegerAtomType_Integer,
-      VObjectType::paIntegerAtomType_Time,
-      VObjectType::paEnum_base_type,
+      SL::VObjectType::paIntVec_TypeBit,
+      SL::VObjectType::paIntVec_TypeLogic,
+      SL::VObjectType::paIntVec_TypeReg,
+      SL::VObjectType::paIntegerAtomType_Int,
+      SL::VObjectType::paIntegerAtomType_LongInt,
+      SL::VObjectType::paIntegerAtomType_Shortint,
+      SL::VObjectType::paIntegerAtomType_Byte,
+      SL::VObjectType::paIntegerAtomType_Integer,
+      SL::VObjectType::paIntegerAtomType_Time,
+      SL::VObjectType::paEnum_base_type,
   };
   return std::ranges::find(kIntegralTypes, type) != kIntegralTypes.end();
 };
 
-static VObjectType GetVariableType(const FileContent* fC, NodeId exprNode) {
-  if (!exprNode) return VObjectType::slNoType;
-
-  NodeId idNode = exprNode;
-  while (idNode && fC->Type(idNode) != VObjectType::slStringConst) {
-    idNode = fC->Child(idNode);
-  }
-  if (!idNode) return VObjectType::slNoType;
-
-  std::string_view varName = fC->SymName(idNode);
-
-  for (NodeId varDeclId : fC->sl_collect_all(
-           fC->getRootNode(), VObjectType::paVariable_declaration)) {
-    for (NodeId assignId : fC->sl_collect_all(
-             varDeclId, VObjectType::paVariable_decl_assignment, false)) {
-      NodeId nameNode = fC->Child(assignId);
-      if (!nameNode) continue;
-
-      std::string_view declName = fC->SymName(nameNode);
-      if (declName == varName) {
-        NodeId typeNode = fC->Child(varDeclId);
-        if (typeNode) {
-          NodeId baseTypeNode = fC->Child(typeNode);
-          if (baseTypeNode) {
-            return fC->Type(baseTypeNode);
-          }
-        }
-      }
-    }
+static auto ResolveVarName(const SL::FileContent* fileContent,
+                           SL::NodeId exprNode) -> std::string_view {
+  if (exprNode == SL::InvalidNodeId) {
+    return {};
   }
 
-  for (NodeId portDeclId : fC->sl_collect_all(
-           fC->getRootNode(), VObjectType::paAnsi_port_declaration)) {
-    NodeId header = fC->Child(portDeclId);
-    NodeId nameNode = header ? fC->Sibling(header) : InvalidNodeId;
-
-    if (!nameNode || fC->Type(nameNode) != VObjectType::slStringConst ||
-        fC->SymName(nameNode) != varName)
-      continue;
-
-    NodeId portDir = fC->Child(header);
-    NodeId netType = portDir ? fC->Sibling(portDir) : InvalidNodeId;
-    NodeId dataType = netType ? fC->Child(fC->Child(netType)) : InvalidNodeId;
-
-    if (NodeId base = dataType ? fC->Child(dataType) : InvalidNodeId)
-      return fC->Type(base);
+  SL::NodeId idNode = exprNode;
+  while (idNode != SL::InvalidNodeId &&
+         fileContent->Type(idNode) != SL::VObjectType::slStringConst) {
+    idNode = fileContent->Child(idNode);
   }
-
-  auto tfItems =
-      fC->sl_collect_all(fC->getRootNode(), VObjectType::paTf_port_item);
-  for (NodeId tfId : tfItems) {
-    NodeId nameNode = fC->Child(tfId);
-    while (nameNode && fC->Type(nameNode) != VObjectType::slStringConst)
-      nameNode = fC->Sibling(nameNode);
-
-    if (!nameNode) continue;
-
-    if (fC->SymName(nameNode) == varName) {
-      NodeId dtNode = fC->Child(tfId);
-      if (dtNode) {
-        NodeId dataType = fC->Child(dtNode);
-        if (dataType) {
-          NodeId base = fC->Child(dataType);
-          if (base) return fC->Type(base);
-        }
-      }
-    }
+  if (idNode == SL::InvalidNodeId) {
+    return {};
   }
-
-  return VObjectType::slNoType;
+  return fileContent->SymName(idNode);
 }
 
-static void CheckSingleCoverpoint(const FileContent* fC, NodeId cpId,
-                                  ErrorContainer* errors,
-                                  SymbolTable* symbols) {
-  NodeId exprNode = InvalidNodeId;
+static auto TypeFromVarDecl(const SL::FileContent* fileContent,
+                            std::string_view varName) -> SL::VObjectType {
+  for (SL::NodeId varDeclId :
+       fileContent->sl_collect_all(fileContent->getRootNode(),
+                                   SL::VObjectType::paVariable_declaration)) {
+    for (SL::NodeId assignId : fileContent->sl_collect_all(
+             varDeclId, SL::VObjectType::paVariable_decl_assignment, false)) {
+      SL::NodeId nameNode = fileContent->Child(assignId);
+      if (nameNode == SL::InvalidNodeId) {
+        continue;
+      }
+      if (fileContent->SymName(nameNode) != varName) {
+        continue;
+      }
 
-  for (NodeId child = fC->Child(cpId); child; child = fC->Sibling(child)) {
-    if (fC->Type(child) == VObjectType::paPrimary ||
-        fC->Type(child) == VObjectType::paExpression) {
+      SL::NodeId typeNode = fileContent->Child(varDeclId);
+      if (typeNode == SL::InvalidNodeId) {
+        continue;
+      }
+      SL::NodeId baseTypeNode = fileContent->Child(typeNode);
+      if (baseTypeNode == SL::InvalidNodeId) {
+        continue;
+      }
+      return fileContent->Type(baseTypeNode);
+    }
+  }
+  return SL::VObjectType::slNoType;
+}
+
+static auto TypeFromPortDecl(const SL::FileContent* fileContent,
+                             std::string_view varName) -> SL::VObjectType {
+  for (SL::NodeId portDeclId :
+       fileContent->sl_collect_all(fileContent->getRootNode(),
+                                   SL::VObjectType::paAnsi_port_declaration)) {
+    SL::NodeId header = fileContent->Child(portDeclId);
+    SL::NodeId nameNode = (header != SL::InvalidNodeId)
+                              ? fileContent->Sibling(header)
+                              : SL::InvalidNodeId;
+
+    if (nameNode == SL::InvalidNodeId ||
+        fileContent->Type(nameNode) != SL::VObjectType::slStringConst ||
+        fileContent->SymName(nameNode) != varName) {
+      continue;
+    }
+
+    SL::NodeId portDir = fileContent->Child(header);
+    SL::NodeId netType = (portDir != SL::InvalidNodeId)
+                             ? fileContent->Sibling(portDir)
+                             : SL::InvalidNodeId;
+    SL::NodeId dataType = (netType != SL::InvalidNodeId)
+                              ? fileContent->Child(fileContent->Child(netType))
+                              : SL::InvalidNodeId;
+    SL::NodeId base = (dataType != SL::InvalidNodeId)
+                          ? fileContent->Child(dataType)
+                          : SL::InvalidNodeId;
+    if (base != SL::InvalidNodeId) {
+      return fileContent->Type(base);
+    }
+  }
+  return SL::VObjectType::slNoType;
+}
+
+static auto TypeFromTfPortItem(const SL::FileContent* fileContent,
+                               std::string_view varName) -> SL::VObjectType {
+  for (SL::NodeId tfId : fileContent->sl_collect_all(
+           fileContent->getRootNode(), SL::VObjectType::paTf_port_item)) {
+    SL::NodeId nameNode = fileContent->Child(tfId);
+    while (nameNode != SL::InvalidNodeId &&
+           fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
+      nameNode = fileContent->Sibling(nameNode);
+    }
+    if (nameNode == SL::InvalidNodeId) {
+      continue;
+    }
+    if (fileContent->SymName(nameNode) != varName) {
+      continue;
+    }
+
+    SL::NodeId dtNode = fileContent->Child(tfId);
+    if (dtNode == SL::InvalidNodeId) {
+      continue;
+    }
+    SL::NodeId dataType = fileContent->Child(dtNode);
+    if (dataType == SL::InvalidNodeId) {
+      continue;
+    }
+    SL::NodeId base = fileContent->Child(dataType);
+    if (base != SL::InvalidNodeId) {
+      return fileContent->Type(base);
+    }
+  }
+  return SL::VObjectType::slNoType;
+}
+
+static auto GetVariableType(const SL::FileContent* fileContent,
+                            SL::NodeId exprNode) -> SL::VObjectType {
+  std::string_view varName = ResolveVarName(fileContent, exprNode);
+  if (varName.empty()) {
+    return SL::VObjectType::slNoType;
+  }
+
+  SL::VObjectType result = TypeFromVarDecl(fileContent, varName);
+  if (result != SL::VObjectType::slNoType) {
+    return result;
+  }
+
+  result = TypeFromPortDecl(fileContent, varName);
+  if (result != SL::VObjectType::slNoType) {
+    return result;
+  }
+
+  return TypeFromTfPortItem(fileContent, varName);
+}
+
+static void CheckSingleCoverpoint(const SL::FileContent* fileContent,
+                                  SL::NodeId cpId, SL::ErrorContainer* errors,
+                                  SL::SymbolTable* symbols) {
+  SL::NodeId exprNode = SL::InvalidNodeId;
+  for (SL::NodeId child = fileContent->Child(cpId); child != SL::InvalidNodeId;
+       child = fileContent->Sibling(child)) {
+    if (fileContent->Type(child) == SL::VObjectType::paPrimary ||
+        fileContent->Type(child) == SL::VObjectType::paExpression) {
       exprNode = child;
       break;
     }
   }
-  if (!exprNode) return;
+  if (exprNode == SL::InvalidNodeId) {
+    return;
+  }
 
-  VObjectType varType = GetVariableType(fC, exprNode);
-
+  SL::VObjectType varType = GetVariableType(fileContent, exprNode);
   if (!IsIntegralType(varType)) {
-    std::string_view cpName = ExtractName(fC, cpId);
-    ReportError(fC, cpId, cpName,
-                ErrorDefinition::LINT_COVERPOINT_EXPRESSION_TYPE, errors,
+    std::string_view cpName = ExtractName(fileContent, cpId);
+    ReportError(fileContent, cpId, cpName,
+                SL::ErrorDefinition::LINT_COVERPOINT_EXPRESSION_TYPE, errors,
                 symbols);
   }
 }
 
-void CheckCoverpointExpressionType(const FileContent* fC,
-                                   ErrorContainer* errors,
-                                   SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+void CheckCoverpointExpressionType(const SL::FileContent* fileContent,
+                                   SL::ErrorContainer* errors,
+                                   SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  auto coverpoints = fC->sl_collect_all(root, VObjectType::paCover_point);
+  auto coverpoints =
+      fileContent->sl_collect_all(root, SL::VObjectType::paCover_point);
 
-  for (NodeId cpId : coverpoints) {
-    CheckSingleCoverpoint(fC, cpId, errors, symbols);
+  for (SL::NodeId cpId : coverpoints) {
+    CheckSingleCoverpoint(fileContent, cpId, errors, symbols);
   }
 }

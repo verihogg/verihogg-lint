@@ -11,132 +11,181 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-using namespace SURELOG;
+namespace SL = SURELOG;
 
 static constexpr std::array kHardWrappers = {
-    VObjectType::paAssignment_pattern,
-    VObjectType::paAssignment_pattern_expression,
-    VObjectType::paConstant_assignment_pattern_expression,
-    VObjectType::paPrimary,
-    VObjectType::paConstant_primary,
-    VObjectType::paExpression,
-    VObjectType::paConstant_expression,
-    VObjectType::paConstant_mintypmax_expression,
-    VObjectType::paConstant_param_expression,
+    SL::VObjectType::paAssignment_pattern,
+    SL::VObjectType::paAssignment_pattern_expression,
+    SL::VObjectType::paConstant_assignment_pattern_expression,
+    SL::VObjectType::paPrimary,
+    SL::VObjectType::paConstant_primary,
+    SL::VObjectType::paExpression,
+    SL::VObjectType::paConstant_expression,
+    SL::VObjectType::paConstant_mintypmax_expression,
+    SL::VObjectType::paConstant_param_expression,
 };
 
 static constexpr std::array kValidContexts = {
-    VObjectType::paOperator_assignment,
-    VObjectType::paBlocking_assignment,
-    VObjectType::paNonblocking_assignment,
-    VObjectType::paNet_assignment,
-    VObjectType::paNet_decl_assignment,
-    VObjectType::paVariable_decl_assignment,
-    VObjectType::paParam_assignment,
-    VObjectType::paContinuous_assign,
+    SL::VObjectType::paOperator_assignment,
+    SL::VObjectType::paBlocking_assignment,
+    SL::VObjectType::paNonblocking_assignment,
+    SL::VObjectType::paNet_assignment,
+    SL::VObjectType::paNet_decl_assignment,
+    SL::VObjectType::paVariable_decl_assignment,
+    SL::VObjectType::paParam_assignment,
+    SL::VObjectType::paContinuous_assign,
 };
 
 static constexpr std::array kAssignmentLvalueTypes = {
-    VObjectType::paOperator_assignment,
-    VObjectType::paBlocking_assignment,
-    VObjectType::paNonblocking_assignment,
-    VObjectType::paNet_assignment,
+    SL::VObjectType::paOperator_assignment,
+    SL::VObjectType::paBlocking_assignment,
+    SL::VObjectType::paNonblocking_assignment,
+    SL::VObjectType::paNet_assignment,
 };
 
 static constexpr std::array kLvalueChildTypes = {
-    VObjectType::paVariable_lvalue,
-    VObjectType::paNet_lvalue,
+    SL::VObjectType::paVariable_lvalue,
+    SL::VObjectType::paNet_lvalue,
 };
 
 static constexpr std::array kExpressionContextTypes = {
-    VObjectType::paCond_predicate,
-    VObjectType::paLoop_statement,
-    VObjectType::paCase_statement,
-    VObjectType::paExpression,
+    SL::VObjectType::paCond_predicate,
+    SL::VObjectType::paLoop_statement,
+    SL::VObjectType::paCase_statement,
+    SL::VObjectType::paExpression,
 };
 
-static bool IsHardWrapper(VObjectType type) {
+static auto IsHardWrapper(SL::VObjectType type) {
   return std::ranges::find(kHardWrappers, type) != kHardWrappers.end();
 }
 
-static bool IsValidAssignmentContext(VObjectType type) {
+static auto IsValidAssignmentContext(SL::VObjectType type) {
   return std::ranges::find(kValidContexts, type) != kValidContexts.end();
 }
 
-static NodeId FindDirectContext(const FileContent* fC, NodeId patternNode) {
-  NodeId current = fC->Parent(patternNode);
-  while (current && IsHardWrapper(fC->Type(current))) {
-    current = fC->Parent(current);
+static auto FindDirectContext(const SL::FileContent* fileContent,
+                              SL::NodeId patternNode) -> SL::NodeId {
+  SL::NodeId current = fileContent->Parent(patternNode);
+  while (current && IsHardWrapper(fileContent->Type(current))) {
+    current = fileContent->Parent(current);
   }
   return current;
 }
 
-static std::string_view FindContextName(const FileContent* fC,
-                                        NodeId patternNode) {
-  auto nameFromFirstChild = [&](NodeId node,
-                                VObjectType targetType) -> std::string_view {
-    for (NodeId ch = fC->Child(node); ch; ch = fC->Sibling(ch)) {
-      if (fC->Type(ch) != targetType) continue;
-      std::string_view name = ExtractName(fC, ch, "");
-      if (!name.empty()) return name;
-      break;
+static auto NameFromFirstChild(const SL::FileContent* fileContent,
+                               SL::NodeId node, SL::VObjectType targetType)
+    -> std::string_view {
+  for (SL::NodeId ch = fileContent->Child(node); ch != SL::NodeId(0);
+       ch = fileContent->Sibling(ch)) {
+    if (fileContent->Type(ch) != targetType) {
+      continue;
     }
-    return {};
-  };
+    std::string_view name = ExtractName(fileContent, ch, "");
+    if (!name.empty()) {
+      return name;
+    }
+    break;
+  }
+  return {};
+}
 
-  for (NodeId current = fC->Parent(patternNode); current;
-       current = fC->Parent(current)) {
-    VObjectType type = fC->Type(current);
+static auto NameFromLvalue(const SL::FileContent* fileContent,
+                           SL::NodeId current) -> std::string_view {
+  for (SL::NodeId ch = fileContent->Child(current); ch != SL::NodeId(0);
+       ch = fileContent->Sibling(ch)) {
+    if (std::ranges::find(kLvalueChildTypes, fileContent->Type(ch)) !=
+        kLvalueChildTypes.end()) {
+      return ExtractName(fileContent, ch, "unknown");
+    }
+  }
+  return {};
+}
+
+static auto NameFromSubroutineCall(const SL::FileContent* fileContent,
+                                   SL::NodeId current) -> std::string_view {
+  SL::NodeId nameNode = fileContent->Child(current);
+  if (nameNode != SL::NodeId(0) &&
+      fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
+    return fileContent->SymName(nameNode);
+  }
+  return {};
+}
+
+static auto NameFromExpressionContext(const SL::FileContent* fileContent,
+                                      SL::NodeId current, SL::VObjectType type)
+    -> std::string_view {
+  SL::NodeId searchRoot = (type == SL::VObjectType::paCond_predicate)
+                              ? fileContent->Child(current)
+                              : current;
+  if (searchRoot == SL::NodeId(0)) {
+    return {};
+  }
+  return NameFromFirstChild(fileContent, searchRoot,
+                            SL::VObjectType::paExpression);
+}
+
+static auto FindContextName(const SL::FileContent* fileContent,
+                            SL::NodeId patternNode) -> std::string_view {
+  for (SL::NodeId current = fileContent->Parent(patternNode);
+       current != SL::NodeId(0); current = fileContent->Parent(current)) {
+    SL::VObjectType type = fileContent->Type(current);
 
     if (std::ranges::find(kAssignmentLvalueTypes, type) !=
         kAssignmentLvalueTypes.end()) {
-      for (NodeId ch = fC->Child(current); ch; ch = fC->Sibling(ch)) {
-        if (std::ranges::find(kLvalueChildTypes, fC->Type(ch)) !=
-            kLvalueChildTypes.end())
-          return ExtractName(fC, ch, "unknown");
+      std::string_view name = NameFromLvalue(fileContent, current);
+      if (!name.empty()) {
+        return name;
       }
     }
 
-    if (type == VObjectType::paSubroutine_call) {
-      NodeId nameNode = fC->Child(current);
-      if (nameNode && fC->Type(nameNode) == VObjectType::slStringConst)
-        return fC->SymName(nameNode);
+    if (type == SL::VObjectType::paSubroutine_call) {
+      std::string_view name = NameFromSubroutineCall(fileContent, current);
+      if (!name.empty()) {
+        return name;
+      }
     }
 
     if (std::ranges::find(kExpressionContextTypes, type) !=
         kExpressionContextTypes.end()) {
-      NodeId searchRoot = (type == VObjectType::paCond_predicate)
-                              ? fC->Child(current)
-                              : current;
-      if (!searchRoot) continue;
-
-      if (auto name = nameFromFirstChild(searchRoot, VObjectType::paExpression);
-          !name.empty())
+      std::string_view name =
+          NameFromExpressionContext(fileContent, current, type);
+      if (!name.empty()) {
         return name;
+      }
     }
   }
   return "<unknown>";
 }
 
-void CheckAssignmentPatternContext(const FileContent* fC,
-                                   ErrorContainer* errors,
-                                   SymbolTable* symbols) {
-  if (!fC || !errors || !symbols) return;
+void CheckAssignmentPatternContext(const SL::FileContent* fileContent,
+                                   SL::ErrorContainer* errors,
+                                   SL::SymbolTable* symbols) {
+  if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
+    return;
+  }
 
-  NodeId root = fC->getRootNode();
-  if (!root) return;
+  SL::NodeId root = fileContent->getRootNode();
+  if (!root) {
+    return;
+  }
 
-  auto patterns = fC->sl_collect_all(root, VObjectType::paAssignment_pattern);
+  auto patterns =
+      fileContent->sl_collect_all(root, SL::VObjectType::paAssignment_pattern);
 
-  for (NodeId pat : patterns) {
-    if (!pat) continue;
+  for (SL::NodeId pat : patterns) {
+    if (!pat) {
+      continue;
+    }
 
-    NodeId ctx = FindDirectContext(fC, pat);
+    SL::NodeId ctx = FindDirectContext(fileContent, pat);
 
-    if (ctx && IsValidAssignmentContext(fC->Type(ctx))) continue;
+    if (ctx && IsValidAssignmentContext(fileContent->Type(ctx))) {
+      continue;
+    }
 
-    std::string_view name = FindContextName(fC, pat);
-    ReportError(fC, pat, name, ErrorDefinition::LINT_ASSIGNMENT_PATTERN_CONTEXT,
-                errors, symbols);
+    std::string_view name = FindContextName(fileContent, pat);
+    ReportError(fileContent, pat, name,
+                SL::ErrorDefinition::LINT_ASSIGNMENT_PATTERN_CONTEXT, errors,
+                symbols);
   }
 }
