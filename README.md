@@ -87,6 +87,36 @@ The project is intended for static code analysis and checking compliance with co
 
 - `TYPE_CASTING`  
   Expecting tick before type casting expression
+  
+- `CIRCULAR_INHERITANCE`  
+  Class # extends itself
+  
+- `DUPLICATE_CLASS`  
+  Duplicate class #, already declared
+
+- `DUPLICATE_CONSTRUCTOR`  
+  Duplicate constructor #, already declared
+    
+- `EXTEND_CLASS`  
+  Extending non existing class #
+
+- `EXTERN_CONSTRAINT_UNDECLARED`  
+  Outer class constraint # was not declared extern inside class #
+
+- `EXTERN_FUNCTION_UNDECLARED`  
+  Outer class function # was not declared extern inside class #
+
+- `EXTERN_TASK_UNDECLARED`  
+  Outer class task # was not declared extern inside class #
+
+- `EXTEND_INTERFACE_CLASS`  
+  Extending interface class # by non-interface class not allowed
+
+- `IMPLEMENT_CLASS`  
+  Implementing non-interface class # by class not allowed
+    
+- `IMPLEMENT_INTERFACE_CLASS`  
+  Implementing non existing interface class #
 
 - `TIME_VALUE`  
   Unexpected white space between number and time value
@@ -261,3 +291,12 @@ You can also pass multiple files or use wildcards:
 ```
 
 You can run `./build/bin/lint --help` to see all available options.
+
+## Testing
+
+You can launch local tests, which are build using GTest framework
+
+To run tests:
+```bash
+ctest --output-on-failure --test-dir build
+```
