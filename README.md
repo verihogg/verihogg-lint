@@ -129,7 +129,7 @@ You can use the prebuilt image published to GitHub Container Registry:
 
 ```bash
 cd /path/to/sv/file.sv
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/toxiccclub/surelint:latest lint file.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint file.sv -nobuiltin
 ```
 
 #### Using filelist (.f)
@@ -152,7 +152,7 @@ Run with Docker:
 
 ```bash
 cd /path/to/project
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/toxiccclub/surelint:latest lint -f files.f -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint -f files.f -nobuiltin
 ```
 
 The filelist format supports:
@@ -167,16 +167,16 @@ You can also pass multiple files or use wildcards:
 ```bash
 # Multiple files
 cd /path/to/project
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/toxiccclub/surelint:latest lint file1.sv file2.sv file3.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint file1.sv file2.sv file3.sv -nobuiltin
 
 # All .sv files in current directory
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/toxiccclub/surelint:latest lint *.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint *.sv -nobuiltin
 
 # All .sv files recursively
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/toxiccclub/surelint:latest lint **/*.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint **/*.sv -nobuiltin
 
 # Specific directory
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/toxiccclub/surelint:latest lint /path/to/project/**/*.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint /path/to/project/**/*.sv -nobuiltin
 ```
 
 ---
