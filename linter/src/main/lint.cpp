@@ -11,7 +11,8 @@ using namespace SURELOG;
 int main(int argc, const char** argv) {
   auto symbolTable = std::make_unique<SymbolTable>();
   auto errors = std::make_unique<ErrorContainer>(symbolTable.get());
-  auto clp = std::make_unique<CommandLineParser>(errors.get(), symbolTable.get(), false, false);
+  auto clp = std::make_unique<CommandLineParser>(
+      errors.get(), symbolTable.get(), false, false);
 
   clp->noPython();
   clp->setParse(true);
@@ -30,9 +31,9 @@ int main(int argc, const char** argv) {
 
   if (success && !clp->help()) {
     try {
-    compiler = start_compiler(clp.get());
-    the_design = get_design(compiler);
-    UHDMdesign = get_uhdm_design(compiler);
+      compiler = start_compiler(clp.get());
+      the_design = get_design(compiler);
+      UHDMdesign = get_uhdm_design(compiler);
     } catch (const std::exception& e) {
       std::cerr << "Compiler error: " << e.what() << '\n';
       return 1;

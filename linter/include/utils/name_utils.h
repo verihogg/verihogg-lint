@@ -10,21 +10,21 @@
 
 using namespace SURELOG;
 
-//Извлечь первое имя StringConst из поддерева узла.
-//Возвращает defaultName, если имя не найдено.
+// Извлечь первое имя StringConst из поддерева узла.
+// Возвращает defaultName, если имя не найдено.
 std::string_view ExtractName(const FileContent* fC, NodeId node,
                              const std::string_view& defaultName = "<unknown>");
 
-//Извлечь параметр цикла
-//Используется для определения порпуска параметра
+// Извлечь параметр цикла
+// Используется для определения порпуска параметра
 std::string_view FindForLoopVariableName(const FileContent* fC, NodeId forNode);
 
-//Извлечь имя переменной из шаблона Variable_decl_assignment.
-//Используется для поиска имен переменных в объявлениях.
+// Извлечь имя переменной из шаблона Variable_decl_assignment.
+// Используется для поиска имен переменных в объявлениях.
 std::string_view ExtractVariableName(const FileContent* fC, NodeId parentNode);
 
-//Извлечение имени параметра из шаблона Param_assignment.
-//Используется для поиска имен параметров в декларациях.
+// Извлечение имени параметра из шаблона Param_assignment.
+// Используется для поиска имен параметров в декларациях.
 std::string_view ExtractParameterName(const FileContent* fC, NodeId parentNode);
 
 std::string_view FindDirectRhsLhsName(const FileContent* fC, NodeId concatNode);
