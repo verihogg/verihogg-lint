@@ -19,6 +19,7 @@
 /install
 /tests/TestInstall/build/
 /test
+/result
 
 CMakeSettings.json
 

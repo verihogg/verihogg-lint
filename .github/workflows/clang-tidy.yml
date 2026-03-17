@@ -15,29 +15,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          submodules: recursive
 
-      - name: Install build and lint dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            clang-tidy-19 \
-            cmake \
-            default-jre \
-            python3 \
-            python3-pip
-          python3 -m pip install --user --break-system-packages orderedmultidict
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
 
       - name: Configure project
-        run: |
-          cmake \
-            -S . \
-            -B build \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        run: nix-shell --run "cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON"
 
       - name: Run clang-tidy on linter sources
-        run: bash scripts/lint.sh build
+        run: nix-shell --run "bash scripts/lint.sh build"

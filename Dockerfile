@@ -1,36 +1,18 @@
-FROM ubuntu:22.04 AS builder
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    git \
-    default-jre \
-    python3 \
-    python3-pip \
-    && rm -rf /var/lib/apt/lists/* \
-    && pip install orderedmultidict
+FROM nixos/nix AS builder
 
 WORKDIR /app
 
-COPY CMakeLists.txt Makefile /app/
-COPY linter /app/linter
-COPY external /app/external
+COPY . .
 
-RUN rm -rf build dbuild coverage-build && \
-    make release
+RUN nix-build && \
+    nix-store --export $(nix-store -qR result) > /nix-closure.nar
 
+FROM nixos/nix
 
-FROM ubuntu:22.04
+COPY --from=builder /nix-closure.nar /nix-closure.nar
 
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get update && apt-get install -y \
-    libstdc++6 \
-    default-jre \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-COPY --from=builder /app/build/bin/lint /usr/local/bin/lint
+RUN imported_paths="$(nix-store --import < /nix-closure.nar)" && \
+    lint_store_path="$(printf '%s\n' "$imported_paths" | grep 'verihogg-lint-' | head -n1)" && \
+    test -n "$lint_store_path" && \
+    ln -s "$lint_store_path/bin/verihogg-lint" /nix/var/nix/profiles/default/bin/ && \
+    rm /nix-closure.nar

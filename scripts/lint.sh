@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-readonly CLANG_TIDY_BIN="clang-tidy-19"
+readonly CLANG_TIDY_BIN="clang-tidy"
 readonly BUILD_DIR="${1:-build}"
 
 if ! command -v "${CLANG_TIDY_BIN}" >/dev/null 2>&1; then

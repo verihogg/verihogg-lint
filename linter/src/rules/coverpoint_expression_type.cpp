@@ -25,8 +25,7 @@ static bool IsIntegralType(VObjectType type) {
       VObjectType::paIntegerAtomType_Time,
       VObjectType::paEnum_base_type,
   };
-  return std::find(kIntegralTypes.begin(), kIntegralTypes.end(), type) !=
-         kIntegralTypes.end();
+  return std::ranges::find(kIntegralTypes, type) != kIntegralTypes.end();
 };
 
 static VObjectType GetVariableType(const FileContent* fC, NodeId exprNode) {

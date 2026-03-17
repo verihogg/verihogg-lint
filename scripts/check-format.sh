@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-readonly CLANG_FORMAT_BIN="clang-format-19"
+readonly CLANG_FORMAT_BIN="clang-format"
 
 if ! command -v "${CLANG_FORMAT_BIN}" >/dev/null 2>&1; then
   echo "error: ${CLANG_FORMAT_BIN} is required but was not found" >&2

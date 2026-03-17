@@ -1,6 +1,6 @@
-## SureLint
+## verihogg-lint
 
-**SureLint** is a SystemVerilog linter built on top of [Surelog](https://github.com/alainmarcel/Surelog).  
+**verihogg-lint** is a SystemVerilog linter built on top of [Surelog](https://github.com/alainmarcel/Surelog).  
 The project is intended for static code analysis and checking compliance with coding rules and standards.
 
 ---
@@ -115,7 +115,7 @@ The project is intended for static code analysis and checking compliance with co
 
 - `linter/src` – implementation of linter rules.  
 - `linter/include` – linter header files.  
-- `external/Surelog` – Surelog submodule used for SystemVerilog code analysis.  
+- `build.nix` / `shell.nix` – Nix definitions for build and development shell.  
 
 ---
 
@@ -129,7 +129,7 @@ You can use the prebuilt image published to GitHub Container Registry:
 
 ```bash
 cd /path/to/sv/file.sv
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint file.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest verihogg-lint file.sv -nobuiltin
 ```
 
 #### Using filelist (.f)
@@ -152,7 +152,7 @@ Run with Docker:
 
 ```bash
 cd /path/to/project
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint -f files.f -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest verihogg-lint -f files.f -nobuiltin
 ```
 
 The filelist format supports:
@@ -167,7 +167,7 @@ You can also pass multiple files or use wildcards:
 ```bash
 # Multiple files
 cd /path/to/project
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint file1.sv file2.sv file3.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest verihogg-lint file1.sv file2.sv file3.sv -nobuiltin
 
 # All .sv files in current directory
 docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint *.sv -nobuiltin
@@ -183,47 +183,24 @@ docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest
 
 ## Build and run locally
 
-### 1. Clone the repository and initialize submodules
+### 1. Build from source (Nix)
 
-Clone the repository and fetch the bundled Surelog submodule:
-
-```bash
-git clone https://github.com/toxiccclub/SureLint.git
-cd SureLint
-
-git submodule update --init --recursive
-```
-
-### 2. Build from source
-
-The project uses CMake driven by the top-level `Makefile`.  
-You will need a C++17-capable compiler, CMake, and `make` installed.
-
-To build the **release** binary, run:
+Use Nix to build the project and all required dependencies in a reproducible environment.
+This command compiles the project and creates a `result` symlink that points to the
+built output in the Nix store.
 
 ```bash
-make release
+nix-build
 ```
 
-This will configure and build the project into the `build` directory.
-
-After a successful build, the `lint` binary will be located at:
-
-```bash
-ls build/bin
-```
-
-You should see `lint` among the listed files.
-
-
-### 3. Run from console (local build)
+### 2. Run from console (local build)
 
 #### Single file
 
 To lint a single SystemVerilog file:
 
 ```bash
-./build/bin/lint /path/to/your_file/my_sv_code.sv -nobuiltin
+./result/bin/lint /path/to/your_file/my_sv_code.sv -nobuiltin
 ```
 
 #### Using filelist (.f)
