@@ -1,14 +1,13 @@
 #pragma once
 
+#include <Surelog/API/Surelog.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
 #include <uhdm/VpiListener.h>
 #include <uhdm/uhdm.h>
 
 #include <vector>
-
-#include "Surelog/API/Surelog.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/SourceCompile/SymbolTable.h"
 
 using namespace SURELOG;
 

@@ -1,13 +1,14 @@
 #include "rules/system_function_arguments.h"
 
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <string>
 #include <string_view>
 #include <unordered_map>
 
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/SourceCompile/SymbolTable.h"
-#include "Surelog/SourceCompile/VObjectTypes.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 

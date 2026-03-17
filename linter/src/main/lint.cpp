@@ -1,8 +1,9 @@
+#include <Surelog/API/Surelog.h>
+#include <Surelog/CommandLine/CommandLineParser.h>
+
 #include <iostream>
 #include <memory>
 
-#include "Surelog/API/Surelog.h"
-#include "Surelog/CommandLine/CommandLineParser.h"
 #include "main/rule_dispatcher.h"
 
 using namespace SURELOG;

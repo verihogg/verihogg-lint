@@ -1,11 +1,12 @@
 #include "main/rule_dispatcher.h"
 
+#include <Surelog/Common/FileSystem.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <array>
 #include <functional>
 
-#include "Surelog/Common/FileSystem.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/SourceCompile/VObjectTypes.h"
 #include "rules/all_rules.h"
 
 using namespace SURELOG;

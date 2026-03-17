@@ -1,16 +1,17 @@
 #include "rules/exponent_format_time_value.h"
 
+#include <Surelog/Common/FileSystem.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <fstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
-#include "Surelog/Common/FileSystem.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/SourceCompile/SymbolTable.h"
-#include "Surelog/SourceCompile/VObjectTypes.h"
 #include "utils/location_utils.h"
 
 using namespace SURELOG;

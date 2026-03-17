@@ -1,9 +1,9 @@
 #include "utils/string_utils.h"
 
-#include <string>
+#include <Surelog/Common/FileSystem.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
 
-#include "Surelog/Common/FileSystem.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include <string>
 
 using namespace SURELOG;
 
