@@ -11,49 +11,18 @@
 # readability.
 Checks: >
   bugprone-*,
-  -bugprone-branch-clone,
-  -bugprone-easily-swappable-parameters,
-  -bugprone-narrowing-conversions,
-  clang-diagnostic-*,
   clang-analyzer-*,
-  -clang-analyzer-core.CallAndMessage,
-  -clang-analyzer-cplusplus.NewDeleteLeaks,
   google-*,
-  -google-build-using-namespace,
-  -google-readability-avoid-underscore-in-googletest-name,
-  -google-readability-braces-around-statements,
-  -google-readability-casting,
-  -google-readability-todo,
-  -google-runtime-int,
+  hicpp-*,
+  llvm-include-order,
   misc-*,
-  -misc-redundant-expression,
-  -misc-unused-parameters,
   modernize-*,
-  -modernize-type-traits,
-  -modernize-use-auto,
-  -modernize-use-nodiscard,
-  -modernize-use-trailing-return-type,
   performance-*,
-  -performance-avoid-endl,
-  -performance-enum-size,
+  portability-*,
+  -portability-avoid-pragma-once, # Usage of pragma once is advised
   readability-*,
-  -readability-braces-around-statements,
-  -readability-convert-member-functions-to-static,
-  -readability-function-cognitive-complexity,
-  -readability-identifier-length,
-  -readability-implicit-bool-conversion,
-  -readability-inconsistent-declaration-parameter-name,
-  -readability-isolate-declaration,
-  -readability-magic-numbers,
-  -readability-make-member-function-const,
-  -readability-named-parameter,
-  -readability-qualified-auto,
-  -readability-redundant-access-specifiers,
-  -readability-uppercase-literal-suffix
 
-WarningsAsErrors: ''
-
-HeaderFilterRegex: 'linter/.*'
+WarningsAsErrors: '*'
 
 CheckOptions:
   - key: performance-unnecessary-value-param.AllowedTypes
@@ -73,7 +42,7 @@ CheckOptions:
     value: k
 
   - key: readability-identifier-naming.LocalVariableCase
-    value: сamelBack
+    value: camelBack
   - key: readability-identifier-naming.ParameterCase
     value: camelBack
 
