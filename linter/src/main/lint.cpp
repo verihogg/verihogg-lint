@@ -1,9 +1,12 @@
+#include <cstdint>
+#include <exception>
 #include <iostream>
 #include <memory>
 
 #include "Surelog/API/Surelog.h"
 #include "Surelog/CommandLine/CommandLineParser.h"
 #include "main/rule_dispatcher.h"
+#include "uhdm/vpi_user.h"
 
 namespace SL = SURELOG;
 
@@ -23,12 +26,12 @@ auto main(int argc, const char** argv) -> int {
   clp->setFilterNote();
   clp->setFilterWarning();
 
-  bool success = clp->parseCommandLine(argc, argv);
+  const bool kSuccess = clp->parseCommandLine(argc, argv);
   SL::Design* theDesign = nullptr;
   SL::scompiler* compiler = nullptr;
   vpiHandle uhdmDesign = nullptr;
 
-  if (success && !clp->help()) {
+  if (kSuccess && !clp->help()) {
     try {
       compiler = start_compiler(clp.get());
       theDesign = get_design(compiler);
@@ -40,7 +43,7 @@ auto main(int argc, const char** argv) -> int {
   }
 
   if (theDesign == nullptr && uhdmDesign == nullptr) {
-    std::cerr << "No design created" << std::endl;
+    std::cerr << "No design created" << '\n';
     return 1;
   }
 
@@ -48,16 +51,15 @@ auto main(int argc, const char** argv) -> int {
 
   errors->printMessages(clp->muteStdout());
 
-  uint32_t errorCount = errors->getErrors().size();
+  const uint32_t kErrorCount = errors->getErrors().size();
 
-  if (errorCount == 0) {
-    std::cout << "Lint completed successfully. No issues found." << std::endl;
+  if (kErrorCount == 0) {
+    std::cout << "Lint completed successfully. No issues found." << '\n';
   } else {
-    std::cout << "Lint finished with " << errorCount << " error(s)."
-              << std::endl;
+    std::cout << "Lint finished with " << kErrorCount << " error(s)." << '\n';
   }
 
-  if (success && !clp->help()) {
+  if (kSuccess && !clp->help()) {
     shutdown_compiler(compiler);
   }
 
