@@ -1,24 +1,32 @@
 #include "rules/exponent_format_time_value.h"
 
+#include <Surelog/Common/FileSystem.h>
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Common/PathId.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
-#include "Surelog/Common/FileSystem.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/SourceCompile/SymbolTable.h"
-#include "Surelog/SourceCompile/VObjectTypes.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
 
 using LineCache = std::vector<std::string>;
 
-static auto GetLines(SL::PathId fileId) -> const LineCache& {
+namespace {
+auto GetLines(SL::PathId fileId) -> const LineCache& {
   static std::unordered_map<uint32_t, LineCache> sFileCache;
   const auto kEy = static_cast<uint32_t>(fileId);
   auto cacheIt = sFileCache.find(kEy);
@@ -49,8 +57,8 @@ static auto GetLines(SL::PathId fileId) -> const LineCache& {
   }
   return lines;
 }
-static auto GetTokenText(SL::PathId fileId, uint32_t line, uint32_t colStart,
-                         uint32_t colEnd) -> std::string {
+auto GetTokenText(SL::PathId fileId, uint32_t line, uint32_t colStart,
+                  uint32_t colEnd) -> std::string {
   if (line == 0 || colStart == 0 || colEnd <= colStart) {
     return {};
   }
@@ -73,8 +81,8 @@ static auto GetTokenText(SL::PathId fileId, uint32_t line, uint32_t colStart,
   return srcLine.substr(kStart, kLen);
 }
 
-static auto TokenContainsExponent(const SL::FileContent* fileContent,
-                                  SL::NodeId numNode) -> bool {
+auto TokenContainsExponent(const SL::FileContent* fileContent,
+                           SL::NodeId numNode) -> bool {
   const SL::PathId kFileId = fileContent->getFileId(numNode);
   const uint32_t kLine = fileContent->Line(numNode);
   const uint32_t kColStart = fileContent->Column(numNode);
@@ -88,11 +96,11 @@ static auto TokenContainsExponent(const SL::FileContent* fileContent,
   return std::ranges::any_of(kText,
                              [](char chr) { return chr == 'e' || chr == 'E'; });
 }
-static void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
-                                        SL::NodeId timeLiteral,
-                                        SL::ErrorContainer* errors,
-                                        SL::SymbolTable* symbols) {
-  SL::NodeId numNode = fileContent->Child(timeLiteral);
+void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
+                                 SL::NodeId timeLiteral,
+                                 SL::ErrorContainer* errors,
+                                 SL::SymbolTable* symbols) {
+  SL::NodeId const numNode = fileContent->Child(timeLiteral);
   if (!numNode) {
     return;
   }
@@ -100,10 +108,12 @@ static void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
   const SL::VObjectType kNumType = fileContent->Type(numNode);
   if (kNumType != SL::VObjectType::slIntConst &&
       kNumType != SL::VObjectType::slRealConst) {
-    { return; }
+    {
+      return;
+    }
   }
 
-  SL::NodeId timeUnitNode = fileContent->Sibling(numNode);
+  SL::NodeId const timeUnitNode = fileContent->Sibling(numNode);
   if (!timeUnitNode) {
     return;
   }
@@ -134,6 +144,7 @@ static void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
               SL::ErrorDefinition::LINT_EXPONENT_FORMAT_TIME_VALUE, errors,
               symbols);
 }
+}  // namespace
 
 void CheckExponentFormatTimeValue(const SL::FileContent* fileContent,
                                   SL::ErrorContainer* errors,
@@ -142,12 +153,12 @@ void CheckExponentFormatTimeValue(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId timeLiteral :
+  for (SL::NodeId const timeLiteral :
        fileContent->sl_collect_all(root, SL::VObjectType::paTime_literal)) {
     CheckTimeLiteralForExponent(fileContent, timeLiteral, errors, symbols);
   }

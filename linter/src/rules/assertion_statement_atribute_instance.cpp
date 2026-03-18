@@ -73,7 +73,9 @@ static auto CheckProceduralCover(const SL::FileContent* fileContent,
 
   SL::NodeId afterLabel = fileContent->Sibling(firstChild);
   if (!afterLabel) {
-    { return true; }
+    {
+      return true;
+    }
   }
 
   SL::VObjectType afterLabelType = fileContent->Type(afterLabel);
