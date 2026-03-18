@@ -25,6 +25,7 @@
 CMakeSettings.json
 
 fixes.yaml
+build.log
 
 /compile_commands.json
 

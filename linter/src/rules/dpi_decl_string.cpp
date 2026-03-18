@@ -1,8 +1,10 @@
 #include "rules/dpi_decl_string.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -19,20 +21,20 @@ void CheckDpiDeclarationString(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId dpiId : fileContent->sl_collect_all(
+  for (SL::NodeId const dpiId : fileContent->sl_collect_all(
            root, SL::VObjectType::paDpi_import_export)) {
-    SL::NodeId importNode = fileContent->Child(dpiId);
+    SL::NodeId const importNode = fileContent->Child(dpiId);
     if (!importNode ||
         fileContent->Type(importNode) != SL::VObjectType::paIMPORT) {
       continue;
     }
 
-    SL::NodeId stringNode = fileContent->Sibling(importNode);
+    SL::NodeId const stringNode = fileContent->Sibling(importNode);
     if (!stringNode ||
         fileContent->Type(stringNode) != SL::VObjectType::slStringLiteral) {
       continue;

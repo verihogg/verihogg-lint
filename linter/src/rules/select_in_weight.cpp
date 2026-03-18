@@ -1,7 +1,9 @@
 #include "rules/select_in_weight.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -19,8 +21,9 @@ static constexpr std::array kSelectTypes = {
     SL::VObjectType::paConstant_select,
 };
 
-static auto ContainsSelectInExpr(const SL::FileContent* fileContent,
-                                 SL::NodeId node) -> bool {
+namespace {
+auto ContainsSelectInExpr(const SL::FileContent* fileContent, SL::NodeId node)
+    -> bool {
   if (!node) {
     return false;
   }
@@ -29,10 +32,10 @@ static auto ContainsSelectInExpr(const SL::FileContent* fileContent,
   worklist.push(node);
 
   while (!worklist.empty()) {
-    SL::NodeId node = worklist.top();
+    SL::NodeId const node = worklist.top();
     worklist.pop();
 
-    SL::VObjectType type = fileContent->Type(node);
+    SL::VObjectType const type = fileContent->Type(node);
 
     if (type == SL::VObjectType::paRs_code_block) {
       continue;
@@ -52,20 +55,21 @@ static auto ContainsSelectInExpr(const SL::FileContent* fileContent,
 
   return false;
 }
+}  // namespace
 void CheckSelectInWeight(const SL::FileContent* fileContent,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId rsRuleId :
+  for (SL::NodeId const rsRuleId :
        fileContent->sl_collect_all(root, SL::VObjectType::paRs_rule)) {
-    SL::NodeId rsProdList = fileContent->Child(rsRuleId);
+    SL::NodeId const rsProdList = fileContent->Child(rsRuleId);
     if (!rsProdList) {
       continue;
     }
@@ -74,7 +78,7 @@ void CheckSelectInWeight(const SL::FileContent* fileContent,
       continue;
     }
 
-    SL::NodeId weightExpr = fileContent->Sibling(rsProdList);
+    SL::NodeId const weightExpr = fileContent->Sibling(rsProdList);
     if (!weightExpr) {
       continue;
     }

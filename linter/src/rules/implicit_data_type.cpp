@@ -1,12 +1,18 @@
 #include "rules/implicit_data_type.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
+#include <utility>
+#include <vector>
 
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -15,12 +21,13 @@ namespace SL = SURELOG;
 
 using LineRange = std::pair<uint32_t, uint32_t>;
 
-static auto Includes(const LineRange& range, uint32_t line) -> bool {
+namespace {
+auto Includes(const LineRange& range, uint32_t line) -> bool {
   return line >= range.first && line <= range.second;
 }
 
-static auto HasExplicitType(const SL::FileContent* fileContent,
-                            SL::NodeId dataDecl) -> bool {
+auto HasExplicitType(const SL::FileContent* fileContent, SL::NodeId dataDecl)
+    -> bool {
   static constexpr std::array kExplicitTypeNodes = {
       SL::VObjectType::paNet_type,
       SL::VObjectType::paData_type,
@@ -36,8 +43,8 @@ static auto HasExplicitType(const SL::FileContent* fileContent,
   });
 }
 
-static auto CollectProceduralRanges(const SL::FileContent* fileContent,
-                                    SL::NodeId root) -> std::vector<LineRange> {
+auto CollectProceduralRanges(const SL::FileContent* fileContent,
+                             SL::NodeId root) -> std::vector<LineRange> {
   static constexpr std::array kProceduralTypes = {
       SL::VObjectType::paInitial_construct,
       SL::VObjectType::paAlways_construct,
@@ -46,7 +53,7 @@ static auto CollectProceduralRanges(const SL::FileContent* fileContent,
 
   std::vector<LineRange> ranges;
   for (auto procType : kProceduralTypes) {
-    for (SL::NodeId block : fileContent->sl_collect_all(root, procType)) {
+    for (SL::NodeId const block : fileContent->sl_collect_all(root, procType)) {
       ranges.emplace_back(fileContent->Line(block),
                           fileContent->EndLine(block));
     }
@@ -54,18 +61,18 @@ static auto CollectProceduralRanges(const SL::FileContent* fileContent,
   return ranges;
 }
 
-static auto IsPhantomNode(const SL::FileContent* fileContent,
-                          SL::NodeId dataDecl,
-                          const std::vector<LineRange>& ranges) -> bool {
+auto IsPhantomNode(const SL::FileContent* fileContent, SL::NodeId dataDecl,
+                   const std::vector<LineRange>& ranges) -> bool {
   if (ExtractVariableName(fileContent, dataDecl).empty()) {
     return true;
   }
 
-  uint32_t declLine = fileContent->Line(dataDecl);
+  uint32_t const declLine = fileContent->Line(dataDecl);
   return std::ranges::any_of(ranges, [declLine](const LineRange& range) {
     return Includes(range, declLine);
   });
 }
+}  // namespace
 
 void CheckImplicitDataTypeInDeclaration(const SL::FileContent* fileContent,
                                         SL::ErrorContainer* errors,
@@ -73,14 +80,14 @@ void CheckImplicitDataTypeInDeclaration(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (root == SL::InvalidNodeId) {
     return;
   }
 
   auto proceduralRanges = CollectProceduralRanges(fileContent, root);
 
-  for (SL::NodeId dataDecl :
+  for (SL::NodeId const dataDecl :
        fileContent->sl_collect_all(root, SL::VObjectType::paData_declaration)) {
     auto packedDims = fileContent->sl_collect_all(
         dataDecl, SL::VObjectType::paPacked_dimension);

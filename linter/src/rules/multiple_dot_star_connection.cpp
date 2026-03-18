@@ -1,7 +1,9 @@
 #include "rules/multiple_dot_star_connection.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -18,28 +20,29 @@ struct DotStarResult {
   SL::NodeId instanceNameNode;
 };
 
-static auto HasDotStarChild(const SL::FileContent* fileContent, SL::NodeId node)
+namespace {
+auto HasDotStarChild(const SL::FileContent* fileContent, SL::NodeId node)
     -> bool {
   return !fileContent->sl_collect_all(node, SL::VObjectType::paDOTSTAR).empty();
 }
 
-static auto FindMultipleDotStarConnections(const SL::FileContent* fileContent,
-                                           SL::NodeId instNode)
+auto FindMultipleDotStarConnections(const SL::FileContent* fileContent,
+                                    SL::NodeId instNode)
     -> std::optional<DotStarResult> {
-  SL::NodeId hierInst = fileContent->sl_collect(
+  SL::NodeId const hierInst = fileContent->sl_collect(
       instNode, SL::VObjectType::paHierarchical_instance);
   if (hierInst == SL::InvalidNodeId) {
     return std::nullopt;
   }
 
   SL::NodeId instanceNameNode = {};
-  SL::NodeId nameOfInst =
+  SL::NodeId const nameOfInst =
       fileContent->sl_collect(hierInst, SL::VObjectType::paName_of_instance);
   if (nameOfInst) {
     instanceNameNode = fileContent->Child(nameOfInst);
   }
 
-  SL::NodeId portList = fileContent->sl_collect(
+  SL::NodeId const portList = fileContent->sl_collect(
       hierInst, SL::VObjectType::paList_of_port_connections);
   if (portList == SL::InvalidNodeId) {
     return std::nullopt;
@@ -56,14 +59,17 @@ static auto FindMultipleDotStarConnections(const SL::FileContent* fileContent,
     }
 
     if (++dotStarCount == 2) {
-      SL::NodeId dotStarNode =
+      SL::NodeId const dotStarNode =
           fileContent->sl_collect(child, SL::VObjectType::paDOTSTAR);
-      return DotStarResult{dotStarNode ? dotStarNode : child, instanceNameNode};
+      return DotStarResult{
+          .secondDotStarNode = dotStarNode ? dotStarNode : child,
+          .instanceNameNode = instanceNameNode};
     }
   }
 
   return std::nullopt;
 }
+}  // namespace
 
 void CheckMultipleDotStarConnections(const SL::FileContent* fileContent,
                                      SL::ErrorContainer* errors,
@@ -72,19 +78,19 @@ void CheckMultipleDotStarConnections(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (root == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId inst : fileContent->sl_collect_all(
+  for (SL::NodeId const inst : fileContent->sl_collect_all(
            root, SL::VObjectType::paModule_instantiation)) {
     auto result = FindMultipleDotStarConnections(fileContent, inst);
     if (!result) {
       continue;
     }
 
-    std::string_view instanceName =
+    std::string_view const instanceName =
         result->instanceNameNode
             ? ExtractName(fileContent, result->instanceNameNode, "unknown")
             : "unknown";

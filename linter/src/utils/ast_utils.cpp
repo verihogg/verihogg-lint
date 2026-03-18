@@ -1,7 +1,10 @@
 #include "utils/ast_utils.h"
 
-#include <Surelog/Common/FileSystem.h>
-#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
+#include <algorithm>
 
 namespace SL = SURELOG;
 
@@ -34,7 +37,7 @@ auto HasUnpackedDimension(const SL::FileContent* fileContent,
       fileContent->sl_collect_all(varDecl,
                                   SL::VObjectType::paVariable_decl_assignment),
       [fileContent](SL::NodeId vda) {
-        SL::NodeId nameNode = fileContent->Child(vda);
+        SL::NodeId const nameNode = fileContent->Child(vda);
         if (!nameNode) {
           return false;
         }

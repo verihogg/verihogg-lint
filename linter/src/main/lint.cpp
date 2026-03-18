@@ -1,10 +1,11 @@
+#include <Surelog/API/Surelog.h>
+#include <Surelog/CommandLine/CommandLineParser.h>
+
 #include <cstdint>
 #include <exception>
 #include <iostream>
 #include <memory>
 
-#include "Surelog/API/Surelog.h"
-#include "Surelog/CommandLine/CommandLineParser.h"
 #include "main/rule_dispatcher.h"
 #include "uhdm/vpi_user.h"
 

@@ -1,14 +1,15 @@
 #include "rules/select_in_event_control.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
 #include <array>
 #include <stack>
-#include <string_view>
 
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -25,15 +26,16 @@ static constexpr std::array kSelectTypes = {
     SL::VObjectType::paConstant_select,
 };
 
-static auto EventExprHasEdge(const SL::FileContent* fileContent,
-                             SL::NodeId eventExprId) -> bool {
+namespace {
+auto EventExprHasEdge(const SL::FileContent* fileContent,
+                      SL::NodeId eventExprId) -> bool {
   return std::ranges::any_of(kEdgeTypes, [&](SL::VObjectType type) {
     return !fileContent->sl_collect_all(eventExprId, type, false).empty();
   });
 }
 
-static auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
-                                      SL::NodeId node) -> bool {
+auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
+                               SL::NodeId node) -> bool {
   if (!node) {
     return false;
   }
@@ -42,10 +44,10 @@ static auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
   stack.push(node);
 
   while (!stack.empty()) {
-    SL::NodeId node = stack.top();
+    SL::NodeId const node = stack.top();
     stack.pop();
 
-    SL::VObjectType type = fileContent->Type(node);
+    SL::VObjectType const type = fileContent->Type(node);
 
     if (type == SL::VObjectType::paEvent_expression &&
         EventExprHasEdge(fileContent, node)) {
@@ -66,6 +68,7 @@ static auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
 
   return false;
 }
+}  // namespace
 
 void CheckSelectInEventControl(const SL::FileContent* fileContent,
                                SL::ErrorContainer* errors,
@@ -74,12 +77,12 @@ void CheckSelectInEventControl(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId eventControlId :
+  for (SL::NodeId const eventControlId :
        fileContent->sl_collect_all(root, SL::VObjectType::paEvent_control)) {
     if (ContainsSelectInEventExpr(fileContent, eventControlId)) {
       ReportError(

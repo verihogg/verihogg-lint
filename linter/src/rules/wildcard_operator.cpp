@@ -1,9 +1,13 @@
 #include "rules/wildcard_operator.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
+
+#include <string_view>
 
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -17,18 +21,18 @@ void CheckWildcardOperators(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId wildEq :
+  for (SL::NodeId const wildEq :
        fileContent->sl_collect_all(root, SL::VObjectType::paBinOp_WildEqual)) {
-    SL::NodeId exprNode = fileContent->Parent(wildEq);
+    SL::NodeId const exprNode = fileContent->Parent(wildEq);
     std::string_view symName = "<unknown>";
 
     if (exprNode) {
-      SL::NodeId leftOperand = fileContent->Child(exprNode);
+      SL::NodeId const leftOperand = fileContent->Child(exprNode);
       if (leftOperand) {
         symName = ExtractName(fileContent, leftOperand, "<unknown>");
       }

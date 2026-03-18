@@ -1,7 +1,11 @@
 #include "utils/name_utils.h"
 
-#include <Surelog/Common/FileSystem.h>
-#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
+#include <string_view>
+#include <unordered_set>
 
 namespace SL = SURELOG;
 
@@ -13,14 +17,14 @@ auto ExtractName(const SL::FileContent* fileContent, SL::NodeId node,
 
   auto stringNodes =
       fileContent->sl_collect_all(node, SL::VObjectType::slStringConst);
-  for (SL::NodeId nameNode : stringNodes) {
+  for (SL::NodeId const nameNode : stringNodes) {
     if (nameNode &&
         fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
       return fileContent->SymName(nameNode);
     }
   }
 
-  SL::NodeId child = fileContent->Child(node);
+  SL::NodeId const child = fileContent->Child(node);
   if (child && fileContent->Type(child) == SL::VObjectType::slStringConst) {
     return fileContent->SymName(child);
   }
@@ -40,7 +44,7 @@ auto FindForLoopVariableName(const SL::FileContent* fileContent,
 
   for (SL::NodeId tmp = fileContent->Sibling(forNode); tmp;
        tmp = fileContent->Sibling(tmp)) {
-    SL::VObjectType type = fileContent->Type(tmp);
+    SL::VObjectType const type = fileContent->Type(tmp);
     if (type == SL::VObjectType::paFor_initialization && !forInit) {
       forInit = tmp;
     } else if (type == SL::VObjectType::paExpression && !condition) {
@@ -51,19 +55,19 @@ auto FindForLoopVariableName(const SL::FileContent* fileContent,
   }
 
   if (forInit) {
-    std::string_view name = ExtractName(fileContent, forInit, "");
+    std::string_view const name = ExtractName(fileContent, forInit, "");
     if (!name.empty()) {
       return name;
     }
   }
   if (condition) {
-    std::string_view name = ExtractName(fileContent, condition, "");
+    std::string_view const name = ExtractName(fileContent, condition, "");
     if (!name.empty()) {
       return name;
     }
   }
   if (forStep) {
-    std::string_view name = ExtractName(fileContent, forStep, "");
+    std::string_view const name = ExtractName(fileContent, forStep, "");
     if (!name.empty()) {
       return name;
     }
@@ -80,11 +84,11 @@ auto ExtractVariableName(const SL::FileContent* fileContent,
 
   auto listNodes = fileContent->sl_collect_all(
       parentNode, SL::VObjectType::paList_of_variable_decl_assignments);
-  for (SL::NodeId listNode : listNodes) {
+  for (SL::NodeId const listNode : listNodes) {
     auto assignNodes = fileContent->sl_collect_all(
         listNode, SL::VObjectType::paVariable_decl_assignment);
-    for (SL::NodeId assignNode : assignNodes) {
-      SL::NodeId nameNode = fileContent->Child(assignNode);
+    for (SL::NodeId const assignNode : assignNodes) {
+      SL::NodeId const nameNode = fileContent->Child(assignNode);
       if (nameNode &&
           fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
         return fileContent->SymName(nameNode);
@@ -102,11 +106,11 @@ auto ExtractParameterName(const SL::FileContent* fileContent,
 
   auto listNodes = fileContent->sl_collect_all(
       parentNode, SL::VObjectType::paList_of_param_assignments);
-  for (SL::NodeId listNode : listNodes) {
+  for (SL::NodeId const listNode : listNodes) {
     auto assignNodes = fileContent->sl_collect_all(
         listNode, SL::VObjectType::paParam_assignment);
-    for (SL::NodeId assignNode : assignNodes) {
-      SL::NodeId nameNode = fileContent->Child(assignNode);
+    for (SL::NodeId const assignNode : assignNodes) {
+      SL::NodeId const nameNode = fileContent->Child(assignNode);
       if (nameNode &&
           fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
         return fileContent->SymName(nameNode);
@@ -116,14 +120,14 @@ auto ExtractParameterName(const SL::FileContent* fileContent,
   return "<unknown>";
 }
 
-static auto LvalueHasIndex(const SL::FileContent* fileContent,
-                           SL::NodeId lvalueNode) {
+namespace {
+auto LvalueHasIndex(const SL::FileContent* fileContent, SL::NodeId lvalueNode) {
   for (SL::NodeId ch = fileContent->Child(lvalueNode); ch;
        ch = fileContent->Sibling(ch)) {
-    SL::VObjectType cont = fileContent->Type(ch);
+    SL::VObjectType const cont = fileContent->Type(ch);
 
     if (cont == SL::VObjectType::paSelect) {
-      SL::NodeId bitSel = fileContent->Child(ch);
+      SL::NodeId const bitSel = fileContent->Child(ch);
       if (bitSel &&
           fileContent->Type(bitSel) == SL::VObjectType::paBit_select) {
         if (fileContent->Child(bitSel)) {
@@ -133,7 +137,7 @@ static auto LvalueHasIndex(const SL::FileContent* fileContent,
     }
 
     if (cont == SL::VObjectType::paConstant_select) {
-      SL::NodeId bitSel = fileContent->Child(ch);
+      SL::NodeId const bitSel = fileContent->Child(ch);
       if (bitSel &&
           fileContent->Type(bitSel) == SL::VObjectType::paConstant_bit_select) {
         if (fileContent->Child(bitSel)) {
@@ -145,14 +149,14 @@ static auto LvalueHasIndex(const SL::FileContent* fileContent,
   return false;
 }
 
-static auto IsDirectAssignment(SL::VObjectType type) -> bool {
+auto IsDirectAssignment(SL::VObjectType type) -> bool {
   return type == SL::VObjectType::paOperator_assignment ||
          type == SL::VObjectType::paBlocking_assignment ||
          type == SL::VObjectType::paNonblocking_assignment ||
          type == SL::VObjectType::paNet_assignment;
 }
 
-static auto IsTransparentWrapper(SL::VObjectType type) -> bool {
+auto IsTransparentWrapper(SL::VObjectType type) -> bool {
   return type == SL::VObjectType::paAssignment_pattern_expression ||
          type == SL::VObjectType::paConstant_assignment_pattern_expression ||
          type == SL::VObjectType::paPrimary ||
@@ -162,11 +166,11 @@ static auto IsTransparentWrapper(SL::VObjectType type) -> bool {
          type == SL::VObjectType::paConstant_param_expression;
 }
 
-static auto LvalueName(const SL::FileContent* fileContent,
-                       SL::NodeId assignNode) -> std::string_view {
+auto LvalueName(const SL::FileContent* fileContent, SL::NodeId assignNode)
+    -> std::string_view {
   for (SL::NodeId child = fileContent->Child(assignNode); child;
        child = fileContent->Sibling(child)) {
-    SL::VObjectType cont = fileContent->Type(child);
+    SL::VObjectType const cont = fileContent->Type(child);
     if (cont == SL::VObjectType::paVariable_lvalue ||
         cont == SL::VObjectType::paNet_lvalue) {
       if (LvalueHasIndex(fileContent, child)) {
@@ -178,9 +182,9 @@ static auto LvalueName(const SL::FileContent* fileContent,
   return "<unknown>";
 }
 
-static auto DeclAssignmentName(const SL::FileContent* fileContent,
-                               SL::NodeId node) -> std::string_view {
-  SL::NodeId nameNode = fileContent->Child(node);
+auto DeclAssignmentName(const SL::FileContent* fileContent, SL::NodeId node)
+    -> std::string_view {
+  SL::NodeId const nameNode = fileContent->Child(node);
   if (nameNode &&
       fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
     return fileContent->SymName(nameNode);
@@ -188,11 +192,11 @@ static auto DeclAssignmentName(const SL::FileContent* fileContent,
   return "<unknown>";
 }
 
-static auto ExpressionIsCompound(const SL::FileContent* fileContent,
-                                 SL::NodeId node) -> bool {
+auto ExpressionIsCompound(const SL::FileContent* fileContent, SL::NodeId node)
+    -> bool {
   for (SL::NodeId ch = fileContent->Child(node); ch;
        ch = fileContent->Sibling(ch)) {
-    SL::VObjectType cont = fileContent->Type(ch);
+    SL::VObjectType const cont = fileContent->Type(ch);
     if (cont != SL::VObjectType::paExpression &&
         cont != SL::VObjectType::paPrimary &&
         cont != SL::VObjectType::paSelect &&
@@ -203,12 +207,13 @@ static auto ExpressionIsCompound(const SL::FileContent* fileContent,
   }
   return false;
 }
+}  // namespace
 
 auto FindDirectRhsLhsName(const SL::FileContent* fileContent,
                           SL::NodeId concatNode) -> std::string_view {
   SL::NodeId current = fileContent->Parent(concatNode);
   while (current) {
-    SL::VObjectType type = fileContent->Type(current);
+    SL::VObjectType const type = fileContent->Type(current);
 
     if (IsDirectAssignment(type)) {
       return LvalueName(fileContent, current);
@@ -240,10 +245,11 @@ auto FindDirectRhsLhsName(const SL::FileContent* fileContent,
 void CollectNames(const SL::FileContent* fileContent, SL::NodeId root,
                   SL::VObjectType parentType, SL::VObjectType assignType,
                   std::unordered_set<std::string_view>& out) {
-  for (SL::NodeId declId : fileContent->sl_collect_all(root, parentType)) {
-    for (SL::NodeId assignId :
+  for (SL::NodeId const declId :
+       fileContent->sl_collect_all(root, parentType)) {
+    for (SL::NodeId const assignId :
          fileContent->sl_collect_all(declId, assignType, true)) {
-      SL::NodeId nameNode = fileContent->Child(assignId);
+      SL::NodeId const nameNode = fileContent->Child(assignId);
       if (nameNode &&
           fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
         out.insert(fileContent->SymName(nameNode));

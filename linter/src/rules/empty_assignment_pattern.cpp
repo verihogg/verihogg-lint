@@ -1,8 +1,10 @@
 #include "rules/empty_assignment_pattern.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -19,12 +21,12 @@ void CheckEmptyAssignmentPattern(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId pat : fileContent->sl_collect_all(
+  for (SL::NodeId const pat : fileContent->sl_collect_all(
            root, SL::VObjectType::paAssignment_pattern)) {
     if (!pat) {
       continue;
@@ -34,7 +36,7 @@ void CheckEmptyAssignmentPattern(const SL::FileContent* fileContent,
       continue;
     }
 
-    std::string_view varName = FindDirectRhsLhsName(fileContent, pat);
+    std::string_view const varName = FindDirectRhsLhsName(fileContent, pat);
 
     ReportError(fileContent, pat, varName,
                 SL::ErrorDefinition::LINT_EMPTY_ASSIGNMENT_PATTERN, errors,

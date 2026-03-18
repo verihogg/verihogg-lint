@@ -1,7 +1,9 @@
 #include "rules/time_value.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -12,10 +14,11 @@
 
 namespace SL = SURELOG;
 
-static void CheckTimeLiteral(const SL::FileContent* fileContent,
-                             SL::NodeId timeLiteral, SL::ErrorContainer* errors,
-                             SL::SymbolTable* symbols) {
-  SL::NodeId intConst = fileContent->Child(timeLiteral);
+namespace {
+void CheckTimeLiteral(const SL::FileContent* fileContent,
+                      SL::NodeId timeLiteral, SL::ErrorContainer* errors,
+                      SL::SymbolTable* symbols) {
+  SL::NodeId const intConst = fileContent->Child(timeLiteral);
   if (!intConst) {
     return;
   }
@@ -23,7 +26,7 @@ static void CheckTimeLiteral(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId timeUnit = fileContent->Sibling(intConst);
+  SL::NodeId const timeUnit = fileContent->Sibling(intConst);
   if (!timeUnit) {
     return;
   }
@@ -48,6 +51,7 @@ static void CheckTimeLiteral(const SL::FileContent* fileContent,
   ReportError(fileContent, intConst, badValue,
               SL::ErrorDefinition::LINT_TIME_VALUE, errors, symbols);
 }
+}  // namespace
 
 void CheckTimeValue(const SL::FileContent* fileContent,
                     SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
@@ -55,12 +59,12 @@ void CheckTimeValue(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId timeLiteral :
+  for (SL::NodeId const timeLiteral :
        fileContent->sl_collect_all(root, SL::VObjectType::paTime_literal)) {
     CheckTimeLiteral(fileContent, timeLiteral, errors, symbols);
   }

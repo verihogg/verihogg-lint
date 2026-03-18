@@ -1,94 +1,25 @@
 #include "rules/fatal_rule.h"
 
-#include <uhdm/VpiListener.h>
+#include <Surelog/Common/FileSystem.h>
+#include <Surelog/Common/PathId.h>
+#include <Surelog/Common/SymbolId.h>
+#include <Surelog/ErrorReporting/Error.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
+#include <Surelog/ErrorReporting/Location.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
 #include <uhdm/uhdm.h>
 #include <uhdm/vpi_user.h>
 
-#include <algorithm>
-#include <functional>
-#include <iostream>
-#include <optional>
+#include <cstddef>
 #include <set>
 #include <string>
 #include <vector>
 
-#include "Surelog/API/Surelog.h"
-#include "Surelog/Common/FileSystem.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/SourceCompile/SymbolTable.h"
-
 namespace SL = SURELOG;
 
-static auto ParseVpiValue(const std::string& raw) -> std::optional<int> {
-  size_t pos = raw.find(':');
-  std::string toParse = (pos != std::string::npos) ? raw.substr(pos + 1) : raw;
-  try {
-    return std::stoi(toParse);
-  } catch (...) {
-    return std::nullopt;
-  }
-}
-
-static auto IsIntegerConstType(int ctype) -> bool {
-  static constexpr std::array kIntegerConstTypes = {
-      vpiIntConst, vpiDecConst,    vpiHexConst,
-      vpiOctConst, vpiBinaryConst, vpiUIntConst,
-  };
-  return std::ranges::any_of(kIntegerConstTypes,
-                             [ctype](int type) { return type == ctype; });
-}
-
-static auto TryParseConstant(const UHDM::constant* cnst) -> std::optional<int> {
-  if (!IsIntegerConstType(cnst->VpiConstType())) {
-    return std::nullopt;
-  }
-  return ParseVpiValue(std::string(cnst->VpiValue()));
-}
-
-static auto TryParseOperation(const UHDM::operation* oper)
-    -> std::optional<int> {
-  int opType = oper->VpiOpType();
-  if (opType != vpiPlusOp && opType != vpiMinusOp) {
-    return std::nullopt;
-  }
-  if (oper->Operands() == nullptr || oper->Operands()->empty()) {
-    return std::nullopt;
-  }
-
-  const auto* cnst = dynamic_cast<UHDM::constant*>((*oper->Operands())[0]);
-  if (cnst == nullptr) {
-    return std::nullopt;
-  }
-
-  auto val = ParseVpiValue(std::string(cnst->VpiValue()));
-  if (!val.has_value()) {
-    return std::nullopt;
-  }
-  return (opType == vpiMinusOp) ? -val.value() : val.value();
-}
-
-static auto ExtractFinishNumber(UHDM::any* firstArg) -> std::optional<int> {
-  if (const auto* cnst = dynamic_cast<UHDM::constant*>(firstArg)) {
-    return TryParseConstant(cnst);
-  }
-  if (const auto* oper = dynamic_cast<UHDM::operation*>(firstArg)) {
-    return TryParseOperation(oper);
-  }
-  return std::nullopt;
-}
-
-static void ReportFatalError(const char* file, int line, int column,
-                             const std::string& msg, SL::ErrorContainer* errors,
-                             SL::SymbolTable* symbols) {
-  SL::SymbolId sym = symbols->registerSymbol(msg);
-  SL::PathId fileId = SL::FileSystem::getInstance()->toPathId(file, symbols);
-  SL::Location loc(fileId, line, column, sym);
-  SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
-  errors->addError(err, false);
-}
-
 void FatalListener::Listen(const vpiHandle& design) {
-  if (design == nullptr) {
+  if (!design) {
     return;
   }
   listenDesigns({design});
@@ -96,7 +27,7 @@ void FatalListener::Listen(const vpiHandle& design) {
 
 void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
                                        vpiHandle handle) {
-  if (object == nullptr) {
+  if (!object) {
     return;
   }
   if (seen_.contains(object)) {
@@ -111,7 +42,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
   const char* file = nullptr;
   int line = 0;
   int column = 0;
-  if (handle != nullptr) {
+  if (handle) {
     file = vpi_get_str(vpiFile, handle);
     line = vpi_get(vpiLineNo, handle);
     try {
@@ -122,40 +53,106 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
   }
 
   const UHDM::VectorOfany* args = object->Tf_call_args();
-  if (args == nullptr || args->empty()) {
-    ReportFatalError(file, line, column, "$fatal has no arguments", errors_,
-                     symbols_);
+  if (!args || args->empty()) {
+    SL::SymbolId const msgSym =
+        symbols_->registerSymbol("$fatal has no arguments");
+    SL::PathId const fileId =
+        SL::FileSystem::getInstance()->toPathId(file, symbols_);
+    SL::Location const loc(fileId, line, column, msgSym);
+    SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+    errors_->addError(err, false);
     return;
   }
 
   UHDM::any* firstArg = (*args)[0];
-  if (firstArg == nullptr) {
+  if (!firstArg) {
     return;
   }
 
-  auto maybeVal = ExtractFinishNumber(firstArg);
-  if (maybeVal.has_value()) {
-    int val = maybeVal.value();
-    if (val != 0 && val != 1 && val != 2) {
-      ReportFatalError(file, line, column,
-                       "$fatal first argument must be 0, 1, or 2. Got " +
-                           std::to_string(val),
-                       errors_, symbols_);
+  int val = 0;
+  bool isInteger = false;
+
+  if (auto c = dynamic_cast<UHDM::constant*>(firstArg)) {
+    int const ctype = c->VpiConstType();
+    isInteger = (ctype == vpiIntConst || ctype == vpiDecConst ||
+                 ctype == vpiHexConst || ctype == vpiOctConst ||
+                 ctype == vpiBinaryConst || ctype == vpiUIntConst);
+
+    if (isInteger) {
+      std::string raw = std::string(c->VpiValue());
+      size_t const pos = raw.find(':');
+      if (pos != std::string::npos) {
+        raw = raw.substr(pos + 1);
+      }
+      try {
+        val = std::stoi(raw);
+      } catch (...) {
+        isInteger = false;
+      }
+    }
+  }
+
+  else if (auto op = dynamic_cast<UHDM::operation*>(firstArg)) {
+    int const opType = op->VpiOpType();
+    if ((opType == vpiPlusOp || opType == vpiMinusOp) && op->Operands() &&
+        !op->Operands()->empty()) {
+      if (auto c = dynamic_cast<UHDM::constant*>((*op->Operands())[0])) {
+        std::string raw = std::string(c->VpiValue());
+        size_t const pos = raw.find(':');
+        if (pos != std::string::npos) {
+          raw = raw.substr(pos + 1);
+        }
+        try {
+          val = std::stoi(raw);
+        } catch (...) {
+          isInteger = false;
+        }
+        if (opType == vpiMinusOp) {
+          val = -val;
+        }
+        isInteger = true;
+      }
+    }
+  }
+
+  if (isInteger) {
+    if (!(val == 0 || val == 1 || val == 2)) {
+      SL::SymbolId const obj = symbols_->registerSymbol(
+          "$fatal first argument must be 0, 1, or 2. Got " +
+          std::to_string(val));
+      SL::PathId const fileId =
+          SL::FileSystem::getInstance()->toPathId(file, symbols_);
+      SL::Location const loc(fileId, line, column, obj);
+      SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+      errors_->addError(err, false);
     }
   } else {
-    ReportFatalError(file, line, column, "first argument is not constant",
-                     errors_, symbols_);
+    SL::SymbolId const obj =
+        symbols_->registerSymbol("first argument is not constant");
+    SL::PathId const fileId =
+        SL::FileSystem::getInstance()->toPathId(file, symbols_);
+    SL::Location const loc(fileId, line, column, obj);
+    SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+    errors_->addError(err, false);
   }
 
   if (args->size() > 1) {
-    const auto* secondArg = (*args)[1];
-    if (dynamic_cast<const UHDM::constant*>(secondArg) == nullptr) {
-      ReportFatalError(file, line, column,
-                       "$fatal message is not string constant", errors_,
-                       symbols_);
+    auto secondArg = (*args)[1];
+    if (!dynamic_cast<UHDM::constant*>(secondArg)) {
+      SL::SymbolId const obj =
+          symbols_->registerSymbol("$fatal message is not string constant");
+      SL::PathId const fileId =
+          SL::FileSystem::getInstance()->toPathId(file, symbols_);
+      SL::Location const loc(fileId, line, column, obj);
+      SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+      errors_->addError(err, false);
     }
   } else {
-    ReportFatalError(file, line, column, "$fatal missing message", errors_,
-                     symbols_);
+    SL::SymbolId const obj = symbols_->registerSymbol("$fatal missing message");
+    SL::PathId const fileId =
+        SL::FileSystem::getInstance()->toPathId(file, symbols_);
+    SL::Location const loc(fileId, line, column, obj);
+    SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+    errors_->addError(err, false);
   }
 }

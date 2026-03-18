@@ -1,7 +1,9 @@
 #include "rules/multiple_bins.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -11,7 +13,6 @@
 #include <string_view>
 
 #include "utils/location_utils.h"
-#include "utils/name_utils.h"
 
 namespace SL = SURELOG;
 
@@ -20,15 +21,16 @@ static constexpr std::array kValueTypes = {
     SL::VObjectType::slStringConst,
 };
 
-static auto ValueHasWildcard(std::string_view val) -> bool {
+namespace {
+auto ValueHasWildcard(std::string_view val) -> bool {
   static constexpr std::string_view kWildcardChars = "xXzZ?";
   return std::ranges::any_of(val, [](char chr) {
     return kWildcardChars.find(chr) != std::string_view::npos;
   });
 }
 
-static auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
-                                         SL::NodeId node) -> SL::NodeId {
+auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
+                                  SL::NodeId node) -> SL::NodeId {
   if (node == SL::InvalidNodeId) {
     return SL::InvalidNodeId;
   }
@@ -37,10 +39,10 @@ static auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
   stack.push(node);
 
   while (!stack.empty()) {
-    SL::NodeId current = stack.top();
+    SL::NodeId const current = stack.top();
     stack.pop();
 
-    SL::VObjectType type = fileContent->Type(current);
+    SL::VObjectType const type = fileContent->Type(current);
 
     if (type == SL::VObjectType::paNumber_1Tickbx) {
       return current;
@@ -67,8 +69,8 @@ static auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
   return SL::InvalidNodeId;
 }
 
-static auto FindWildcardInTransList(const SL::FileContent* fileContent,
-                                    SL::NodeId transList) -> SL::NodeId {
+auto FindWildcardInTransList(const SL::FileContent* fileContent,
+                             SL::NodeId transList) -> SL::NodeId {
   if (transList == SL::InvalidNodeId) {
     return SL::InvalidNodeId;
   }
@@ -86,7 +88,7 @@ static auto FindWildcardInTransList(const SL::FileContent* fileContent,
         continue;
       }
 
-      SL::NodeId wildcardNode =
+      SL::NodeId const wildcardNode =
           FindWildcardInTransRangeList(fileContent, transRange);
       if (wildcardNode) {
         return wildcardNode;
@@ -97,8 +99,8 @@ static auto FindWildcardInTransList(const SL::FileContent* fileContent,
   return SL::InvalidNodeId;
 }
 
-static auto ExtractBinName(const SL::FileContent* fileContent,
-                           SL::NodeId binsOrOptions) -> std::string_view {
+auto ExtractBinName(const SL::FileContent* fileContent,
+                    SL::NodeId binsOrOptions) -> std::string_view {
   if (fileContent == nullptr || !binsOrOptions) {
     return "<unknown>";
   }
@@ -106,7 +108,7 @@ static auto ExtractBinName(const SL::FileContent* fileContent,
   for (SL::NodeId child = fileContent->Child(binsOrOptions); child;
        child = fileContent->Sibling(child)) {
     if (fileContent->Type(child) == SL::VObjectType::paBins_Bins) {
-      SL::NodeId nameNode = fileContent->Sibling(child);
+      SL::NodeId const nameNode = fileContent->Sibling(child);
       if (nameNode &&
           fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
         return fileContent->SymName(nameNode);
@@ -117,9 +119,8 @@ static auto ExtractBinName(const SL::FileContent* fileContent,
   return "<unknown>";
 }
 
-static auto FindTransListInBinsOrOptions(const SL::FileContent* fileContent,
-                                         SL::NodeId binsOrOptions)
-    -> SL::NodeId {
+auto FindTransListInBinsOrOptions(const SL::FileContent* fileContent,
+                                  SL::NodeId binsOrOptions) -> SL::NodeId {
   if (!binsOrOptions) {
     return SL::InvalidNodeId;
   }
@@ -127,6 +128,7 @@ static auto FindTransListInBinsOrOptions(const SL::FileContent* fileContent,
       fileContent->sl_collect_all(binsOrOptions, SL::VObjectType::paTrans_list);
   return transLists.empty() ? SL::InvalidNodeId : transLists.front();
 }
+}  // namespace
 
 void CheckMultipleBins(const SL::FileContent* fileContent,
                        SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
@@ -134,19 +136,21 @@ void CheckMultipleBins(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (root == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId binsNode :
+  for (SL::NodeId const binsNode :
        fileContent->sl_collect_all(root, SL::VObjectType::paBins_or_options)) {
-    SL::NodeId transList = FindTransListInBinsOrOptions(fileContent, binsNode);
+    SL::NodeId const transList =
+        FindTransListInBinsOrOptions(fileContent, binsNode);
     if (transList == SL::InvalidNodeId) {
       continue;
     }
 
-    SL::NodeId wildcardNode = FindWildcardInTransList(fileContent, transList);
+    SL::NodeId const wildcardNode =
+        FindWildcardInTransList(fileContent, transList);
     if (wildcardNode == SL::InvalidNodeId) {
       continue;
     }

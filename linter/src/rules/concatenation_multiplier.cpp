@@ -1,8 +1,10 @@
 #include "rules/concatenation_multiplier.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -12,6 +14,7 @@
 #include <string_view>
 #include <type_traits>
 #include <unordered_set>
+#include <utility>
 
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -53,11 +56,12 @@ static constexpr std::array kVarDeclTypes = {
               SL::VObjectType::paVariable_decl_assignment},
 };
 
+namespace {
 auto CollectConstantParameters(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> constants;
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   for (const auto& [parentType, assignType] : kParamDeclTypes) {
     CollectNames(fileContent, root, parentType, assignType, constants);
   }
@@ -68,7 +72,7 @@ auto CollectVariables(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> variables;
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   for (const auto& [parentType, assignType] : kVarDeclTypes) {
     CollectNames(fileContent, root, parentType, assignType, variables);
   }
@@ -160,7 +164,7 @@ void CheckSingleMultipleConcatenation(
     return;
   }
 
-  SL::NodeId multiplierExpr = fileContent->Child(multiConcatNode);
+  SL::NodeId const multiplierExpr = fileContent->Child(multiConcatNode);
   if (!multiplierExpr) {
     return;
   }
@@ -173,6 +177,7 @@ void CheckSingleMultipleConcatenation(
                 symbols);
   }
 }
+}  // namespace
 
 void CheckConcatenationMultiplier(const SL::FileContent* fileContent,
                                   SL::ErrorContainer* errors,
@@ -181,7 +186,7 @@ void CheckConcatenationMultiplier(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
@@ -189,7 +194,7 @@ void CheckConcatenationMultiplier(const SL::FileContent* fileContent,
   auto constantParams = CollectConstantParameters(fileContent);
   auto variables = CollectVariables(fileContent);
 
-  for (SL::NodeId node : fileContent->sl_collect_all(
+  for (SL::NodeId const node : fileContent->sl_collect_all(
            root, SL::VObjectType::paMultiple_concatenation)) {
     CheckSingleMultipleConcatenation(fileContent, node, variables, errors,
                                      symbols);

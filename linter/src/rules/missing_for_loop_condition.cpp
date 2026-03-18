@@ -6,7 +6,13 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <algorithm>
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
@@ -21,12 +27,12 @@ void CheckMissingForLoopCondition(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (root == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId forNode :
+  for (SL::NodeId const forNode :
        fileContent->sl_collect_all(root, SL::VObjectType::paFOR)) {
     if (HasSiblingOfType(fileContent, forNode, SL::VObjectType::paExpression)) {
       continue;

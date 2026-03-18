@@ -1,27 +1,29 @@
 #include "rules/hierarchical_interface_identifier.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
 
-static auto JoinNames(const SL::FileContent* fileContent,
-                      const std::vector<SL::NodeId>& parts) -> std::string {
+namespace {
+auto JoinNames(const SL::FileContent* fileContent,
+               const std::vector<SL::NodeId>& parts) -> std::string {
   if (parts.empty()) {
     return "<unknown>";
   }
   std::string res;
   bool first = true;
-  for (SL::NodeId part : parts) {
+  for (SL::NodeId const part : parts) {
     if (!first) {
       res += '.';
     }
@@ -30,6 +32,7 @@ static auto JoinNames(const SL::FileContent* fileContent,
   }
   return res;
 }
+}  // namespace
 
 void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
                                           SL::ErrorContainer* errors,
@@ -37,12 +40,12 @@ void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (root == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId iid : fileContent->sl_collect_all(
+  for (SL::NodeId const iid : fileContent->sl_collect_all(
            root, SL::VObjectType::paInterface_identifier)) {
     auto parts =
         fileContent->sl_collect_all(iid, SL::VObjectType::slStringConst);

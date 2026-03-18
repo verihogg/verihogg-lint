@@ -1,7 +1,9 @@
 #include "rules/type_casting.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -13,16 +15,17 @@
 
 namespace SL = SURELOG;
 
-static auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
-                                    SL::NodeId root)
+namespace {
+auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
+                             SL::NodeId root)
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> userTypes;
 
-  for (SL::NodeId declNode :
+  for (SL::NodeId const declNode :
        fileContent->sl_collect_all(root, SL::VObjectType::paType_declaration)) {
-    for (SL::NodeId child : fileContent->sl_collect_all(
+    for (SL::NodeId const child : fileContent->sl_collect_all(
              declNode, SL::VObjectType::slStringConst, false)) {
-      std::string_view typeName = fileContent->SymName(child);
+      std::string_view const typeName = fileContent->SymName(child);
       if (!typeName.empty()) {
         userTypes.insert(typeName);
       }
@@ -31,6 +34,7 @@ static auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
 
   return userTypes;
 }
+}  // namespace
 
 void CheckTypeCasting(const SL::FileContent* fileContent,
                       SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
@@ -38,7 +42,7 @@ void CheckTypeCasting(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
@@ -48,9 +52,9 @@ void CheckTypeCasting(const SL::FileContent* fileContent,
     return;
   }
 
-  for (SL::NodeId funcCallNode : fileContent->sl_collect_all(
+  for (SL::NodeId const funcCallNode : fileContent->sl_collect_all(
            root, SL::VObjectType::paComplex_func_call)) {
-    std::string_view typeName = ExtractName(fileContent, funcCallNode);
+    std::string_view const typeName = ExtractName(fileContent, funcCallNode);
     if (typeName.empty()) {
       continue;
     }
