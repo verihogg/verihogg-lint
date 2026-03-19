@@ -1,15 +1,9 @@
 #include "rules/prototype_return_data_type.h"
 
-<<<<<<< HEAD
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
-    == == ==
-    =
-#include <Surelog/Design/FileContent.h>
-#include <Surelog/ErrorReporting/ErrorContainer.h>
-        >>>>>>> origin
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -18,7 +12,7 @@
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
-        namespace SL = SURELOG;
+namespace SL = SURELOG;
 
 namespace {
 auto HasReturnType(const SL::FileContent* fileContent, SL::NodeId typeNode)
