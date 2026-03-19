@@ -3,13 +3,13 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string_view>
 #include <unordered_set>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -61,7 +61,7 @@ void CheckTypeCasting(const SL::FileContent* fileContent,
 
     if (userTypes.contains(typeName)) {
       ReportError(fileContent, fileContent->Child(funcCallNode), typeName,
-                  SL::ErrorDefinition::LINT_TYPE_CASTING, errors, symbols);
+                  verihogg_lint::LINT_TYPE_CASTING, errors, symbols);
     }
   }
 }

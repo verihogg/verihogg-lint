@@ -9,6 +9,7 @@
 #include <string_view>
 #include <unordered_set>
 
+#include "main/lint_rules.h"
 #include "rules/covergroup_expression.h"
 #include "utils/location_utils.h"
 
@@ -82,8 +83,7 @@ static void CheckIdentifiersRecursive(
       std::string_view varName = fileContent->SymName(current);
       if (moduleVars.contains(varName) && !allowedArgs.contains(varName)) {
         ReportError(fileContent, current, varName,
-                    SL::ErrorDefinition::LINT_COVERGROUP_EXPRESSION, errors,
-                    symbols);
+                    verihogg_lint::LINT_COVERGROUP_EXPRESSION, errors, symbols);
         continue;
       }
     }

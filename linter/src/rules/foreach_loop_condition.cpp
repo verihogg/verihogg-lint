@@ -8,6 +8,7 @@
 
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -60,7 +61,6 @@ void CheckForeachLoopCondition(const SL::FileContent* fileContent,
                     : "unknown";
 
     ReportError(fileContent, foreachNode, arrayName,
-                SL::ErrorDefinition::LINT_FOREACH_LOOP_CONDITION, errors,
-                symbols);
+                verihogg_lint::LINT_FOREACH_LOOP_CONDITION, errors, symbols);
   }
 }

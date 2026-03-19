@@ -3,12 +3,12 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
@@ -80,9 +80,9 @@ void CheckInsideOperatorRange(const SL::FileContent* fileContent,
   for (SL::NodeId const insideId :
        fileContent->sl_collect_all(root, SL::VObjectType::paINSIDE)) {
     if (!IsValidInsideRange(fileContent, fileContent->Sibling(insideId))) {
-      ReportError(
-          fileContent, insideId, GetInsideContextName(fileContent, insideId),
-          SL::ErrorDefinition::LINT_INSIDE_OPERATOR_RANGE, errors, symbols);
+      ReportError(fileContent, insideId,
+                  GetInsideContextName(fileContent, insideId),
+                  verihogg_lint::LINT_INSIDE_OPERATOR_RANGE, errors, symbols);
     }
   }
 }

@@ -3,7 +3,6 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -12,6 +11,7 @@
 #include <stack>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
@@ -157,6 +157,6 @@ void CheckMultipleBins(const SL::FileContent* fileContent,
 
     ReportError(fileContent, wildcardNode,
                 ExtractBinName(fileContent, binsNode),
-                SL::ErrorDefinition::LINT_MULTIPLE_BINS, errors, symbols);
+                verihogg_lint::LINT_MULTIPLE_BINS, errors, symbols);
   }
 }

@@ -2,11 +2,11 @@
 let
   surelog = pkgs.surelog.overrideAttrs (_: {
     src = builtins.fetchGit {
-      url = "https://github.com/verihogg/Surelog.git";
-      rev = "d3498b89eeaaf792af2ff5bfbe21ea2fc32d9eda";
+      url = "https://github.com/chipsalliance/Surelog.git";
+      rev = "35ec4b3fa6b98464fec12b5da3530e7bd7b5c4c7";
       shallow = true;
     };
-    version = "d3498b89";
+    version = "35ec4b3f";
   }); 
 in {
   inherit surelog;

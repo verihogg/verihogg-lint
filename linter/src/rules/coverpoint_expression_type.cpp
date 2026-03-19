@@ -4,7 +4,6 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -12,6 +11,7 @@
 #include <array>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -187,7 +187,7 @@ void CheckSingleCoverpoint(const SL::FileContent* fileContent, SL::NodeId cpId,
   if (!IsIntegralType(varType)) {
     std::string_view const cpName = ExtractName(fileContent, cpId);
     ReportError(fileContent, cpId, cpName,
-                SL::ErrorDefinition::LINT_COVERPOINT_EXPRESSION_TYPE, errors,
+                verihogg_lint::LINT_COVERPOINT_EXPRESSION_TYPE, errors,
                 symbols);
   }
 }

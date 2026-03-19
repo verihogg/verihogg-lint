@@ -3,7 +3,6 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -11,6 +10,7 @@
 #include <array>
 #include <stack>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -89,7 +89,7 @@ void CheckSelectInWeight(const SL::FileContent* fileContent,
     if (ContainsSelectInExpr(fileContent, weightExpr)) {
       ReportError(fileContent, rsRuleId,
                   ExtractName(fileContent, rsProdList, "<unknown>"),
-                  SL::ErrorDefinition::LINT_SELECT_IN_WEIGHT, errors, symbols);
+                  verihogg_lint::LINT_SELECT_IN_WEIGHT, errors, symbols);
     }
   }
 }

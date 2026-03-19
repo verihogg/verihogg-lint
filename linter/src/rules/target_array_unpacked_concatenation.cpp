@@ -1,7 +1,6 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -11,6 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "main/lint_rules.h"
 #include "rules/target_unpacked_array_concatenation.h"
 #include "utils/location_utils.h"
 
@@ -104,7 +104,7 @@ void CheckVariableLvalueConcatenations(
             FindFirstUnpackedVarInSubtree(fileContent, lvalueId, unpackedVars);
         !foundVar.empty()) {
       ReportError(fileContent, lvalueId, foundVar,
-                  SL::ErrorDefinition::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
+                  verihogg_lint::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
                   errors, symbols);
     }
   }
@@ -121,10 +121,9 @@ void CheckNamedPortConnectionConcatenations(
       if (auto foundVar = FindFirstUnpackedVarInSubtree(fileContent, concatId,
                                                         unpackedVars);
           !foundVar.empty()) {
-        ReportError(
-            fileContent, concatId, foundVar,
-            SL::ErrorDefinition::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
-            errors, symbols);
+        ReportError(fileContent, concatId, foundVar,
+                    verihogg_lint::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
+                    errors, symbols);
         break;
       }
     }

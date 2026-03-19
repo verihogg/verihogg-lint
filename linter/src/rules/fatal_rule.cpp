@@ -5,7 +5,6 @@
 #include <Surelog/Common/SymbolId.h>
 #include <Surelog/ErrorReporting/Error.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/ErrorReporting/Location.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <uhdm/uhdm.h>
@@ -15,6 +14,8 @@
 #include <set>
 #include <string>
 #include <vector>
+
+#include "main/lint_rules.h"
 
 namespace SL = SURELOG;
 
@@ -59,7 +60,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     SL::PathId const fileId =
         SL::FileSystem::getInstance()->toPathId(file, symbols_);
     SL::Location const loc(fileId, line, column, msgSym);
-    SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+    SL::Error err(verihogg_lint::LINT_FATAL_SYSCALL, loc);
     errors_->addError(err, false);
     return;
   }
@@ -123,7 +124,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
       SL::PathId const fileId =
           SL::FileSystem::getInstance()->toPathId(file, symbols_);
       SL::Location const loc(fileId, line, column, obj);
-      SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+      SL::Error err(verihogg_lint::LINT_FATAL_SYSCALL, loc);
       errors_->addError(err, false);
     }
   } else {
@@ -132,7 +133,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     SL::PathId const fileId =
         SL::FileSystem::getInstance()->toPathId(file, symbols_);
     SL::Location const loc(fileId, line, column, obj);
-    SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+    SL::Error err(verihogg_lint::LINT_FATAL_SYSCALL, loc);
     errors_->addError(err, false);
   }
 
@@ -144,7 +145,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
       SL::PathId const fileId =
           SL::FileSystem::getInstance()->toPathId(file, symbols_);
       SL::Location const loc(fileId, line, column, obj);
-      SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+      SL::Error err(verihogg_lint::LINT_FATAL_SYSCALL, loc);
       errors_->addError(err, false);
     }
   } else {
@@ -152,7 +153,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     SL::PathId const fileId =
         SL::FileSystem::getInstance()->toPathId(file, symbols_);
     SL::Location const loc(fileId, line, column, obj);
-    SL::Error err(SL::ErrorDefinition::LINT_FATAL_SYSCALL, loc);
+    SL::Error err(verihogg_lint::LINT_FATAL_SYSCALL, loc);
     errors_->addError(err, false);
   }
 }

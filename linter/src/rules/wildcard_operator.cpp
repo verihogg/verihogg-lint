@@ -3,9 +3,9 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
+#include <main/lint_rules.h>
 
 #include <string_view>
 
@@ -39,11 +39,11 @@ void CheckWildcardOperators(const SL::FileContent* fileContent,
     }
 
     ReportError(fileContent, wildEq, symName,
-                SL::ErrorDefinition::LINT_WILDCARD_EQUALITY_OPERATOR, errors,
+                verihogg_lint::LINT_WILDCARD_EQUALITY_OPERATOR, errors,
                 symbols);
 
     ReportError(fileContent, wildEq, symName,
-                SL::ErrorDefinition::LINT_WILDCARD_INEQUALITY_OPERATOR, errors,
+                verihogg_lint::LINT_WILDCARD_INEQUALITY_OPERATOR, errors,
                 symbols);
   }
 }

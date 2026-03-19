@@ -3,13 +3,13 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
@@ -48,8 +48,8 @@ void CheckTimeLiteral(const SL::FileContent* fileContent,
   badValue.reserve(kNumber.size() + 1 + kUnit.size());
   badValue.append(kNumber).append(1, ' ').append(kUnit);
 
-  ReportError(fileContent, intConst, badValue,
-              SL::ErrorDefinition::LINT_TIME_VALUE, errors, symbols);
+  ReportError(fileContent, intConst, badValue, verihogg_lint::LINT_TIME_VALUE,
+              errors, symbols);
 }
 }  // namespace
 

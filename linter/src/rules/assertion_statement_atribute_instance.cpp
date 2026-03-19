@@ -9,6 +9,7 @@
 #include <array>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -134,9 +135,9 @@ void CheckAssertionStatementAttributeInstance(
       continue;
     }
 
-    ReportError(
-        fileContent, coverStmt, ExtractLabelName(fileContent, coverStmt),
-        SL::ErrorDefinition::LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
-        errors, symbols);
+    ReportError(fileContent, coverStmt,
+                ExtractLabelName(fileContent, coverStmt),
+                verihogg_lint::LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
+                errors, symbols);
   }
 }

@@ -3,12 +3,12 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <vector>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -35,7 +35,7 @@ void CheckFunctionPrototype(const SL::FileContent* fileContent,
   SL::NodeId const typeNode = ftypeNodes.front();
   if (!HasReturnType(fileContent, typeNode)) {
     ReportError(fileContent, typeNode, ExtractName(fileContent, typeNode),
-                SL::ErrorDefinition::LINT_PROTOTYPE_RETURN_DATA_TYPE, errors,
+                verihogg_lint::LINT_PROTOTYPE_RETURN_DATA_TYPE, errors,
                 symbols);
   }
 }

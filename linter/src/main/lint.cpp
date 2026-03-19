@@ -6,6 +6,8 @@
 #include <iostream>
 #include <memory>
 
+#include "Surelog/ErrorReporting/ErrorDefinition.h"
+#include "main/lint_rules.h"
 #include "main/rule_dispatcher.h"
 #include "uhdm/vpi_user.h"
 
@@ -16,6 +18,8 @@ auto main(int argc, const char** argv) -> int {
   auto errors = std::make_unique<SL::ErrorContainer>(symbolTable.get());
   auto clp = std::make_unique<SL::CommandLineParser>(
       errors.get(), symbolTable.get(), false, false);
+  SL::ErrorDefinition::init();
+  verihogg_lint::RegisterLintRules();
 
   clp->noPython();
   clp->setParse(true);

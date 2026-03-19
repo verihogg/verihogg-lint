@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <array>
 
+#include "main/lint_rules.h"
 #include "rules/parameter_override.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -98,6 +99,6 @@ void CheckParameterOverride(const SL::FileContent* fileContent,
     }
 
     ReportError(fileContent, badNode, ExtractName(fileContent, badNode),
-                SL::ErrorDefinition::LINT_PARAMETR_OVERRIDE, errors, symbols);
+                verihogg_lint::LINT_PARAMETR_OVERRIDE, errors, symbols);
   }
 }

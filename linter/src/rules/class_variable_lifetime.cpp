@@ -8,6 +8,7 @@
 
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -32,7 +33,7 @@ void CheckClassVariableLifetime(const SL::FileContent* fileContent,
                propId, SL::VObjectType::paLifetime_Automatic)) {
         std::string_view varName = ExtractVariableName(fileContent, propId);
         ReportError(fileContent, autoId, varName,
-                    SL::ErrorDefinition::LINT_CLASS_VARIABLE_LIFETIME, errors,
+                    verihogg_lint::LINT_CLASS_VARIABLE_LIFETIME, errors,
                     symbols);
       }
     }

@@ -5,7 +5,6 @@
 #include <Surelog/Common/PathId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -19,6 +18,7 @@
 #include <utility>
 #include <vector>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
@@ -141,8 +141,7 @@ void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
   badValue.append(originalNum).append(kUnit);
 
   ReportError(fileContent, numNode, badValue,
-              SL::ErrorDefinition::LINT_EXPONENT_FORMAT_TIME_VALUE, errors,
-              symbols);
+              verihogg_lint::LINT_EXPONENT_FORMAT_TIME_VALUE, errors, symbols);
 }
 }  // namespace
 

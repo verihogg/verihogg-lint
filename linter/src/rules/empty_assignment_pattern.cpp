@@ -4,12 +4,12 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -39,7 +39,6 @@ void CheckEmptyAssignmentPattern(const SL::FileContent* fileContent,
     std::string_view const varName = FindDirectRhsLhsName(fileContent, pat);
 
     ReportError(fileContent, pat, varName,
-                SL::ErrorDefinition::LINT_EMPTY_ASSIGNMENT_PATTERN, errors,
-                symbols);
+                verihogg_lint::LINT_EMPTY_ASSIGNMENT_PATTERN, errors, symbols);
   }
 }

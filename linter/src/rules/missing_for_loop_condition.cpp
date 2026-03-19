@@ -4,10 +4,10 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -33,6 +33,6 @@ void CheckMissingForLoopCondition(const SL::FileContent* fileContent,
     }
     ReportError(
         fileContent, forNode, FindForLoopVariableName(fileContent, forNode),
-        SL::ErrorDefinition::LINT_MISSING_FOR_LOOP_CONDITION, errors, symbols);
+        verihogg_lint::LINT_MISSING_FOR_LOOP_CONDITION, errors, symbols);
   }
 }

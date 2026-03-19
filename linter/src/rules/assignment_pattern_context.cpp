@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -185,7 +186,7 @@ void CheckAssignmentPatternContext(const SL::FileContent* fileContent,
 
     std::string_view name = FindContextName(fileContent, pat);
     ReportError(fileContent, pat, name,
-                SL::ErrorDefinition::LINT_ASSIGNMENT_PATTERN_CONTEXT, errors,
+                verihogg_lint::LINT_ASSIGNMENT_PATTERN_CONTEXT, errors,
                 symbols);
   }
 }

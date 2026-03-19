@@ -7,6 +7,7 @@
 
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -43,8 +44,7 @@ void CheckRepetitionInSequence(const SL::FileContent* fileContent,
       }
 
       ReportError(fileContent, seqExprId, seqName,
-                  SL::ErrorDefinition::LINT_REPETITION_IN_SEQUENCE, errors,
-                  symbols);
+                  verihogg_lint::LINT_REPETITION_IN_SEQUENCE, errors, symbols);
     }
   }
 }

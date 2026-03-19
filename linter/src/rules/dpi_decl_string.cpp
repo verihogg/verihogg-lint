@@ -4,12 +4,12 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/string_utils.h"
 
@@ -50,8 +50,7 @@ void CheckDpiDeclarationString(const SL::FileContent* fileContent,
 
     if (dpiStr != "DPI-C" && dpiStr != "DPI") {
       ReportError(fileContent, stringNode, dpiStr,
-                  SL::ErrorDefinition::LINT_DPI_DECLARATION_STRING, errors,
-                  symbols);
+                  verihogg_lint::LINT_DPI_DECLARATION_STRING, errors, symbols);
     }
   }
 }

@@ -1,26 +1,30 @@
 #include "rules/assignment_pattern.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+#include <utils/ast_utils.h>
+
 #include <algorithm>
 #include <string_view>
 #include <unordered_set>
 
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/SourceCompile/SymbolTable.h"
-#include "Surelog/SourceCompile/VObjectTypes.h"
-#include "utils/ast_utils.h"
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
 namespace SL = SURELOG;
 
-static auto CollectStructTypeNames(const SL::FileContent* fileContent,
-                                   SL::NodeId moduleRoot)
+namespace {
+auto CollectStructTypeNames(const SL::FileContent* fileContent,
+                            SL::NodeId moduleRoot)
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> structTypeNames;
   auto typeDecls = fileContent->sl_collect_all(
       moduleRoot, SL::VObjectType::paType_declaration);
-  for (SL::NodeId typeDecl : typeDecls) {
+  for (SL::NodeId const typeDecl : typeDecls) {
     if (typeDecl == SL::InvalidNodeId) {
       continue;
     }
@@ -38,7 +42,7 @@ static auto CollectStructTypeNames(const SL::FileContent* fileContent,
   return structTypeNames;
 }
 
-static auto IsStructViaVarDecl(
+auto IsStructViaVarDecl(
     const SL::FileContent* fileContent, SL::NodeId moduleRoot,
     std::string_view varName,
     const std::unordered_set<std::string_view>& structTypeNames) -> bool {
@@ -51,7 +55,7 @@ static auto IsStructViaVarDecl(
     if (ExtractVariableName(fileContent, varDecl) != varName) {
       return false;
     }
-    SL::NodeId dataType = fileContent->Child(varDecl);
+    SL::NodeId const dataType = fileContent->Child(varDecl);
     if (dataType == SL::InvalidNodeId) {
       return false;
     }
@@ -59,7 +63,7 @@ static auto IsStructViaVarDecl(
              .empty()) {
       return true;
     }
-    SL::NodeId dtChild = fileContent->Child(dataType);
+    SL::NodeId const dtChild = fileContent->Child(dataType);
     return dtChild != SL::InvalidNodeId &&
            fileContent->Type(dtChild) == SL::VObjectType::slStringConst &&
            structTypeNames.contains(fileContent->SymName(dtChild));
@@ -67,13 +71,12 @@ static auto IsStructViaVarDecl(
   return false;
 }
 
-static auto NetDeclMatchesName(const SL::FileContent* fileContent,
-                               SL::NodeId netDecl, std::string_view varName)
-    -> bool {
+auto NetDeclMatchesName(const SL::FileContent* fileContent, SL::NodeId netDecl,
+                        std::string_view varName) -> bool {
   auto assignNodes = fileContent->sl_collect_all(
       netDecl, SL::VObjectType::paNet_decl_assignment);
   return std::ranges::any_of(assignNodes, [&](SL::NodeId assignNode) {
-    SL::NodeId nameNode = fileContent->Child(assignNode);
+    SL::NodeId const nameNode = fileContent->Child(assignNode);
     return nameNode != SL::InvalidNodeId &&
            fileContent->Type(nameNode) == SL::VObjectType::slStringConst &&
            fileContent->SymName(nameNode) == varName;
@@ -81,7 +84,7 @@ static auto NetDeclMatchesName(const SL::FileContent* fileContent,
   return false;
 }
 
-static auto IsStructViaNetDecl(
+auto IsStructViaNetDecl(
     const SL::FileContent* fileContent, SL::NodeId moduleRoot,
     std::string_view varName,
     const std::unordered_set<std::string_view>& structTypeNames) -> bool {
@@ -98,7 +101,7 @@ static auto IsStructViaNetDecl(
              .empty()) {
       return true;
     }
-    SL::NodeId firstChild = fileContent->Child(netDecl);
+    SL::NodeId const firstChild = fileContent->Child(netDecl);
     return firstChild != SL::InvalidNodeId &&
            fileContent->Type(firstChild) == SL::VObjectType::slStringConst &&
            structTypeNames.contains(fileContent->SymName(firstChild));
@@ -106,9 +109,8 @@ static auto IsStructViaNetDecl(
   return false;
 }
 
-static auto IsStructVariable(const SL::FileContent* fileContent,
-                             SL::NodeId moduleRoot, std::string_view varName)
-    -> bool {
+auto IsStructVariable(const SL::FileContent* fileContent, SL::NodeId moduleRoot,
+                      std::string_view varName) -> bool {
   if (varName.empty() || varName == "<unknown>") {
     return false;
   }
@@ -120,20 +122,19 @@ static auto IsStructVariable(const SL::FileContent* fileContent,
          IsStructViaNetDecl(fileContent, moduleRoot, varName, kStructTypeNames);
 }
 
-static auto IsArrayVariable(const SL::FileContent* fileContent,
-                            SL::NodeId moduleRoot, std::string_view varName)
-    -> bool {
+auto IsArrayVariable(const SL::FileContent* fileContent, SL::NodeId moduleRoot,
+                     std::string_view varName) -> bool {
   if (varName.empty() || varName == "<unknown>") {
     return false;
   }
 
   auto vdas = fileContent->sl_collect_all(
       moduleRoot, SL::VObjectType::paVariable_decl_assignment);
-  for (SL::NodeId vda : vdas) {
+  for (SL::NodeId const vda : vdas) {
     if (vda == SL::InvalidNodeId) {
       continue;
     }
-    SL::NodeId nameNode = fileContent->Child(vda);
+    SL::NodeId const nameNode = fileContent->Child(vda);
     if (nameNode == SL::InvalidNodeId ||
         fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
       continue;
@@ -149,7 +150,7 @@ static auto IsArrayVariable(const SL::FileContent* fileContent,
 
   auto netDecls = fileContent->sl_collect_all(
       moduleRoot, SL::VObjectType::paNet_declaration);
-  for (SL::NodeId netDecl : netDecls) {
+  for (SL::NodeId const netDecl : netDecls) {
     if (netDecl == SL::InvalidNodeId) {
       continue;
     }
@@ -160,8 +161,8 @@ static auto IsArrayVariable(const SL::FileContent* fileContent,
     }
     auto assignNodes = fileContent->sl_collect_all(
         netDecl, SL::VObjectType::paNet_decl_assignment);
-    for (SL::NodeId assignNode : assignNodes) {
-      SL::NodeId nameNode = fileContent->Child(assignNode);
+    for (SL::NodeId const assignNode : assignNodes) {
+      SL::NodeId const nameNode = fileContent->Child(assignNode);
       if (nameNode != SL::InvalidNodeId &&
           fileContent->Type(nameNode) == SL::VObjectType::slStringConst &&
           fileContent->SymName(nameNode) == varName) {
@@ -172,6 +173,7 @@ static auto IsArrayVariable(const SL::FileContent* fileContent,
 
   return false;
 }
+}  // namespace
 
 void CheckAssignmentPattern(const SL::FileContent* fileContent,
                             SL::ErrorContainer* errors,
@@ -180,18 +182,18 @@ void CheckAssignmentPattern(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId concat :
+  for (SL::NodeId const concat :
        fileContent->sl_collect_all(root, SL::VObjectType::paConcatenation)) {
     if (!concat) {
       continue;
     }
 
-    SL::NodeId moduleRoot = FindEnclosingModule(fileContent, concat);
+    SL::NodeId const moduleRoot = FindEnclosingModule(fileContent, concat);
     if (!moduleRoot) {
       continue;
     }
@@ -205,23 +207,21 @@ void CheckAssignmentPattern(const SL::FileContent* fileContent,
       }
     }
 
-    std::string_view varName = FindDirectRhsLhsName(fileContent, concat);
+    std::string_view const varName = FindDirectRhsLhsName(fileContent, concat);
     if (varName == "<unknown>" || varName == "<indexed>") {
       continue;
     }
 
     if (hasLabel) {
       ReportError(fileContent, concat, varName,
-                  SL::ErrorDefinition::LINT_ASSIGNMENT_PATTERN, errors,
-                  symbols);
+                  verihogg_lint::LINT_ASSIGNMENT_PATTERN, errors, symbols);
       continue;
     }
 
     if (IsStructVariable(fileContent, moduleRoot, varName) ||
         IsArrayVariable(fileContent, moduleRoot, varName)) {
       ReportError(fileContent, concat, varName,
-                  SL::ErrorDefinition::LINT_ASSIGNMENT_PATTERN, errors,
-                  symbols);
+                  verihogg_lint::LINT_ASSIGNMENT_PATTERN, errors, symbols);
     }
   }
 }

@@ -3,7 +3,6 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -11,6 +10,7 @@
 #include <array>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
@@ -106,7 +106,7 @@ void CheckScalarAssignmentPattern(const SL::FileContent* fileContent,
     std::string_view const varName = FindDirectRhsLhsName(fileContent, pat);
     if (IsScalarVariable(fileContent, root, varName, pat)) {
       ReportError(fileContent, pat, varName,
-                  SL::ErrorDefinition::LINT_SCALAR_ASSIGNMENT_PATTERN, errors,
+                  verihogg_lint::LINT_SCALAR_ASSIGNMENT_PATTERN, errors,
                   symbols);
     }
   }

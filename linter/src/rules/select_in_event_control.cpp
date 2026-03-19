@@ -3,7 +3,6 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -11,6 +10,7 @@
 #include <array>
 #include <stack>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -85,9 +85,9 @@ void CheckSelectInEventControl(const SL::FileContent* fileContent,
   for (SL::NodeId const eventControlId :
        fileContent->sl_collect_all(root, SL::VObjectType::paEvent_control)) {
     if (ContainsSelectInEventExpr(fileContent, eventControlId)) {
-      ReportError(
-          fileContent, eventControlId, ExtractName(fileContent, eventControlId),
-          SL::ErrorDefinition::LINT_SELECT_IN_EVENT_CONTROL, errors, symbols);
+      ReportError(fileContent, eventControlId,
+                  ExtractName(fileContent, eventControlId),
+                  verihogg_lint::LINT_SELECT_IN_EVENT_CONTROL, errors, symbols);
     }
   }
 }

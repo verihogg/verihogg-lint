@@ -4,13 +4,13 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string>
 #include <vector>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
@@ -54,7 +54,7 @@ void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
     }
 
     ReportError(fileContent, iid, JoinNames(fileContent, parts),
-                SL::ErrorDefinition::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER,
-                errors, symbols);
+                verihogg_lint::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
+                symbols);
   }
 }

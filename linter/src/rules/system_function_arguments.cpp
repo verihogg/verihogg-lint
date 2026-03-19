@@ -3,7 +3,6 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -13,6 +12,7 @@
 #include <string_view>
 #include <utility>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
@@ -138,8 +138,7 @@ void CheckCall(const SL::FileContent* fileContent, const SysFuncCall& call,
       "$" + call.funcName + " is " + std::to_string(maxAllowed);
 
   ReportError(fileContent, call.callNode, symbolName,
-              SL::ErrorDefinition::LINT_SYSTEM_FUNCTION_ARGUMENTS, errors,
-              symbols);
+              verihogg_lint::LINT_SYSTEM_FUNCTION_ARGUMENTS, errors, symbols);
 }
 }  // namespace
 

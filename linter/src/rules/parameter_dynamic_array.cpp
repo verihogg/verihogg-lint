@@ -3,12 +3,12 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <array>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -40,7 +40,7 @@ void CheckParameterDynamicArray(const SL::FileContent* fileContent,
       {
         ReportError(fileContent, unsizedDims.front(),
                     ExtractParameterName(fileContent, decl),
-                    SL::ErrorDefinition::LINT_PARAMETR_DYNAMIC_ARRAY, errors,
+                    verihogg_lint::LINT_PARAMETR_DYNAMIC_ARRAY, errors,
                     symbols);
       }
     }

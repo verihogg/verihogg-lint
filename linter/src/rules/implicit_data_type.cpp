@@ -4,7 +4,6 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -14,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -104,6 +104,6 @@ void CheckImplicitDataTypeInDeclaration(const SL::FileContent* fileContent,
 
     ReportError(fileContent, packedDims.front(),
                 ExtractVariableName(fileContent, dataDecl),
-                SL::ErrorDefinition::LINT_IMPLICIT_DATA_TYPE, errors, symbols);
+                verihogg_lint::LINT_IMPLICIT_DATA_TYPE, errors, symbols);
   }
 }

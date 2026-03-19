@@ -3,13 +3,13 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
-#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <optional>
 #include <string_view>
 
+#include "main/lint_rules.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -96,7 +96,7 @@ void CheckMultipleDotStarConnections(const SL::FileContent* fileContent,
             : "unknown";
 
     ReportError(fileContent, result->secondDotStarNode, instanceName,
-                SL::ErrorDefinition::LINT_MULTIPLE_DOT_STAR_CONNECTIONS, errors,
+                verihogg_lint::LINT_MULTIPLE_DOT_STAR_CONNECTIONS, errors,
                 symbols);
   }
 }
