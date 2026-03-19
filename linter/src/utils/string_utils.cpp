@@ -1,8 +1,5 @@
 #include "utils/string_utils.h"
 
-#include <Surelog/Common/FileSystem.h>
-#include <Surelog/ErrorReporting/ErrorContainer.h>
-
 #include <string>
 
 auto Trim(const std::string& str) -> std::string {
