@@ -69,7 +69,6 @@ auto main(int argc, const char** argv) -> int {
   }
 
   if (!kSuccess) {
-    // Surelog уже напечатал своё сообщение об ошибке — просто выходим
     std::cerr << "Try '" << argv[0] << " --help' for usage.\n";
     return 1;
   }

@@ -133,6 +133,7 @@ set(LINTER_SRC
     linter/src/rules/system_function_arguments.cpp
     linter/src/rules/wildcard_operator.cpp
     linter/src/rules/exponent_format_time_value.cpp
+    linter/src/rules/nof_parameter_override.cpp
 
 )
 

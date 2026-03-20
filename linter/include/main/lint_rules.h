@@ -51,6 +51,7 @@ inline constexpr ED::ErrorType LINT_SYSTEM_FUNCTION_ARGUMENTS = LintId(764);
 inline constexpr ED::ErrorType LINT_WILDCARD_EQUALITY_OPERATOR = LintId(765);
 inline constexpr ED::ErrorType LINT_WILDCARD_INEQUALITY_OPERATOR = LintId(766);
 inline constexpr ED::ErrorType LINT_EXPONENT_FORMAT_TIME_VALUE = LintId(767);
+inline constexpr ED::ErrorType LINT_NOF_PARAMETER_OVERRIDE = LintId(768);
 
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -150,6 +151,9 @@ inline constexpr std::array kLintRules = {
         .text = "Expecting wildcard operator '!=?' instead of '!?=': %s"},
     LintRuleInfo{.type = LINT_EXPONENT_FORMAT_TIME_VALUE,
                  .text = "Unexpected exponent format for time value: %s"},
+    LintRuleInfo{
+        .type = LINT_NOF_PARAMETER_OVERRIDE,
+        .text = "Expected # parameter overrides, found #module %s; endmodule"},
 };
 
 inline void RegisterLintRules() {

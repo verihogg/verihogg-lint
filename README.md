@@ -109,6 +109,9 @@ The project is intended for static code analysis and checking compliance with co
 - `EXPONENT_FORMAT_TIME_VALUE`  
   Unexpected exponent format for time value
 
+- `NOF_PARAMETER_OVERRIDES`  
+  Expected # parameter overrides, found #module; endmodule
+
 ---
 
 ## Project structure

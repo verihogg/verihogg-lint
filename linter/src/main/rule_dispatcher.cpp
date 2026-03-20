@@ -30,6 +30,7 @@
 #include "rules/missing_for_loop_step.h"
 #include "rules/multiple_bins.h"
 #include "rules/multiple_dot_star_connection.h"
+#include "rules/nof_parameter_override.h"
 #include "rules/parameter_dynamic_array.h"
 #include "rules/parameter_override.h"
 #include "rules/prototype_return_data_type.h"
@@ -170,4 +171,6 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     FatalListener listener(errors, symbols);
     listener.Listen(uhdmDesign);
   }
+
+  CheckNofParameterOverrides(design, errors, symbols);
 }

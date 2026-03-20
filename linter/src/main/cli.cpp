@@ -11,7 +11,7 @@ struct RuleInfo {
   const char* description;
 };
 
-static constexpr std::array<RuleInfo, 34> kRules = {{
+static constexpr std::array<RuleInfo, 35> kRules = {{
     {.id = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
      .description =
          "Expecting 0, 1 or 2 as first argument to '$fatal' system task"},
@@ -90,6 +90,8 @@ static constexpr std::array<RuleInfo, 34> kRules = {{
      .description = "Expecting wildcard operator '!=?' instead of '!?='"},
     {.id = "EXPONENT_FORMAT_TIME_VALUE",
      .description = "Unexpected exponent format for time value"},
+    {.id = "NOF_PARAMETER_OVERRIDES",
+     .description = "Expected # parameter overrides, found #module; endmodule"},
 }};
 
 static constexpr int kRuleCount =
