@@ -1,12 +1,15 @@
 #include <Surelog/API/Surelog.h>
 #include <Surelog/CommandLine/CommandLineParser.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 
+#include <array>
 #include <cstdint>
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <vector>
 
-#include "Surelog/ErrorReporting/ErrorDefinition.h"
+#include "main/cli.h"
 #include "main/lint_rules.h"
 #include "main/rule_dispatcher.h"
 #include "uhdm/vpi_user.h"
@@ -14,10 +17,26 @@
 namespace SL = SURELOG;
 
 auto main(int argc, const char** argv) -> int {
+  const cli::Options opts = cli::parse_args(argc, argv);
+
+  if (opts.show_version) {
+    cli::print_version();
+    return 0;
+  }
+  if (opts.show_help) {
+    cli::print_help(argv[0]);
+    return 0;
+  }
+  if (opts.show_rules) {
+    cli::print_rules();
+    return 0;
+  }
+
   auto symbolTable = std::make_unique<SL::SymbolTable>();
   auto errors = std::make_unique<SL::ErrorContainer>(symbolTable.get());
   auto clp = std::make_unique<SL::CommandLineParser>(
       errors.get(), symbolTable.get(), false, false);
+
   SL::ErrorDefinition::init();
   verihogg_lint::RegisterLintRules();
 
@@ -31,12 +50,41 @@ auto main(int argc, const char** argv) -> int {
   clp->setFilterNote();
   clp->setFilterWarning();
 
-  const bool kSuccess = clp->parseCommandLine(argc, argv);
+  if (opts.show_surelog_help) {
+    std::array<const char*, 2> help_argv = {argv[0], "--help"};
+    clp->parseCommandLine(static_cast<int>(help_argv.size()), help_argv.data());
+    return 0;
+  }
+
+  std::vector<const char*> sl_argv = opts.surelog_args;
+  if (opts.show_surelog_help) {
+    sl_argv.push_back("--help");
+  }
+
+  const int sl_argc = static_cast<int>(sl_argv.size());
+  const bool kSuccess = clp->parseCommandLine(sl_argc, sl_argv.data());
+
+  if (clp->help()) {
+    return 0;
+  }
+
+  if (!kSuccess) {
+    // Surelog уже напечатал своё сообщение об ошибке — просто выходим
+    std::cerr << "Try '" << argv[0] << " --help' for usage.\n";
+    return 1;
+  }
+
+  if (clp->getSourceFiles().empty()) {
+    std::cerr << argv[0] << ": no input files\n"
+              << "Try '" << argv[0] << " --help' for usage.\n";
+    return 1;
+  }
+
   SL::Design* theDesign = nullptr;
   SL::scompiler* compiler = nullptr;
   vpiHandle uhdmDesign = nullptr;
 
-  if (kSuccess && !clp->help()) {
+  if (kSuccess) {
     try {
       compiler = start_compiler(clp.get());
       theDesign = get_design(compiler);
@@ -64,7 +112,7 @@ auto main(int argc, const char** argv) -> int {
     std::cout << "Lint finished with " << kErrorCount << " error(s)." << '\n';
   }
 
-  if (kSuccess && !clp->help()) {
+  if (compiler != nullptr) {
     shutdown_compiler(compiler);
   }
 

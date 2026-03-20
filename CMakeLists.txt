@@ -94,6 +94,7 @@ endif()
 
 set(LINTER_SRC
     linter/src/main/lint.cpp
+    linter/src/main/cli.cpp
     linter/src/utils/ast_utils.cpp
     linter/src/utils/location_utils.cpp
     linter/src/utils/name_utils.cpp
