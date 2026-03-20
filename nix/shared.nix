@@ -8,6 +8,7 @@
     cmake
     ninja
     pkg-config
+    gtest
   ];
 
   shellOnlyPackages = with pkgs; [

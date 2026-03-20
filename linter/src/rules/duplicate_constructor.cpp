@@ -11,9 +11,6 @@
 #include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/Library/Library.h"
-#include "Surelog/SourceCompile/CompileSourceFile.h"
-#include "Surelog/SourceCompile/Compiler.h"
-#include "Surelog/SourceCompile/ParseFile.h"
 #include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
@@ -54,7 +51,7 @@ void checkDuplicateConstructor(const FileContent* fC, ErrorContainer* errors,
       }
 
       if (argTree.count(types) > 0) {
-        reportError(fC, id, className,
+        ReportError(fC, id, className,
                     ErrorDefinition::LINT_DUPLICATE_CONSTRUCTOR, errors,
                     symbols);
       }
@@ -62,4 +59,3 @@ void checkDuplicateConstructor(const FileContent* fC, ErrorContainer* errors,
     }
   }
 }
-

@@ -10,9 +10,6 @@
 #include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/Library/Library.h"
-#include "Surelog/SourceCompile/CompileSourceFile.h"
-#include "Surelog/SourceCompile/Compiler.h"
-#include "Surelog/SourceCompile/ParseFile.h"
 #include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
@@ -47,7 +44,7 @@ void checkExternConstraintUndeclared(const FileContent* fC,
           fC->sl_collect(protoId, VObjectType::paExtern_qualifier);
       const std::string protoName = getStringConst(fC, nameId);
       if (protoName == constrName && externId == zeroId) {
-        reportError(fC, protoId, protoName,
+        ReportError(fC, protoId, protoName,
                     ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED, errors,
                     symbols);
       }

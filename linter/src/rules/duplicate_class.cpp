@@ -9,9 +9,6 @@
 #include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/Library/Library.h"
-#include "Surelog/SourceCompile/CompileSourceFile.h"
-#include "Surelog/SourceCompile/Compiler.h"
-#include "Surelog/SourceCompile/ParseFile.h"
 #include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
@@ -37,11 +34,10 @@ void checkDuplicateClass(const FileContent* fC, ErrorContainer* errors,
       duplicateSet.erase(fullName);
     } else if (isSeen) {
       duplicateSet.insert(fullName);
-      reportError(fC, classId, fullName, ErrorDefinition::LINT_DUPLICATE_CLASS,
+      ReportError(fC, classId, fullName, ErrorDefinition::LINT_DUPLICATE_CLASS,
                   errors, symbols);
     } else {
       seenSet.insert(fullName);
     }
   }
 }
-

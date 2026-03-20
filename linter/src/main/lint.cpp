@@ -16,6 +16,7 @@
 #include "main/lint_rules.h"
 #include "main/rule_dispatcher.h"
 #include "uhdm/vpi_user.h"
+#include "utils/init.h"
 
 namespace SL = SURELOG;
 
@@ -45,15 +46,7 @@ auto main(int argc, const char** argv) -> int {
   SL::ErrorDefinition::init();
   verihogg_lint::RegisterLintRules();
 
-  clp->noPython();
-  clp->setParse(true);
-  clp->setCompile(true);
-  clp->setElaborate(true);
-  clp->setwritePpOutput(true);
-  clp->setCacheAllowed(false);
-  clp->setFilterInfo();
-  clp->setFilterNote();
-  clp->setFilterWarning();
+  initCommandLineParser(clp.get());
 
   if (kOpts.show_surelog_help) {
     std::array<const char*, 2> helpArgv = {args[0], "--help"};

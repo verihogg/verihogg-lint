@@ -4,16 +4,8 @@
 #include <iostream>
 #include <vector>
 
-#include "Surelog/CommandLine/CommandLineParser.h"
-#include "Surelog/Design/Design.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/Design/ModuleDefinition.h"
-#include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/Library/Library.h"
-#include "Surelog/SourceCompile/CompileSourceFile.h"
-#include "Surelog/SourceCompile/Compiler.h"
-#include "Surelog/SourceCompile/ParseFile.h"
 #include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
@@ -44,7 +36,7 @@ void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
     const std::string fullName = getFullName(fC, id);
     const ClassDefinition* def = fC->getClassDefinition(fullName);
     if (def == nullptr)
-      reportError(fC, id, superclass, ErrorDefinition::LINT_EXTEND_CLASS,
+      ReportError(fC, id, superclass, ErrorDefinition::LINT_EXTEND_CLASS,
                   errors, symbols);
   }
 }

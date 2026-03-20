@@ -67,6 +67,14 @@ find_library(ZLIB_LIBRARY
   PATH_SUFFIXES lib lib64
 )
 
+set(GTEST_ROOT "" CACHE PATH "Path to GTest installation prefix")
+
+find_library(GTEST_LIBRARY
+  NAMES googletest gtest
+  HINTS ${GTEST_ROOT} ENV GTEST_ROOT
+  PATH_SUFFIXES lib lib64
+)
+
 if(NOT SURELOG_INCLUDE_DIR OR NOT SURELOG_LIBRARY)
   message(FATAL_ERROR
     "Surelog was not found. Install Surelog and set SURELOG_ROOT (or pass -DSURELOG_ROOT=<prefix>).")
@@ -92,6 +100,16 @@ if(NOT ZLIB_LIBRARY)
     "zlib was not found. Install zlib and set ZLIB_ROOT (or pass -DZLIB_ROOT=<prefix>).")
 endif()
 
+if(NOT GTEST_LIBRARY)
+  message(FATAL_ERROR
+    "gtest was not found. Install gtest and set GTEST_ROOT (or pass -DGTEST_ROOT=<prefix>).")
+endif()
+
+enable_testing()
+add_subdirectory(tests)
+
+add_subdirectory(linter)
+
 set(LINTER_SRC
     linter/src/main/lint.cpp
     linter/src/main/cli.cpp
@@ -101,6 +119,7 @@ set(LINTER_SRC
     linter/src/utils/string_utils.cpp
     linter/src/utils/design_utils.cpp
     linter/src/utils/class_scope_utils.cpp
+    linter/src/utils/init.cpp
     linter/src/rules/class_variable_lifetime.cpp
     linter/src/rules/dpi_decl_string.cpp
     linter/src/rules/fatal_rule.cpp
@@ -143,9 +162,9 @@ set(LINTER_SRC
     linter/src/rules/duplicate_class.cpp
     linter/src/rules/extern_constraint_undeclared.cpp
 )
-
 #     linter/src/rules/extern_function_undeclared.cpp
 #     linter/src/rules/extern_task_undeclared.cpp
+
 
 foreach(f ${LINTER_SRC})
   if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
