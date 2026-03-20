@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <set>
 
 #include "Surelog/API/Surelog.h"
 #include "Surelog/CommandLine/CommandLineParser.h"
@@ -14,7 +15,6 @@
 #include "Surelog/SourceCompile/SymbolTable.h"
 
 namespace fs = std::filesystem;
-using namespace SURELOG;
 
 const fs::path base_path = fs::current_path() / ".." / "..";
 
@@ -60,6 +60,31 @@ void testCheckWithNoErrorsExpected(
   }
 }
 
+void testCheckWithErrorsExpected(
+    const fs::path tests_path, ErrorDefinition::ErrorType errorIdExpected,
+    std::set<ErrorDefinition::ErrorType> ignoreList,
+    std::function<void(const FileContent*, ErrorContainer*, SymbolTable*)>
+        check_func) {
+  std::vector<fs::path> paths(fs::directory_iterator{tests_path},
+                              fs::directory_iterator{});
+  for (auto& file_path : paths) {
+    auto symbols = std::make_unique<SymbolTable>();
+    auto errors = std::make_unique<ErrorContainer>(symbols.get());
+
+    const FileContent* fC =
+        getFileContentFromPath(file_path, errors.get(), symbols.get());
+    check_func(fC, errors.get(), symbols.get());
+    errors->printMessages();
+    auto errorVector = errors.get()->getErrors();
+    ASSERT_NE(errorVector.size(), 0);
+    for (auto& error : errorVector) {
+      ErrorDefinition::ErrorType type = error.getType();
+      if (ignoreList.count(type) > 0) continue;
+      ASSERT_EQ(error.getType(), errorIdExpected);
+    }
+  }
+}
+
 }  // namespace
 
 TEST(ExtendClassTest, NoErrors) {
@@ -67,6 +92,17 @@ TEST(ExtendClassTest, NoErrors) {
                             "ExtendClass" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, checkExtendClass);
+}
+
+TEST(ExtendClassTest, RaiseError) {
+  const fs::path tests_path{base_path / "tests" / "ClassChecks" /
+                            "ExtendClass" / "RaiseError"};
+
+  std::set<ErrorDefinition::ErrorType> ignoreList{
+      ErrorDefinition::COMP_UNDEFINED_BASE_CLASS};
+
+  testCheckWithErrorsExpected(tests_path, ErrorDefinition::LINT_EXTEND_CLASS,
+                              ignoreList, checkExtendClass);
 }
 
 int main(int argc, char** argv) {
