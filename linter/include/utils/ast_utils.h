@@ -12,6 +12,9 @@ auto FindEnclosingModule(const SL::FileContent* fileContent, SL::NodeId node)
 auto HasSiblingOfType(const SL::FileContent* fileContent, SL::NodeId start,
                       SL::VObjectType type) -> bool;
 
+const SL::NodeId zeroId = SL::NodeId(SL::InvalidRawNodeId); /*  */
+
+
 auto HasUnpackedDimension(const SL::FileContent* fileContent,
                           SL::NodeId varDecl) -> bool;
 

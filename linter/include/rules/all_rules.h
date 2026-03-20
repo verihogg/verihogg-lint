@@ -35,4 +35,5 @@
 #include "wildcard_operator.h"
 #include "type_casting.h"
 #include "extend_class.h"
-
+#include "duplicate_constructor.h"
+#include "duplicate_class.h"
