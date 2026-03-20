@@ -138,6 +138,7 @@ set(LINTER_SRC
     linter/src/rules/nof_parameter_override.cpp
     linter/src/rules/missing_function_implementation.cpp
     linter/src/rules/function_implemention_scope.cpp
+    linter/src/rules/extend_class.cpp
 )
 
 foreach(f ${LINTER_SRC})
