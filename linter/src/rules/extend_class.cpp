@@ -1,7 +1,8 @@
 #include "rules/extend_class.h"
 
 #include <cassert>
-#include <iostream>
+#include <map>
+#include <string_view>
 #include <vector>
 
 #include "Surelog/ErrorReporting/ErrorContainer.h"
@@ -27,16 +28,37 @@ void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
   const std::vector<NodeId> classDeclarations =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
 
+  std::map<std::string, std::vector<NodeId>> classMap;
   for (auto& id : classDeclarations) {
     const std::string className = getStringConst(fC, id);
-    const std::string superclass = getSuperclassString(fC, id);
+    classMap[className].push_back(id);
+  }
 
-    if (isBuiltinClass(className) || superclass == "") continue;
+  for (auto& id : classDeclarations) {
+    const std::string className = getStringConst(fC, id);
+    const std::string mainPrefix = getPrefix(fC, id);
+    const std::string superclassName = getSuperclassString(fC, id);
 
-    const std::string fullName = getFullName(fC, id);
-    const ClassDefinition* def = fC->getClassDefinition(fullName);
-    if (def == nullptr)
-      ReportError(fC, id, superclass, ErrorDefinition::LINT_EXTEND_CLASS,
-                  errors, symbols);
+    if (isBuiltinClass(className) || superclassName == "") continue;
+
+    std::vector<NodeId> superIdVector = classMap[superclassName];
+
+    bool found = false;
+    for (auto& superId : superIdVector) {
+      const std::string superPrefix = getPrefix(fC, superId);
+
+      const size_t superSize = superPrefix.size();
+      const size_t mainSize = superPrefix.size();
+      if (superSize <= mainSize &&
+          std::string_view(mainPrefix).substr(0, superSize) == superPrefix) {
+        found = true;
+        break;
+      }
+    }
+
+    if (found) break;
+
+    ReportError(fC, id, superclassName, ErrorDefinition::LINT_EXTEND_CLASS,
+                errors, symbols);
   }
 }
