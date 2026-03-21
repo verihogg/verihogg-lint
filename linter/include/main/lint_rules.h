@@ -52,6 +52,8 @@ inline constexpr ED::ErrorType LINT_WILDCARD_EQUALITY_OPERATOR = LintId(765);
 inline constexpr ED::ErrorType LINT_WILDCARD_INEQUALITY_OPERATOR = LintId(766);
 inline constexpr ED::ErrorType LINT_EXPONENT_FORMAT_TIME_VALUE = LintId(767);
 inline constexpr ED::ErrorType LINT_NOF_PARAMETER_OVERRIDE = LintId(768);
+inline constexpr ED::ErrorType LINT_MISSING_FUNCTION_IMPLEMENTATION =
+    LintId(769);
 
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -154,6 +156,8 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{
         .type = LINT_NOF_PARAMETER_OVERRIDE,
         .text = "Expected # parameter overrides, found #module %s; endmodule"},
+    LintRuleInfo{.type = LINT_MISSING_FUNCTION_IMPLEMENTATION,
+                 .text = "extern function is not implemented: %s"},
 };
 
 inline void RegisterLintRules() {

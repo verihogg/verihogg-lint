@@ -112,6 +112,9 @@ The project is intended for static code analysis and checking compliance with co
 - `NOF_PARAMETER_OVERRIDES`  
   Expected # parameter overrides, found #module; endmodule
 
+- `MISSING_FUNCTION_IMPLEMENTATION`  
+  extern function is not implemented
+
 ---
 
 ## Project structure

@@ -28,6 +28,7 @@
 #include "rules/missing_for_loop_condition.h"
 #include "rules/missing_for_loop_initialization.h"
 #include "rules/missing_for_loop_step.h"
+#include "rules/missing_function_implementation.h"
 #include "rules/multiple_bins.h"
 #include "rules/multiple_dot_star_connection.h"
 #include "rules/nof_parameter_override.h"
@@ -52,6 +53,12 @@ struct Rule {
   std::function<void(const SL::FileContent*, SL::ErrorContainer*,
                      SL::SymbolTable*)>
       check;
+};
+
+struct GlobalRule {
+  std::string_view name = {};
+  bool enabled = true;
+  std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)> check;
 };
 
 static const std::array kAllRules = std::to_array<Rule>({
@@ -144,6 +151,15 @@ static const std::array kAllRules = std::to_array<Rule>({
 
 });
 
+static const std::array kGlobalRules = std::to_array<GlobalRule>({
+    {.name = "NofParameterOverrides",
+     .enabled = true,
+     .check = CheckNofParameterOverrides},
+    {.name = "MissingFunctionImplementation",
+     .enabled = true,
+     .check = CheckMissingFunctionImplementation},
+});
+
 namespace {
 void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
                  SL::SymbolTable* symbols) {
@@ -172,5 +188,10 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     listener.Listen(uhdmDesign);
   }
 
-  CheckNofParameterOverrides(design, errors, symbols);
+  for (const auto& rule : kGlobalRules) {
+    if (!rule.enabled) {
+      continue;
+    }
+    rule.check(design, errors, symbols);
+  }
 }

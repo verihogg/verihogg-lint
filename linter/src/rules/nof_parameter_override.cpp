@@ -11,6 +11,8 @@
 #include <unordered_map>
 
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
+#include "utils/design_utils.h"
 #include "utils/location_utils.h"
 
 namespace SL = SURELOG;
@@ -35,14 +37,8 @@ auto CountModuleParams(const SL::FileContent* fileContent,
     return 0;
   }
 
-  SL::NodeId portList = SL::InvalidNodeId;
-  for (SL::NodeId cur = fileContent->Child(header); cur;
-       cur = fileContent->Sibling(cur)) {
-    if (fileContent->Type(cur) == SL::VObjectType::paParameter_port_list) {
-      portList = cur;
-      break;
-    }
-  }
+  SL::NodeId const portList = FindChildOfType(
+      fileContent, header, SL::VObjectType::paParameter_port_list);
 
   if (!portList) {
     return 0;
@@ -96,15 +92,9 @@ auto CountOrderedOverrides(const SL::FileContent* fileContent,
     return -1;
   }
 
-  SL::NodeId paramValueAssign = SL::InvalidNodeId;
-  for (SL::NodeId cur = fileContent->Sibling(moduleNameNode); cur;
-       cur = fileContent->Sibling(cur)) {
-    if (fileContent->Type(cur) ==
-        SL::VObjectType::paParameter_value_assignment) {
-      paramValueAssign = cur;
-      break;
-    }
-  }
+  SL::NodeId const paramValueAssign =
+      FindSiblingOfType(fileContent, moduleNameNode,
+                        SL::VObjectType::paParameter_value_assignment);
 
   if (!paramValueAssign) {
     return -1;
@@ -179,13 +169,9 @@ void CheckNofParameterOverrides(SL::Design* design, SL::ErrorContainer* errors,
   }
 
   std::unordered_map<std::string_view, int> globalParamMap;
-  for (auto& [name, fileContent] : design->getAllFileContents()) {
-    if (fileContent == nullptr) {
-      continue;
-    }
-    auto localMap = BuildModuleParamMap(fileContent);
-    globalParamMap.merge(localMap);
-  }
+  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fc) {
+    globalParamMap.merge(BuildModuleParamMap(fc));
+  });
 
   for (auto& [name, fileContent] : design->getAllFileContents()) {
     if (fileContent == nullptr) {

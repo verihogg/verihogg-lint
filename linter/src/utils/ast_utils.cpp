@@ -59,3 +59,25 @@ auto FindAncestorOfType(const SL::FileContent* fileContent, SL::NodeId node,
   }
   return SL::InvalidNodeId;
 }
+
+auto FindSiblingOfType(const SL::FileContent* fileContent, SL::NodeId start,
+                       SL::VObjectType type) -> SL::NodeId {
+  for (SL::NodeId cur = fileContent->Sibling(start); cur;
+       cur = fileContent->Sibling(cur)) {
+    if (fileContent->Type(cur) == type) {
+      return cur;
+    }
+  }
+  return SL::InvalidNodeId;
+}
+
+auto FindChildOfType(const SL::FileContent* fileContent, SL::NodeId node,
+                     SL::VObjectType type) -> SL::NodeId {
+  for (SL::NodeId cur = fileContent->Child(node); cur;
+       cur = fileContent->Sibling(cur)) {
+    if (fileContent->Type(cur) == type) {
+      return cur;
+    }
+  }
+  return SL::InvalidNodeId;
+}

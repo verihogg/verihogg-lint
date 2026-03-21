@@ -17,3 +17,9 @@ auto HasUnpackedDimension(const SL::FileContent* fileContent,
 
 auto FindAncestorOfType(const SL::FileContent* fileContent, SL::NodeId node,
                         SL::VObjectType type) -> SL::NodeId;
+
+auto FindSiblingOfType(const SL::FileContent* fileContent, SL::NodeId start,
+                       SL::VObjectType type) -> SL::NodeId;
+
+auto FindChildOfType(const SL::FileContent* fileContent, SL::NodeId node,
+                     SL::VObjectType type) -> SL::NodeId;

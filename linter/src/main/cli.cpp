@@ -11,7 +11,7 @@ struct RuleInfo {
   const char* description;
 };
 
-static constexpr std::array<RuleInfo, 35> kRules = {{
+static constexpr std::array<RuleInfo, 36> kRules = {{
     {.id = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
      .description =
          "Expecting 0, 1 or 2 as first argument to '$fatal' system task"},
@@ -92,6 +92,8 @@ static constexpr std::array<RuleInfo, 35> kRules = {{
      .description = "Unexpected exponent format for time value"},
     {.id = "NOF_PARAMETER_OVERRIDES",
      .description = "Expected # parameter overrides, found #module; endmodule"},
+    {.id = "MISSING_FUNCTION_IMPLEMENTATION",
+     .description = "extern function is not implemented"},
 }};
 
 static constexpr int kRuleCount =
