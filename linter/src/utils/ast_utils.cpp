@@ -145,6 +145,10 @@ auto getPrefix(const SL::FileContent* fC, SL::NodeId id) -> std::string {
     result += contexts[i];
   }
 
+  if (contexts.size() > 0) {
+    result += "::";
+  }
+
   return libName + "@" + result;
 }
 
@@ -162,10 +166,10 @@ std::unordered_map<std::string, SL::NodeId> getClassIds(const FileContent* fC) {
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
   std::unordered_map<std::string, SL::NodeId> classes;
 
-  for (SL::NodeId classId : classDeclarations) {
-    const std::string fullName = getFullName(fC, classId);
-    assert(classes.find(fullName) == classes.end());
-    classes[fullName] = classId;
+  for (NodeId classId : classDeclarations) {
+    const std::string className = getFullName(fC, classId);
+    if (isBuiltinClass(className)) continue;
+    classes[className] = classId;
   }
   return classes;
 }
@@ -177,19 +181,24 @@ auto removeFilePrefix(std::string str) -> std::string {
   return std::string(str).substr(ind, str.size());
 }
 
-auto getClassScope(const SL::FileContent* fC, SL::NodeId funcBodyId)
-    -> std::string {
-  const SL::NodeId kClassScopeId =
-      fC->sl_collect(funcBodyId, SL:: : VObjectType::paClass_scope);
-  if (kClassScopeId == zeroId) {
-    return "";
+std::vector<std::string> getClassScope(const FileContent* fC,
+                                       NodeId funcBodyId) {
+  std::vector<std::string> scopes;
+  const NodeId classScopeId =
+      fC->sl_collect(funcBodyId, VObjectType::paClass_scope);
+  const NodeId classTypeId =
+      fC->sl_get(classScopeId, VObjectType::paClass_type);
+
+  if (classTypeId == zeroId) return scopes;
+  const std::vector<NodeId> ids =
+      fC->sl_collect_all(funcBodyId, VObjectType::slStringConst);
+
+  for (auto& id : ids) {
+    std::string str{fC->SymName(id)};
+    scopes.push_back(str);
   }
-  const SL::NodeId kClassTypeId =
-      fC->sl_get(kClassScopeId, SL::VObjectType::paClass_type);
-  if (kClassTypeId == zeroId) {
-    return "";
-  }
-  return getStringConst(fC, kClassTypeId);
+
+  return scopes;
 }
 
 auto getInterfaceClassSet(const SL::FileContent* fC)

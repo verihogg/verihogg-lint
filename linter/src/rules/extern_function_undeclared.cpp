@@ -1,13 +1,40 @@
 #include "rules/extern_function_undeclared.h"
 
 #include <cassert>
+#include <sstream>
 #include <unordered_map>
+#include <vector>
 
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
 using namespace SURELOG;
+
+namespace {
+
+std::string getFullNameFromScope(const FileContent* fC, NodeId id) {
+  std::stringstream sstream;
+  std::string libName{fC->getLibrary()->getName()};
+  sstream << libName << "@";
+
+  const NodeId tempId = fC->sl_get(id, VObjectType::paClass_type);
+  const std::vector<NodeId> strIds =
+      fC->sl_collect_all(tempId, VObjectType::slStringConst);
+  assert(strIds.size() > 0);
+
+  std::string firstString{fC->SymName(strIds[0])};
+  sstream << firstString;
+
+  for (size_t i = 1; i < strIds.size(); i++) {
+    const NodeId stringId = strIds[i];
+    std::string scopeName{fC->SymName(stringId)};
+    sstream << "::" << scopeName;
+  }
+  return sstream.str();
+}
+
+}  // namespace
 
 void checkExternFunctionUndeclared(const FileContent* fC,
                                    ErrorContainer* errors,
@@ -27,19 +54,25 @@ void checkExternFunctionUndeclared(const FileContent* fC,
     if (classes.count(className) == 0) continue;
     const NodeId classId = classes.at(className);
 
-    const std::vector<NodeId> funcPrototypes =
-        fC->sl_collect_all(classId, VObjectType::paFunction_body_declaration);
-
-    for (auto& protoId : funcPrototypes) {
-      const std::string protoName = getStringConst(fC, protoId);
+    const NodeId classId = classes.at(fullName);
+    const std::string funcName = getStringConst(fC, funcId);
+    const std::vector<NodeId> funcImplIds =
+        fC->sl_collect_all(classId, VObjectType::paClass_method);
+    bool found = false;
+    for (auto& methodId : funcImplIds) {
       const NodeId externId =
-          fC->sl_collect(protoId, VObjectType::paExtern_qualifier);
-
-      if (protoName == declName && externId == zeroId) {
-        ReportError(fC, classId, className,
-                    ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED, errors,
-                    symbols);
+          fC->sl_collect(methodId, VObjectType::paExtern_qualifier);
+      const NodeId protoId =
+          fC->sl_collect(methodId, VObjectType::paFunction_prototype);
+      const std::string protoName = getStringConst(fC, protoId);
+      if (protoName == funcName && externId != zeroId) {
+        found = true;
+        break;
       }
     }
+    if (found) continue;
+    reportError(fC, funcId, funcName,
+                ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED, errors,
+                symbols);
   }
 }
