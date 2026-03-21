@@ -9,6 +9,30 @@
 
 using namespace SURELOG;
 
+namespace {
+std::string getFullNameFromScope(const FileContent* fC, NodeId id) {
+  std::stringstream sstream;
+  std::string libName{fC->getLibrary()->getName()};
+  sstream << libName << "@";
+
+  const NodeId tempId = fC->sl_get(id, VObjectType::paClass_type);
+  const std::vector<NodeId> strIds =
+      fC->sl_collect_all(tempId, VObjectType::slStringConst);
+  assert(strIds.size() > 0);
+
+  std::string firstString{fC->SymName(strIds[0])};
+  sstream << firstString;
+
+  for (size_t i = 1; i < strIds.size(); i++) {
+    const NodeId stringId = strIds[i];
+    std::string scopeName{fC->SymName(stringId)};
+    sstream << "::" << scopeName;
+  }
+  return sstream.str();
+}
+
+}  // namespace
+
 void checkExternConstraintUndeclared(const FileContent* fC,
                                      ErrorContainer* errors,
                                      SymbolTable* symbols) {
@@ -16,33 +40,35 @@ void checkExternConstraintUndeclared(const FileContent* fC,
 
   const std::unordered_map<std::string, NodeId> classes = getClassIds(fC);
 
-  const std::vector<NodeId> constrDeclarations = fC->sl_collect_all(
+  const std::vector<NodeId> externConstraintDeclarations = fC->sl_collect_all(
       fC->getRootNode(), VObjectType::paExtern_constraint_declaration);
 
-  for (auto& constrId : constrDeclarations) {
-    NodeId stringId = fC->sl_get(constrId, VObjectType::paClass_scope);
-    stringId = fC->sl_collect(stringId, VObjectType::slStringConst);
+  for (auto& constrDeclId : externConstraintDeclarations) {
+    std::cout << fC->printSubTree(fC->getRootNode()) << std::endl;
+    const NodeId classScopeId =
+        fC->sl_get(constrDeclId, VObjectType::paClass_scope);
+    if (classScopeId == zeroId) continue;
 
-    const std::string constrName = getStringConst(fC, constrId);
-    const std::string className =
-        getPrefix(fC, constrId) + getStringConst(fC, stringId);
+    std::string fullName = getFullNameFromScope(fC, classScopeId);
+    if (classes.find(fullName) == classes.end()) continue;
 
-    assert(classes.find(className) != classes.end());
-    const NodeId classId = classes.at(className);
-
-    const std::vector<NodeId> constrPrototypes =
+    const NodeId classId = classes.at(fullName);
+    const std::string constrName = getStringConst(fC, constrDeclId);
+    const std::vector<NodeId> constrIds =
         fC->sl_collect_all(classId, VObjectType::paConstraint_prototype);
-
-    for (auto& protoId : constrPrototypes) {
-      const NodeId nameId = fC->sl_collect(protoId, VObjectType::slStringConst);
+    bool found = false;
+    for (auto& constrId : constrIds) {
+      const std::string protoName = getStringConst(fC, constrId);
       const NodeId externId =
-          fC->sl_collect(protoId, VObjectType::paExtern_qualifier);
-      const std::string protoName = getStringConst(fC, nameId);
-      if (protoName == constrName && externId == zeroId) {
-        ReportError(fC, protoId, protoName,
-                    ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED, errors,
-                    symbols);
+          fC->sl_get(constrId, VObjectType::paExtern_qualifier);
+      if (protoName == constrName && externId != zeroId) {
+        found = true;
+        break;
       }
     }
+    if (found) continue;
+    reportError(fC, constrDeclId, constrName,
+                ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED, errors,
+                symbols);
   }
 }
