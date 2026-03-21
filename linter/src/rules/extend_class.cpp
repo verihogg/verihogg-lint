@@ -41,9 +41,12 @@ void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
     const std::string mainPrefix = getPrefix(fC, id);
     const std::string superclassName = getSuperclassString(fC, id);
 
+    const NodeId extendsId = fC->sl_get(id, VObjectType::paEXTENDS);
+    if (extendsId == zeroId) continue;
+
     if (isBuiltinClass(className) || superclassName == "") continue;
 
-    std::vector<NodeId> superIdVector = classMap[superclassName];
+    const std::vector<NodeId> superIdVector = classMap[superclassName];
     bool found = false;
     for (auto& superId : superIdVector) {
       const std::string superPrefix = getPrefix(fC, superId);
