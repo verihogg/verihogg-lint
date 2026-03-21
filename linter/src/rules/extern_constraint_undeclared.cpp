@@ -9,30 +9,6 @@
 
 using namespace SURELOG;
 
-namespace {
-std::string getFullNameFromScope(const FileContent* fC, NodeId id) {
-  std::stringstream sstream;
-  std::string libName{fC->getLibrary()->getName()};
-  sstream << libName << "@";
-
-  const NodeId tempId = fC->sl_get(id, VObjectType::paClass_type);
-  const std::vector<NodeId> strIds =
-      fC->sl_collect_all(tempId, VObjectType::slStringConst);
-  assert(strIds.size() > 0);
-
-  std::string firstString{fC->SymName(strIds[0])};
-  sstream << firstString;
-
-  for (size_t i = 1; i < strIds.size(); i++) {
-    const NodeId stringId = strIds[i];
-    std::string scopeName{fC->SymName(stringId)};
-    sstream << "::" << scopeName;
-  }
-  return sstream.str();
-}
-
-}  // namespace
-
 void checkExternConstraintUndeclared(const FileContent* fC,
                                      ErrorContainer* errors,
                                      SymbolTable* symbols) {
