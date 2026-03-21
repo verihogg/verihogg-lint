@@ -108,8 +108,6 @@ endif()
 enable_testing()
 add_subdirectory(tests)
 
-add_subdirectory(linter)
-
 set(LINTER_SRC
     linter/src/main/lint.cpp
     linter/src/main/cli.cpp
@@ -198,6 +196,16 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${UHDM_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CAPNP_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ANTLR_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARY})
+
+add_executable(lint_exec ${LINTER_SRC})
+
+target_include_directories(lint_exec
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
+)
+
+target_link_libraries(lint_exec PUBLIC surelog)
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /bigobj)
