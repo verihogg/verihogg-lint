@@ -1,4 +1,3 @@
-// rules/missing_function_implementation.cpp
 #include "rules/missing_function_implementation.h"
 
 #include <Surelog/Common/NodeId.h>
@@ -14,6 +13,7 @@
 #include <utility>
 #include <vector>
 
+#include "Surelog/ErrorReporting/ErrorDefinition.h"
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/design_utils.h"
@@ -71,6 +71,7 @@ struct ExternMethodInfo {
   std::string_view methodName;
   SL::NodeId reportNode;
   const SL::FileContent* fileContent;
+  bool isTask;
 };
 
 auto CollectExternMethods(const SL::FileContent* fileContent)
@@ -137,6 +138,7 @@ auto CollectExternMethods(const SL::FileContent* fileContent)
           .methodName = methodName,
           .reportNode = methodProtoContainer,
           .fileContent = fileContent,
+          .isTask = (protoType == SL::VObjectType::paTask_prototype),
       });
     }
   }
@@ -248,8 +250,11 @@ void CheckMissingFunctionImplementation(SL::Design* design,
       continue;
     }
 
-    ReportError(
-        externInfo.fileContent, externInfo.reportNode, externInfo.methodName,
-        verihogg_lint::LINT_MISSING_FUNCTION_IMPLEMENTATION, errors, symbols);
+    SL::ErrorDefinition::ErrorType const errorType =
+        externInfo.isTask ? verihogg_lint::LINT_MISSING_TASK_IMPLEMENTATION
+                          : verihogg_lint::LINT_MISSING_FUNCTION_IMPLEMENTATION;
+
+    ReportError(externInfo.fileContent, externInfo.reportNode,
+                externInfo.methodName, errorType, errors, symbols);
   }
 }

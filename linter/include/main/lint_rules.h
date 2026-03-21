@@ -54,6 +54,7 @@ inline constexpr ED::ErrorType LINT_EXPONENT_FORMAT_TIME_VALUE = LintId(767);
 inline constexpr ED::ErrorType LINT_NOF_PARAMETER_OVERRIDE = LintId(768);
 inline constexpr ED::ErrorType LINT_MISSING_FUNCTION_IMPLEMENTATION =
     LintId(769);
+inline constexpr ED::ErrorType LINT_MISSING_TASK_IMPLEMENTATION = LintId(770);
 
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -158,6 +159,8 @@ inline constexpr std::array kLintRules = {
         .text = "Expected # parameter overrides, found #module %s; endmodule"},
     LintRuleInfo{.type = LINT_MISSING_FUNCTION_IMPLEMENTATION,
                  .text = "extern function is not implemented: %s"},
+    LintRuleInfo{.type = LINT_MISSING_TASK_IMPLEMENTATION,
+                 .text = "extern task is not implemented: %s"},
 };
 
 inline void RegisterLintRules() {
