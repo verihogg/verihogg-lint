@@ -109,7 +109,6 @@ enable_testing()
 add_subdirectory(tests)
 
 set(LINTER_SRC
-    linter/src/main/lint.cpp
     linter/src/main/cli.cpp
     linter/src/utils/ast_utils.cpp
     linter/src/utils/location_utils.cpp
@@ -170,6 +169,9 @@ set(LINTER_SRC
 #     linter/src/rules/extern_task_undeclared.cpp
 
 
+add_library(productionLibrary ${LINTER_SRC})
+target_include_directories(productionLibrary PUBLIC linter/include) 
+
 foreach(f ${LINTER_SRC})
   if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
     message(FATAL_ERROR "Linter source file not found: ${f}\nCheck for typos/incorrect path in CMakeLists.txt")
@@ -180,7 +182,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-add_executable(${PROJECT_NAME} ${LINTER_SRC})
+add_executable(${PROJECT_NAME} $<TARGET_OBJECTS:productionLibrary> linter/src/main/lint.cpp)
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -191,21 +193,12 @@ target_include_directories(${PROJECT_NAME}
     ${ANTLR_INCLUDE_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${SURELOG_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PUBLIC productionLibrary)
+TARGET_link_libraries(${PROJECT_NAME} PUBLIC ${SURELOG_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${UHDM_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CAPNP_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ANTLR_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARY})
-
-add_executable(lint_exec ${LINTER_SRC})
-
-target_include_directories(lint_exec
-  PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
-)
-
-target_link_libraries(lint_exec PUBLIC surelog)
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /bigobj)
@@ -217,4 +210,5 @@ endif()
 include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
 

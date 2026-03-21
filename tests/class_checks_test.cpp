@@ -1,15 +1,4 @@
 #include <gtest/gtest.h>
-#include <rules/circular_inheritance.h>
-#include <rules/duplicate_class.h>
-#include <rules/duplicate_constructor.h>
-#include <rules/extend_class.h>
-#include <rules/extend_interface_class.h>
-#include <rules/extern_constraint_undeclared.h>
-#include <rules/extern_function_undeclared.h>
-#include <rules/extern_task_undeclared.h>
-#include <rules/implement_class.h>
-#include <rules/implement_interface_class.h>
-#include <utils/init.h>
 
 #include <filesystem>
 #include <functional>
@@ -21,6 +10,8 @@
 #include "Surelog/Design/FileContent.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
 #include "Surelog/SourceCompile/SymbolTable.h"
+#include "rules/all_rules.h"
+#include "utils/init.h"
 
 namespace fs = std::filesystem;
 
