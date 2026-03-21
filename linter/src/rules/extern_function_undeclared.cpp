@@ -3,16 +3,7 @@
 #include <cassert>
 #include <unordered_map>
 
-#include "Surelog/CommandLine/CommandLineParser.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/Design/ModuleDefinition.h"
-#include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/Library/Library.h"
-#include "Surelog/SourceCompile/CompileSourceFile.h"
-#include "Surelog/SourceCompile/Compiler.h"
-#include "Surelog/SourceCompile/ParseFile.h"
-#include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
@@ -45,7 +36,7 @@ void checkExternFunctionUndeclared(const FileContent* fC,
           fC->sl_collect(protoId, VObjectType::paExtern_qualifier);
 
       if (protoName == declName && externId == zeroId) {
-        reportError(fC, classId, className,
+        ReportError(fC, classId, className,
                     ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED, errors,
                     symbols);
       }

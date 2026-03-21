@@ -12,6 +12,8 @@ pkgs.stdenv.mkDerivation {
 
   nativeBuildInputs = shared.nativeBuildInputs;
 
+  doCheck = true;
+
   buildInputs = shared.buildInputs;
 
   meta = with pkgs.lib; {

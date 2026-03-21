@@ -1,6 +1,6 @@
 add_executable(class_checks_test class_checks_test.cpp)
 
-target_link_libraries(class_checks_test PUBLIC linter)
+target_link_libraries(class_checks_test PUBLIC linter gtest)
 target_link_libraries(class_checks_test PUBLIC ${GTEST_LIBRARY})
 target_link_libraries(class_checks_test PUBLIC ${SURELOG_LIBRARY})
 target_link_libraries(class_checks_test PUBLIC ${UHDM_LIBRARY})

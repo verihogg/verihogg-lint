@@ -5,17 +5,7 @@
 #include <string_view>
 #include <vector>
 
-#include "Surelog/CommandLine/CommandLineParser.h"
-#include "Surelog/Design/Design.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/Design/ModuleDefinition.h"
-#include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/Library/Library.h"
-#include "Surelog/SourceCompile/CompileSourceFile.h"
-#include "Surelog/SourceCompile/Compiler.h"
-#include "Surelog/SourceCompile/ParseFile.h"
-#include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
@@ -67,8 +57,6 @@ void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
       bool found = false;
       for (auto& superId : superIdVector) {
         const std::string superPrefix = getPrefix(fC, superId);
-        std::cerr << superPrefix << superclassName << " " << mainPrefix
-                  << className << std::endl;
 
         const size_t superSize = superPrefix.size();
         const size_t mainSize = superPrefix.size();
@@ -81,7 +69,7 @@ void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
 
       if (found) continue;
 
-      reportError(fC, interfaceId, className,
+      ReportError(fC, interfaceId, className,
                   ErrorDefinition::LINT_EXTEND_INTERFACE_CLASS, errors,
                   symbols);
     }
