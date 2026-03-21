@@ -48,7 +48,7 @@ void checkExternTaskUndeclared(const FileContent* fC, ErrorContainer* errors,
       }
     }
     if (found) continue;
-    reportError(fC, taskId, funcName,
+    ReportError(fC, taskId, funcName,
                 ErrorDefinition::LINT_EXTERN_TASK_UNDECLARED, errors, symbols);
   }
 }

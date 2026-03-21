@@ -20,7 +20,6 @@ void checkExternConstraintUndeclared(const FileContent* fC,
       fC->getRootNode(), VObjectType::paExtern_constraint_declaration);
 
   for (auto& constrDeclId : externConstraintDeclarations) {
-    std::cout << fC->printSubTree(fC->getRootNode()) << std::endl;
     const NodeId classScopeId =
         fC->sl_get(constrDeclId, VObjectType::paClass_scope);
     if (classScopeId == zeroId) continue;
@@ -43,7 +42,7 @@ void checkExternConstraintUndeclared(const FileContent* fC,
       }
     }
     if (found) continue;
-    reportError(fC, constrDeclId, constrName,
+    ReportError(fC, constrDeclId, constrName,
                 ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED, errors,
                 symbols);
   }

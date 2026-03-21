@@ -1,7 +1,6 @@
 #include "rules/circular_inheritance.h"
 
 #include <forward_list>
-#include <iostream>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -164,7 +163,7 @@ void checkCircularInheritance(const FileContent* fC, ErrorContainer* errors,
   for (auto& numOfId : cyclicDependencies) {
     const NodeId id(numOfId);
     const std::string name = getStringConst(fC, id);
-    reportError(fC, id, name, ErrorDefinition::LINT_CIRCULAR_INHERITANCE,
+    ReportError(fC, id, name, ErrorDefinition::LINT_CIRCULAR_INHERITANCE,
                 errors, symbols);
   }
 }

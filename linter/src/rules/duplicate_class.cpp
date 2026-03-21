@@ -2,14 +2,7 @@
 
 #include <unordered_set>
 
-#include "Surelog/CommandLine/CommandLineParser.h"
-#include "Surelog/Design/Design.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/Design/ModuleDefinition.h"
-#include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/Library/Library.h"
-#include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 

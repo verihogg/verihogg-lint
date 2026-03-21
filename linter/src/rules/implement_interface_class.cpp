@@ -5,17 +5,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include "Surelog/CommandLine/CommandLineParser.h"
-#include "Surelog/Design/Design.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/Design/ModuleDefinition.h"
-#include "Surelog/Design/ModuleInstance.h"
 #include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/Library/Library.h"
-#include "Surelog/SourceCompile/CompileSourceFile.h"
-#include "Surelog/SourceCompile/Compiler.h"
-#include "Surelog/SourceCompile/ParseFile.h"
-#include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
@@ -50,7 +40,7 @@ void checkImplementInterfaceClass(const FileContent* fC, ErrorContainer* errors,
 
     if (interfaceClassSet.count(superInterfaceName) == 0) {
       std::string className = getStringConst(fC, classId);
-      reportError(fC, classId, className,
+      ReportError(fC, classId, className,
                   ErrorDefinition::LINT_IMPLEMENT_INTERFACE_CLASS, errors,
                   symbols);
     }

@@ -46,7 +46,7 @@ void checkExternFunctionUndeclared(const FileContent* fC,
       }
     }
     if (found) continue;
-    reportError(fC, funcId, funcName,
+    ReportError(fC, funcId, funcName,
                 ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED, errors,
                 symbols);
   }
