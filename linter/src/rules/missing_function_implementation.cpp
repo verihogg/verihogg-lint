@@ -4,6 +4,7 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
@@ -13,7 +14,6 @@
 #include <utility>
 #include <vector>
 
-#include "Surelog/ErrorReporting/ErrorDefinition.h"
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/design_utils.h"
@@ -160,9 +160,14 @@ auto ExtractImplementationKey(const SL::FileContent* fileContent,
       fileContent->Type(classType) != SL::VObjectType::paClass_type) {
     return {};
   }
-  SL::NodeId const classNameNode = fileContent->Child(classType);
-  if (!classNameNode ||
-      fileContent->Type(classNameNode) != SL::VObjectType::slStringConst) {
+  SL::NodeId classNameNode = SL::InvalidNodeId;
+  for (SL::NodeId cur = fileContent->Child(classType); cur;
+       cur = fileContent->Sibling(cur)) {
+    if (fileContent->Type(cur) == SL::VObjectType::slStringConst) {
+      classNameNode = cur;
+    }
+  }
+  if (!classNameNode) {
     return {};
   }
   std::string_view const className = fileContent->SymName(classNameNode);

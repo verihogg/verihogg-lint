@@ -21,6 +21,7 @@
 #include "rules/exponent_format_time_value.h"
 #include "rules/fatal_rule.h"
 #include "rules/foreach_loop_condition.h"
+#include "rules/function_implemention_scope.h"
 #include "rules/hierarchical_interface_identifier.h"
 #include "rules/implicit_data_type.h"
 #include "rules/inside_operator.h"
@@ -158,6 +159,9 @@ static const std::array kGlobalRules = std::to_array<GlobalRule>({
     {.name = "MissingFunctionImplementation",
      .enabled = true,
      .check = CheckMissingFunctionImplementation},
+    {.name = "FuctionImplementationScope",
+     .enabled = true,
+     .check = CheckFuncImplScope},
 });
 
 namespace {

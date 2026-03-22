@@ -100,6 +100,7 @@ set(LINTER_SRC
     linter/src/utils/name_utils.cpp
     linter/src/utils/string_utils.cpp
     linter/src/utils/design_utils.cpp
+    linter/src/utils/class_scope_utils.cpp
     linter/src/rules/class_variable_lifetime.cpp
     linter/src/rules/dpi_decl_string.cpp
     linter/src/rules/fatal_rule.cpp
@@ -136,6 +137,7 @@ set(LINTER_SRC
     linter/src/rules/exponent_format_time_value.cpp
     linter/src/rules/nof_parameter_override.cpp
     linter/src/rules/missing_function_implementation.cpp
+    linter/src/rules/function_implemention_scope.cpp
 )
 
 foreach(f ${LINTER_SRC})

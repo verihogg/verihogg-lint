@@ -1,4 +1,3 @@
-// utils/design_utils.cpp
 #include "utils/design_utils.h"
 
 #include <functional>
