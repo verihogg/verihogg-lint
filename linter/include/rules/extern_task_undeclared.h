@@ -4,5 +4,5 @@
 
 using namespace SURELOG;
 
-void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
+void checkExternTaskUndeclared(const FileContent* fC, ErrorContainer* errors,
                                SymbolTable* symbols);

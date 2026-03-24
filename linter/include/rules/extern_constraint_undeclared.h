@@ -4,4 +4,6 @@
 
 using namespace SURELOG;
 
-void checkExternConstraintUndeclared(const FileContent* fC, ErrorContainer* errors, SymbolTable* symbols);
+void checkExternConstraintUndeclared(const FileContent* fC,
+                                     ErrorContainer* errors,
+                                     SymbolTable* symbols);

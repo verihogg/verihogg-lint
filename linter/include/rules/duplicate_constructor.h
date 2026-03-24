@@ -4,5 +4,5 @@
 
 using namespace SURELOG;
 
-void checkDuplicateConstructor(const FileContent* fC, ErrorContainer* errors, SymbolTable* symbols);
-
+void checkDuplicateConstructor(const FileContent* fC, ErrorContainer* errors,
+                               SymbolTable* symbols);

@@ -4,4 +4,5 @@
 
 using namespace SURELOG;
 
-void checkExtendClass(const FileContent* fC, ErrorContainer* errors, SymbolTable* symbols);
+void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
+                      SymbolTable* symbols);

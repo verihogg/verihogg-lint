@@ -6,6 +6,5 @@
 
 using namespace SURELOG;
 
-void checkDuplicateClass(const FileContent* fC,
-                                   ErrorContainer* errors,
-                                   SymbolTable* symbols);
+void checkDuplicateClass(const FileContent* fC, ErrorContainer* errors,
+                         SymbolTable* symbols);
