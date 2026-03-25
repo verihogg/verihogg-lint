@@ -1,9 +1,9 @@
 #pragma once
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
+
 #include <algorithm>
 #include <array>
 #include <string_view>
-
-#include "Surelog/ErrorReporting/ErrorDefinition.h"
 
 namespace verihogg_lint {
 
@@ -56,6 +56,8 @@ inline constexpr ED::ErrorType LINT_MISSING_FUNCTION_IMPLEMENTATION =
     LintId(769);
 inline constexpr ED::ErrorType LINT_MISSING_TASK_IMPLEMENTATION = LintId(770);
 inline constexpr ED::ErrorType LINT_FUNC_IMPL_SCOPE = LintId(771);
+inline constexpr ED::ErrorType LINT_TASK_IMPL_SCOPE = LintId(772);
+inline constexpr ED::ErrorType LINT_CONSTRAINT_IMPL_SCOPE = LintId(773);
 
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -165,6 +167,12 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{
         .type = LINT_FUNC_IMPL_SCOPE,
         .text = "extern function implemented outside of its class scope: %s"},
+    LintRuleInfo{
+        .type = LINT_TASK_IMPL_SCOPE,
+        .text = "extern task implemented outside of its class scope: %s"},
+    LintRuleInfo{
+        .type = LINT_CONSTRAINT_IMPL_SCOPE,
+        .text = "extern constraint implemented outside of its class scope: %s"},
 };
 
 inline void RegisterLintRules() {

@@ -11,7 +11,7 @@ struct RuleInfo {
   const char* description;
 };
 
-static constexpr std::array<RuleInfo, 36> kRules = {{
+static constexpr std::array<RuleInfo, 40> kRules = {{
     {.id = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
      .description =
          "Expecting 0, 1 or 2 as first argument to '$fatal' system task"},
@@ -94,6 +94,15 @@ static constexpr std::array<RuleInfo, 36> kRules = {{
      .description = "Expected # parameter overrides, found #module; endmodule"},
     {.id = "MISSING_FUNCTION_IMPLEMENTATION",
      .description = "extern function is not implemented"},
+    {.id = "MISSING_TASK_IMPLEMENTATION",
+     .description = "extern task is not implemented"},
+    {.id = "TASK_IMPLEMENTATION_SCOPE",
+     .description = "extern function implemented outside of its class scope"},
+    {.id = "CONSTRAINT_IMPLEMENTATION_SCOPE",
+     .description = "extern constraint implemented outside of its class scope"},
+    {.id = "FUNCTION_IMPLEMENTATION_SCOPE",
+     .description = "extern task implemented outside of its class scope"},
+
 }};
 
 static constexpr int kRuleCount =

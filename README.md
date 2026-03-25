@@ -115,6 +115,17 @@ The project is intended for static code analysis and checking compliance with co
 - `MISSING_FUNCTION_IMPLEMENTATION`  
   extern function is not implemented
 
+- `MISSING_TASK_IMPLEMENTATION`  
+  extern task is not implemented
+
+- `FUNCTION_IMPLEMENTATION_SCOPE`  
+  extern function implemented outside of its class scoped
+
+- `TASK_IMPLEMENTATION_SCOPE`  
+  extern task implemented outside of its class scope
+
+- `CONSTRAINT_IMPLEMENTATION_SCOPE`  
+  extern conxtraint implemented outside of its class scope
 ---
 
 ## Project structure

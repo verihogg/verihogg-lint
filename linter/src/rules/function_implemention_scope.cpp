@@ -4,9 +4,11 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include <cstdint>
 #include <optional>
 #include <string_view>
 #include <unordered_map>
@@ -23,15 +25,19 @@ namespace SL = SURELOG;
 
 namespace {
 
+enum class ImplKind : std::uint8_t { Function, Task, Constraint };
+
 struct ImplInfo {
   std::string_view className;
-  std::string_view methodName;
+  std::string_view memberName;
   SL::NodeId reportNode;
   ClassScopeUtils::ClassScopeInfo scopeInfo;
   const SL::FileContent* fileContent;
+  ImplKind kind;
 };
 
-auto ExtractImplInfo(const SL::FileContent* fileContent, SL::NodeId bodyDecl)
+auto ExtractSubroutineImplInfo(const SL::FileContent* fileContent,
+                               SL::NodeId bodyDecl, ImplKind kind)
     -> std::optional<ImplInfo> {
   SL::NodeId const classScope =
       FindChildOfType(fileContent, bodyDecl, SL::VObjectType::paClass_scope);
@@ -62,7 +68,7 @@ auto ExtractImplInfo(const SL::FileContent* fileContent, SL::NodeId bodyDecl)
       fileContent->Type(methodNameNode) != SL::VObjectType::slStringConst) {
     return std::nullopt;
   }
-  std::string_view const methodName = fileContent->SymName(methodNameNode);
+  std::string_view const memberName = fileContent->SymName(methodNameNode);
 
   SL::NodeId const scopeContainer =
       ClassScopeUtils::FindScopeContainer(fileContent, bodyDecl);
@@ -70,18 +76,72 @@ auto ExtractImplInfo(const SL::FileContent* fileContent, SL::NodeId bodyDecl)
     return std::nullopt;
   }
 
-  return ImplInfo{
-      .className = className,
-      .methodName = methodName,
-      .reportNode = classScope,
-      .scopeInfo =
-          ClassScopeUtils::ClassScopeInfo{
-              .scopeType = fileContent->Type(scopeContainer),
-              .scopeName = ClassScopeUtils::GetScopeContainerName(
-                  fileContent, scopeContainer),
-          },
-      .fileContent = fileContent,
-  };
+  return ImplInfo{.className = className,
+                  .memberName = memberName,
+                  .reportNode = classScope,
+                  .scopeInfo =
+                      ClassScopeUtils::ClassScopeInfo{
+                          .scopeType = fileContent->Type(scopeContainer),
+                          .scopeName = ClassScopeUtils::GetScopeContainerName(
+                              fileContent, scopeContainer),
+                      },
+                  .fileContent = fileContent,
+                  .kind = kind};
+}
+
+auto ExtractConstraintImplInfo(const SL::FileContent* fileContent,
+                               SL::NodeId node) -> std::optional<ImplInfo> {
+  SL::NodeId const classScope =
+      FindChildOfType(fileContent, node, SL::VObjectType::paClass_scope);
+  if (!classScope) {
+    return std::nullopt;
+  }
+
+  SL::NodeId const classType = fileContent->Child(classScope);
+  if (!classType ||
+      fileContent->Type(classType) != SL::VObjectType::paClass_type) {
+    return std::nullopt;
+  }
+
+  SL::NodeId classNameNode = SL::InvalidNodeId;
+  for (SL::NodeId cur = fileContent->Child(classType); cur;
+       cur = fileContent->Sibling(cur)) {
+    if (fileContent->Type(cur) == SL::VObjectType::slStringConst) {
+      classNameNode = cur;
+    }
+  }
+
+  if (!classNameNode) {
+    return std::nullopt;
+  }
+
+  std::string_view const className = fileContent->SymName(classNameNode);
+
+  SL::NodeId const constraintNameNode = fileContent->Sibling(classScope);
+  if (!constraintNameNode ||
+      fileContent->Type(constraintNameNode) != SL::VObjectType::slStringConst) {
+    return std::nullopt;
+  }
+
+  std::string_view const constraintName =
+      fileContent->SymName(constraintNameNode);
+
+  SL::NodeId const scopeContainer =
+      ClassScopeUtils::FindScopeContainer(fileContent, node);
+  if (!scopeContainer) {
+    return std::nullopt;
+  }
+
+  return ImplInfo{.className = className,
+                  .memberName = constraintName,
+                  .reportNode = classScope,
+                  .scopeInfo =
+                      ClassScopeUtils::ClassScopeInfo{
+                          .scopeType = fileContent->Type(scopeContainer),
+                          .scopeName = ClassScopeUtils::GetScopeContainerName(
+                              fileContent, scopeContainer)},
+                  .fileContent = fileContent,
+                  .kind = ImplKind::Constraint};
 }
 
 auto CollectImplInfos(const SL::FileContent* fileContent)
@@ -95,27 +155,34 @@ auto CollectImplInfos(const SL::FileContent* fileContent)
 
   for (SL::NodeId const funcDecl : fileContent->sl_collect_all(
            root, SL::VObjectType::paFunction_declaration)) {
-    SL::NodeId const bodyDecl = fileContent->Child(funcDecl);
-    if (!bodyDecl || fileContent->Type(bodyDecl) !=
-                         SL::VObjectType::paFunction_body_declaration) {
-      continue;
-    }
-    auto info = ExtractImplInfo(fileContent, bodyDecl);
-    if (info.has_value()) {
-      result.push_back(std::move(*info));
+    SL::NodeId const body = fileContent->Child(funcDecl);
+    if (body && fileContent->Type(body) ==
+                    SL::VObjectType::paFunction_body_declaration) {
+      auto info =
+          ExtractSubroutineImplInfo(fileContent, body, ImplKind::Function);
+      if (info) {
+        result.push_back(*info);
+      }
     }
   }
 
   for (SL::NodeId const taskDecl :
        fileContent->sl_collect_all(root, SL::VObjectType::paTask_declaration)) {
-    SL::NodeId const bodyDecl = fileContent->Child(taskDecl);
-    if (!bodyDecl || fileContent->Type(bodyDecl) !=
-                         SL::VObjectType::paTask_body_declaration) {
-      continue;
+    SL::NodeId const body = fileContent->Child(taskDecl);
+    if (body &&
+        fileContent->Type(body) == SL::VObjectType::paTask_body_declaration) {
+      auto info = ExtractSubroutineImplInfo(fileContent, body, ImplKind::Task);
+      if (info) {
+        result.push_back(*info);
+      }
     }
-    auto info = ExtractImplInfo(fileContent, bodyDecl);
-    if (info.has_value()) {
-      result.push_back(std::move(*info));
+  }
+
+  for (SL::NodeId const node : fileContent->sl_collect_all(
+           root, SL::VObjectType::paExtern_constraint_declaration)) {
+    auto info = ExtractConstraintImplInfo(fileContent, node);
+    if (info) {
+      result.push_back(*info);
     }
   }
 
@@ -147,7 +214,7 @@ void CheckFuncImplScope(SL::Design* design, SL::ErrorContainer* errors,
   });
 
   for (const auto& impl : allImpls) {
-    auto const it = globalClassScopeMap.find(impl.className);
+    auto it = globalClassScopeMap.find(impl.className);
     if (it == globalClassScopeMap.end()) {
       continue;
     }
@@ -156,7 +223,23 @@ void CheckFuncImplScope(SL::Design* design, SL::ErrorContainer* errors,
       continue;
     }
 
-    ReportError(impl.fileContent, impl.reportNode, impl.methodName,
-                verihogg_lint::LINT_FUNC_IMPL_SCOPE, errors, symbols);
+    SL::ErrorDefinition::ErrorType errorType{};
+
+    switch (impl.kind) {
+      case ImplKind::Function:
+        errorType = verihogg_lint::LINT_FUNC_IMPL_SCOPE;
+        break;
+
+      case ImplKind::Task:
+        errorType = verihogg_lint::LINT_TASK_IMPL_SCOPE;
+        break;
+
+      case ImplKind::Constraint:
+        errorType = verihogg_lint::LINT_CONSTRAINT_IMPL_SCOPE;
+        break;
+    }
+
+    ReportError(impl.fileContent, impl.reportNode, impl.memberName, errorType,
+                errors, symbols);
   }
 }
