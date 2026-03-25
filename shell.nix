@@ -11,6 +11,6 @@ pkgs.mkShell {
     ++ shared.shellOnlyPackages;
 
     shellHook = ''
-    export SURELOG_ROOT=${shared.surelog}
+    export SURELOG_ROOT=${pkgs.surelog}
   '';
 }
