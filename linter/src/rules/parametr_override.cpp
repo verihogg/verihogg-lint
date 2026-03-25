@@ -1,3 +1,4 @@
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
@@ -31,23 +32,24 @@ static constexpr std::array kInstanceTypes = {
     SL::VObjectType::paName_of_instance,
 };
 
-static auto IsParameterOverrideValid(const SL::FileContent* fileContent,
-                                     SL::NodeId instNode) -> bool {
+namespace {
+auto IsParameterOverrideValid(const SL::FileContent* fileContent,
+                              SL::NodeId instNode) -> bool {
   if (fileContent == nullptr || !instNode) {
     return true;
   }
 
-  SL::NodeId child = fileContent->Child(instNode);
+  SL::NodeId const child = fileContent->Child(instNode);
   if (!child) {
     return true;
   }
 
-  SL::NodeId secondChild = fileContent->Sibling(child);
+  SL::NodeId const secondChild = fileContent->Sibling(child);
   if (!secondChild) {
     return true;
   }
 
-  SL::VObjectType secondType = fileContent->Type(secondChild);
+  SL::VObjectType const secondType = fileContent->Type(secondChild);
 
   if (std::ranges::any_of(kLiteralTypes, [secondType](SL::VObjectType type) {
         return type == secondType;
@@ -58,9 +60,9 @@ static auto IsParameterOverrideValid(const SL::FileContent* fileContent,
   if (std::ranges::any_of(kConstantTypes, [secondType](SL::VObjectType type) {
         return type == secondType;
       })) {
-    SL::NodeId thirdChild = fileContent->Sibling(secondChild);
+    SL::NodeId const thirdChild = fileContent->Sibling(secondChild);
     if (thirdChild) {
-      SL::VObjectType thirdType = fileContent->Type(thirdChild);
+      SL::VObjectType const thirdType = fileContent->Type(thirdChild);
       if (std::ranges::any_of(kInstanceTypes,
                               [thirdType](SL::VObjectType type) {
                                 return type == thirdType;
@@ -72,6 +74,7 @@ static auto IsParameterOverrideValid(const SL::FileContent* fileContent,
 
   return true;
 }
+}  // namespace
 
 void CheckParameterOverride(const SL::FileContent* fileContent,
                             SL::ErrorContainer* errors,
@@ -80,18 +83,18 @@ void CheckParameterOverride(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId inst : fileContent->sl_collect_all(
+  for (SL::NodeId const inst : fileContent->sl_collect_all(
            root, SL::VObjectType::paModule_instantiation)) {
     if (IsParameterOverrideValid(fileContent, inst)) {
       continue;
     }
 
-    SL::NodeId moduleName = fileContent->Child(inst);
+    SL::NodeId const moduleName = fileContent->Child(inst);
     SL::NodeId badNode =
         moduleName ? fileContent->Sibling(moduleName) : SL::NodeId{};
     if (!badNode) {

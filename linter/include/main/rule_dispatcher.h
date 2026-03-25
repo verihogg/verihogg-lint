@@ -5,6 +5,8 @@
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 
+#include "uhdm/vpi_user.h"
+
 void RunAllRules(SURELOG::ErrorContainer* errors,
                  SURELOG::SymbolTable* symbols);
 

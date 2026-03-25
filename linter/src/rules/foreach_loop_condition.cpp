@@ -1,5 +1,6 @@
 #include "rules/foreach_loop_condition.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
@@ -14,9 +15,10 @@
 
 namespace SL = SURELOG;
 
-static auto CountForeachDimensionGroups(const SL::FileContent* fileContent,
-                                        SL::NodeId foreachKeyword) -> int {
-  SL::NodeId arrayIdNode = FindArrayIdNode(fileContent, foreachKeyword);
+namespace {
+auto CountForeachDimensionGroups(const SL::FileContent* fileContent,
+                                 SL::NodeId foreachKeyword) -> int {
+  SL::NodeId const arrayIdNode = FindArrayIdNode(fileContent, foreachKeyword);
   if (arrayIdNode == SL::InvalidNodeId) {
     return 0;
   }
@@ -24,7 +26,7 @@ static auto CountForeachDimensionGroups(const SL::FileContent* fileContent,
   int groups = 0;
   for (SL::NodeId sib = fileContent->Sibling(arrayIdNode); sib;
        sib = fileContent->Sibling(sib)) {
-    SL::VObjectType type = fileContent->Type(sib);
+    SL::VObjectType const type = fileContent->Type(sib);
     if (type == SL::VObjectType::paLoop_variables ||
         type == SL::VObjectType::slStringConst) {
       ++groups;
@@ -32,6 +34,7 @@ static auto CountForeachDimensionGroups(const SL::FileContent* fileContent,
   }
   return groups;
 }
+}  // namespace
 
 void CheckForeachLoopCondition(const SL::FileContent* fileContent,
                                SL::ErrorContainer* errors,
@@ -40,12 +43,12 @@ void CheckForeachLoopCondition(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (root == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId foreachNode :
+  for (SL::NodeId const foreachNode :
        fileContent->sl_collect_all(root, SL::VObjectType::paFOREACH)) {
     if (foreachNode == SL::InvalidNodeId) {
       continue;
@@ -55,8 +58,8 @@ void CheckForeachLoopCondition(const SL::FileContent* fileContent,
       continue;
     }
 
-    SL::NodeId arrayIdNode = FindArrayIdNode(fileContent, foreachNode);
-    std::string_view arrayName =
+    SL::NodeId const arrayIdNode = FindArrayIdNode(fileContent, foreachNode);
+    std::string_view const arrayName =
         arrayIdNode ? ExtractName(fileContent, arrayIdNode, "unknown")
                     : "unknown";
 

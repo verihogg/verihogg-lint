@@ -1,5 +1,6 @@
 #include "rules/repeat_in_sequence.h"
 
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
@@ -20,16 +21,16 @@ void CheckRepetitionInSequence(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId root = fileContent->getRootNode();
+  SL::NodeId const root = fileContent->getRootNode();
   if (!root) {
     return;
   }
 
-  for (SL::NodeId seqDeclId : fileContent->sl_collect_all(
+  for (SL::NodeId const seqDeclId : fileContent->sl_collect_all(
            root, SL::VObjectType::paSequence_declaration)) {
-    std::string_view seqName = ExtractName(fileContent, seqDeclId);
+    std::string_view const seqName = ExtractName(fileContent, seqDeclId);
 
-    for (SL::NodeId seqExprId : fileContent->sl_collect_all(
+    for (SL::NodeId const seqExprId : fileContent->sl_collect_all(
              seqDeclId, SL::VObjectType::paSequence_expr)) {
       if (fileContent
               ->sl_collect_all(seqExprId, SL::VObjectType::paGoto_repetition)
