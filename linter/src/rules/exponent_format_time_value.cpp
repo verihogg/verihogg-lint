@@ -100,12 +100,12 @@ void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
                                  SL::NodeId timeLiteral,
                                  SL::ErrorContainer* errors,
                                  SL::SymbolTable* symbols) {
-  SL::NodeId const numNode = fileContent->Child(timeLiteral);
-  if (!numNode) {
+  SL::NodeId const kNumNode = fileContent->Child(timeLiteral);
+  if (!kNumNode) {
     return;
   }
 
-  const SL::VObjectType kNumType = fileContent->Type(numNode);
+  const SL::VObjectType kNumType = fileContent->Type(kNumNode);
   if (kNumType != SL::VObjectType::slIntConst &&
       kNumType != SL::VObjectType::slRealConst) {
     {
@@ -113,34 +113,34 @@ void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
     }
   }
 
-  SL::NodeId const timeUnitNode = fileContent->Sibling(numNode);
-  if (!timeUnitNode) {
+  SL::NodeId const kTimeUnitNode = fileContent->Sibling(kNumNode);
+  if (!kTimeUnitNode) {
     return;
   }
-  if (fileContent->Type(timeUnitNode) != SL::VObjectType::paTime_unit) {
-    return;
-  }
-
-  if (!TokenContainsExponent(fileContent, numNode)) {
+  if (fileContent->Type(kTimeUnitNode) != SL::VObjectType::paTime_unit) {
     return;
   }
 
-  const SL::PathId kFileId = fileContent->getFileId(numNode);
-  const uint32_t kLine = fileContent->Line(numNode);
-  const uint32_t kColStart = fileContent->Column(numNode);
-  const uint32_t kColEnd = fileContent->EndColumn(numNode);
-  const std::string_view kUnit = fileContent->SymName(timeUnitNode);
+  if (!TokenContainsExponent(fileContent, kNumNode)) {
+    return;
+  }
+
+  const SL::PathId kFileId = fileContent->getFileId(kNumNode);
+  const uint32_t kLine = fileContent->Line(kNumNode);
+  const uint32_t kColStart = fileContent->Column(kNumNode);
+  const uint32_t kColEnd = fileContent->EndColumn(kNumNode);
+  const std::string_view kUnit = fileContent->SymName(kTimeUnitNode);
 
   std::string originalNum = GetTokenText(kFileId, kLine, kColStart, kColEnd);
   if (originalNum.empty()) {
-    originalNum = fileContent->SymName(numNode);
+    originalNum = fileContent->SymName(kNumNode);
   }
 
   std::string badValue;
   badValue.reserve(originalNum.size() + kUnit.size());
   badValue.append(originalNum).append(kUnit);
 
-  ReportError(fileContent, numNode, badValue,
+  ReportError(fileContent, kNumNode, badValue,
               verihogg_lint::LINT_EXPONENT_FORMAT_TIME_VALUE, errors, symbols);
 }
 }  // namespace
@@ -152,13 +152,13 @@ void CheckExponentFormatTimeValue(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const timeLiteral :
-       fileContent->sl_collect_all(root, SL::VObjectType::paTime_literal)) {
-    CheckTimeLiteralForExponent(fileContent, timeLiteral, errors, symbols);
+  for (SL::NodeId const kTimeLiteral :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paTime_literal)) {
+    CheckTimeLiteralForExponent(fileContent, kTimeLiteral, errors, symbols);
   }
 }

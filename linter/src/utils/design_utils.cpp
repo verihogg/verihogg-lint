@@ -9,8 +9,9 @@ namespace SL = SURELOG;
 
 namespace DesignUtils {
 
-void ForEachFileContent(SL::Design* design,
-                        const std::function<void(const SL::FileContent*)>& fn) {
+void ForEachFileContent(
+    SL::Design* design,
+    const std::function<void(const SL::FileContent*)>& func) {
   if (design == nullptr) {
     return;
   }
@@ -18,7 +19,7 @@ void ForEachFileContent(SL::Design* design,
     if (fileContent == nullptr) {
       continue;
     }
-    fn(fileContent);
+    func(fileContent);
   }
 }
 

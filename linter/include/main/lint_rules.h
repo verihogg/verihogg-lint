@@ -9,10 +9,11 @@ namespace verihogg_lint {
 
 using ED = SURELOG::ErrorDefinition;
 
-[[nodiscard]] consteval auto LintId(int id) -> ED::ErrorType {
-  return static_cast<ED::ErrorType>(id);
+[[nodiscard]] consteval auto LintId(int ident) -> ED::ErrorType {
+  return static_cast<ED::ErrorType>(ident);
 }
 
+// NOLINTBEGIN(readability-identifier-naming)
 inline constexpr ED::ErrorType LINT_CLASS_VARIABLE_LIFETIME = LintId(734);
 inline constexpr ED::ErrorType LINT_DPI_DECLARATION_STRING = LintId(735);
 inline constexpr ED::ErrorType LINT_HIERARCHICAL_INTERFACE_IDENTIFIER =
@@ -58,13 +59,12 @@ inline constexpr ED::ErrorType LINT_MISSING_TASK_IMPLEMENTATION = LintId(770);
 inline constexpr ED::ErrorType LINT_FUNC_IMPL_SCOPE = LintId(771);
 inline constexpr ED::ErrorType LINT_TASK_IMPL_SCOPE = LintId(772);
 inline constexpr ED::ErrorType LINT_CONSTRAINT_IMPL_SCOPE = LintId(773);
-
+// NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
   ED::ErrorSeverity severity = ED::ERROR;
   ED::ErrorCategory category = ED::LINT;
-  std::string_view text = {};
-  std::string_view extraText = {};
+  std::string_view text;
 };
 
 inline constexpr std::array kLintRules = {
@@ -176,8 +176,8 @@ inline constexpr std::array kLintRules = {
 };
 
 inline void RegisterLintRules() {
-  std::ranges::for_each(kLintRules, [](const LintRuleInfo& r) {
-    ED::rec(r.type, r.severity, r.category, r.text, r.extraText);
+  std::ranges::for_each(kLintRules, [](const LintRuleInfo& rule) {
+    ED::rec(rule.type, rule.severity, rule.category, rule.text);
   });
 }
 

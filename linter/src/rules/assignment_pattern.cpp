@@ -24,15 +24,15 @@ auto CollectStructTypeNames(const SL::FileContent* fileContent,
   std::unordered_set<std::string_view> structTypeNames;
   auto typeDecls = fileContent->sl_collect_all(
       moduleRoot, SL::VObjectType::paType_declaration);
-  for (SL::NodeId const typeDecl : typeDecls) {
-    if (typeDecl == SL::InvalidNodeId) {
+  for (SL::NodeId const kTypeDecl : typeDecls) {
+    if (kTypeDecl == SL::InvalidNodeId) {
       continue;
     }
-    if (fileContent->sl_collect_all(typeDecl, SL::VObjectType::paStruct_union)
+    if (fileContent->sl_collect_all(kTypeDecl, SL::VObjectType::paStruct_union)
             .empty()) {
       continue;
     }
-    for (SL::NodeId child = fileContent->Child(typeDecl);
+    for (SL::NodeId child = fileContent->Child(kTypeDecl);
          child != SL::InvalidNodeId; child = fileContent->Sibling(child)) {
       if (fileContent->Type(child) == SL::VObjectType::slStringConst) {
         structTypeNames.insert(fileContent->SymName(child));
@@ -55,18 +55,18 @@ auto IsStructViaVarDecl(
     if (ExtractVariableName(fileContent, varDecl) != varName) {
       return false;
     }
-    SL::NodeId const dataType = fileContent->Child(varDecl);
-    if (dataType == SL::InvalidNodeId) {
+    SL::NodeId const kDataType = fileContent->Child(varDecl);
+    if (kDataType == SL::InvalidNodeId) {
       return false;
     }
-    if (!fileContent->sl_collect_all(dataType, SL::VObjectType::paStruct_union)
+    if (!fileContent->sl_collect_all(kDataType, SL::VObjectType::paStruct_union)
              .empty()) {
       return true;
     }
-    SL::NodeId const dtChild = fileContent->Child(dataType);
-    return dtChild != SL::InvalidNodeId &&
-           fileContent->Type(dtChild) == SL::VObjectType::slStringConst &&
-           structTypeNames.contains(fileContent->SymName(dtChild));
+    SL::NodeId const kDtChild = fileContent->Child(kDataType);
+    return kDtChild != SL::InvalidNodeId &&
+           fileContent->Type(kDtChild) == SL::VObjectType::slStringConst &&
+           structTypeNames.contains(fileContent->SymName(kDtChild));
   });
   return false;
 }
@@ -76,10 +76,10 @@ auto NetDeclMatchesName(const SL::FileContent* fileContent, SL::NodeId netDecl,
   auto assignNodes = fileContent->sl_collect_all(
       netDecl, SL::VObjectType::paNet_decl_assignment);
   return std::ranges::any_of(assignNodes, [&](SL::NodeId assignNode) {
-    SL::NodeId const nameNode = fileContent->Child(assignNode);
-    return nameNode != SL::InvalidNodeId &&
-           fileContent->Type(nameNode) == SL::VObjectType::slStringConst &&
-           fileContent->SymName(nameNode) == varName;
+    SL::NodeId const kNameNode = fileContent->Child(assignNode);
+    return kNameNode != SL::InvalidNodeId &&
+           fileContent->Type(kNameNode) == SL::VObjectType::slStringConst &&
+           fileContent->SymName(kNameNode) == varName;
   });
   return false;
 }
@@ -101,10 +101,10 @@ auto IsStructViaNetDecl(
              .empty()) {
       return true;
     }
-    SL::NodeId const firstChild = fileContent->Child(netDecl);
-    return firstChild != SL::InvalidNodeId &&
-           fileContent->Type(firstChild) == SL::VObjectType::slStringConst &&
-           structTypeNames.contains(fileContent->SymName(firstChild));
+    SL::NodeId const kFirstChild = fileContent->Child(netDecl);
+    return kFirstChild != SL::InvalidNodeId &&
+           fileContent->Type(kFirstChild) == SL::VObjectType::slStringConst &&
+           structTypeNames.contains(fileContent->SymName(kFirstChild));
   });
   return false;
 }
@@ -130,19 +130,20 @@ auto IsArrayVariable(const SL::FileContent* fileContent, SL::NodeId moduleRoot,
 
   auto vdas = fileContent->sl_collect_all(
       moduleRoot, SL::VObjectType::paVariable_decl_assignment);
-  for (SL::NodeId const vda : vdas) {
-    if (vda == SL::InvalidNodeId) {
+  for (SL::NodeId const kVda : vdas) {
+    if (kVda == SL::InvalidNodeId) {
       continue;
     }
-    SL::NodeId const nameNode = fileContent->Child(vda);
-    if (nameNode == SL::InvalidNodeId ||
-        fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
+    SL::NodeId const kNameNode = fileContent->Child(kVda);
+    if (kNameNode == SL::InvalidNodeId ||
+        fileContent->Type(kNameNode) != SL::VObjectType::slStringConst) {
       continue;
     }
-    if (fileContent->SymName(nameNode) != varName) {
+    if (fileContent->SymName(kNameNode) != varName) {
       continue;
     }
-    if (!fileContent->sl_collect_all(vda, SL::VObjectType::paUnpacked_dimension)
+    if (!fileContent
+             ->sl_collect_all(kVda, SL::VObjectType::paUnpacked_dimension)
              .empty()) {
       return true;
     }
@@ -150,22 +151,22 @@ auto IsArrayVariable(const SL::FileContent* fileContent, SL::NodeId moduleRoot,
 
   auto netDecls = fileContent->sl_collect_all(
       moduleRoot, SL::VObjectType::paNet_declaration);
-  for (SL::NodeId const netDecl : netDecls) {
-    if (netDecl == SL::InvalidNodeId) {
+  for (SL::NodeId const kNetDecl : netDecls) {
+    if (kNetDecl == SL::InvalidNodeId) {
       continue;
     }
     if (fileContent
-            ->sl_collect_all(netDecl, SL::VObjectType::paUnpacked_dimension)
+            ->sl_collect_all(kNetDecl, SL::VObjectType::paUnpacked_dimension)
             .empty()) {
       continue;
     }
     auto assignNodes = fileContent->sl_collect_all(
-        netDecl, SL::VObjectType::paNet_decl_assignment);
-    for (SL::NodeId const assignNode : assignNodes) {
-      SL::NodeId const nameNode = fileContent->Child(assignNode);
-      if (nameNode != SL::InvalidNodeId &&
-          fileContent->Type(nameNode) == SL::VObjectType::slStringConst &&
-          fileContent->SymName(nameNode) == varName) {
+        kNetDecl, SL::VObjectType::paNet_decl_assignment);
+    for (SL::NodeId const kAssignNode : assignNodes) {
+      SL::NodeId const kNameNode = fileContent->Child(kAssignNode);
+      if (kNameNode != SL::InvalidNodeId &&
+          fileContent->Type(kNameNode) == SL::VObjectType::slStringConst &&
+          fileContent->SymName(kNameNode) == varName) {
         return true;
       }
     }
@@ -182,24 +183,24 @@ void CheckAssignmentPattern(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const concat :
-       fileContent->sl_collect_all(root, SL::VObjectType::paConcatenation)) {
-    if (!concat) {
+  for (SL::NodeId const kConcat :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paConcatenation)) {
+    if (!kConcat) {
       continue;
     }
 
-    SL::NodeId const moduleRoot = FindEnclosingModule(fileContent, concat);
-    if (!moduleRoot) {
+    SL::NodeId const kModuleRoot = FindEnclosingModule(fileContent, kConcat);
+    if (!kModuleRoot) {
       continue;
     }
 
     bool hasLabel = false;
-    for (SL::NodeId child = fileContent->Child(concat); child;
+    for (SL::NodeId child = fileContent->Child(kConcat); child;
          child = fileContent->Sibling(child)) {
       if (fileContent->Type(child) == SL::VObjectType::paArray_member_label) {
         hasLabel = true;
@@ -207,20 +208,21 @@ void CheckAssignmentPattern(const SL::FileContent* fileContent,
       }
     }
 
-    std::string_view const varName = FindDirectRhsLhsName(fileContent, concat);
-    if (varName == "<unknown>" || varName == "<indexed>") {
+    std::string_view const kVarName =
+        FindDirectRhsLhsName(fileContent, kConcat);
+    if (kVarName == "<unknown>" || kVarName == "<indexed>") {
       continue;
     }
 
     if (hasLabel) {
-      ReportError(fileContent, concat, varName,
+      ReportError(fileContent, kConcat, kVarName,
                   verihogg_lint::LINT_ASSIGNMENT_PATTERN, errors, symbols);
       continue;
     }
 
-    if (IsStructVariable(fileContent, moduleRoot, varName) ||
-        IsArrayVariable(fileContent, moduleRoot, varName)) {
-      ReportError(fileContent, concat, varName,
+    if (IsStructVariable(fileContent, kModuleRoot, kVarName) ||
+        IsArrayVariable(fileContent, kModuleRoot, kVarName)) {
+      ReportError(fileContent, kConcat, kVarName,
                   verihogg_lint::LINT_ASSIGNMENT_PATTERN, errors, symbols);
     }
   }

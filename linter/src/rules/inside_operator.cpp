@@ -24,8 +24,8 @@ static constexpr std::array kContextTable = {
 };
 
 namespace {
-static auto GetConstantContextName(const SL::FileContent* fileContent,
-                                   SL::NodeId insideNode) -> std::string_view {
+auto GetConstantContextName(const SL::FileContent* fileContent,
+                            SL::NodeId insideNode) -> std::string_view {
   for (SL::NodeId cur = fileContent->Parent(insideNode); cur;
        cur = fileContent->Parent(cur)) {
     SL::VObjectType type = fileContent->Type(cur);
@@ -46,22 +46,23 @@ void CheckInsideOperator(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const insideId :
-       fileContent->sl_collect_all(root, SL::VObjectType::paINSIDE)) {
-    SL::NodeId const parentId = fileContent->Parent(insideId);
-    if (!parentId) {
+  for (SL::NodeId const kInsideId :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paINSIDE)) {
+    SL::NodeId const kParentId = fileContent->Parent(kInsideId);
+    if (!kParentId) {
       continue;
     }
 
-    if (fileContent->Type(parentId) == SL::VObjectType::paConstant_expression) {
-      std::string_view const contextName =
-          GetConstantContextName(fileContent, insideId);
-      ReportError(fileContent, insideId, contextName,
+    if (fileContent->Type(kParentId) ==
+        SL::VObjectType::paConstant_expression) {
+      std::string_view const kContextName =
+          GetConstantContextName(fileContent, kInsideId);
+      ReportError(fileContent, kInsideId, kContextName,
                   verihogg_lint::LINT_INSIDE_OPERATOR, errors, symbols);
     }
   }

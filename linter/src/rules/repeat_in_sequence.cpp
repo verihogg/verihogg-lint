@@ -21,30 +21,30 @@ void CheckRepetitionInSequence(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const seqDeclId : fileContent->sl_collect_all(
-           root, SL::VObjectType::paSequence_declaration)) {
-    std::string_view const seqName = ExtractName(fileContent, seqDeclId);
+  for (SL::NodeId const kSeqDeclId : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paSequence_declaration)) {
+    std::string_view const kSeqName = ExtractName(fileContent, kSeqDeclId);
 
-    for (SL::NodeId const seqExprId : fileContent->sl_collect_all(
-             seqDeclId, SL::VObjectType::paSequence_expr)) {
+    for (SL::NodeId const kSeqExprId : fileContent->sl_collect_all(
+             kSeqDeclId, SL::VObjectType::paSequence_expr)) {
       if (fileContent
-              ->sl_collect_all(seqExprId, SL::VObjectType::paGoto_repetition)
+              ->sl_collect_all(kSeqExprId, SL::VObjectType::paGoto_repetition)
               .empty()) {
         continue;
       }
       if (fileContent
-              ->sl_collect_all(seqExprId,
+              ->sl_collect_all(kSeqExprId,
                                SL::VObjectType::paNon_consecutive_repetition)
               .empty()) {
         continue;
       }
 
-      ReportError(fileContent, seqExprId, seqName,
+      ReportError(fileContent, kSeqExprId, kSeqName,
                   verihogg_lint::LINT_REPETITION_IN_SEQUENCE, errors, symbols);
     }
   }

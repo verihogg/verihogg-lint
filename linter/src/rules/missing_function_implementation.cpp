@@ -8,6 +8,7 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -36,31 +37,31 @@ auto MakeKey(std::string_view className, std::string_view methodName)
 auto ExtractMethodNameFromPrototype(const SL::FileContent* fileContent,
                                     SL::NodeId methodProto)
     -> std::string_view {
-  SL::NodeId const firstChild = fileContent->Child(methodProto);
-  if (!firstChild) {
+  SL::NodeId const kFirstChild = fileContent->Child(methodProto);
+  if (!kFirstChild) {
     return {};
   }
 
-  SL::VObjectType const protoType = fileContent->Type(methodProto);
+  SL::VObjectType const kProtoType = fileContent->Type(methodProto);
 
-  if (protoType == SL::VObjectType::paFunction_prototype) {
-    if (fileContent->Type(firstChild) !=
+  if (kProtoType == SL::VObjectType::paFunction_prototype) {
+    if (fileContent->Type(kFirstChild) !=
         SL::VObjectType::paFunction_data_type_or_implicit) {
       return {};
     }
-    SL::NodeId const nameNode = fileContent->Sibling(firstChild);
-    if (!nameNode ||
-        fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
+    SL::NodeId const kNameNode = fileContent->Sibling(kFirstChild);
+    if (!kNameNode ||
+        fileContent->Type(kNameNode) != SL::VObjectType::slStringConst) {
       return {};
     }
-    return fileContent->SymName(nameNode);
+    return fileContent->SymName(kNameNode);
   }
 
-  if (protoType == SL::VObjectType::paTask_prototype) {
-    if (fileContent->Type(firstChild) != SL::VObjectType::slStringConst) {
+  if (kProtoType == SL::VObjectType::paTask_prototype) {
+    if (fileContent->Type(kFirstChild) != SL::VObjectType::slStringConst) {
       return {};
     }
-    return fileContent->SymName(firstChild);
+    return fileContent->SymName(kFirstChild);
   }
 
   return {};
@@ -74,73 +75,102 @@ struct ExternMethodInfo {
   bool isTask;
 };
 
+auto GetClassNameFromClassDeclaration(const SL::FileContent* fileContent,
+                                      SL::NodeId classDecl)
+    -> std::string_view {
+  SL::NodeId const kClassKw = fileContent->Child(classDecl);
+  if (!kClassKw || fileContent->Type(kClassKw) != SL::VObjectType::paCLASS) {
+    return {};
+  }
+
+  SL::NodeId const kClassNameNode = fileContent->Sibling(kClassKw);
+  if (!kClassNameNode ||
+      fileContent->Type(kClassNameNode) != SL::VObjectType::slStringConst) {
+    return {};
+  }
+
+  return fileContent->SymName(kClassNameNode);
+}
+
+auto TryCollectExternMethodInfo(const SL::FileContent* fileContent,
+                                SL::NodeId classItem,
+                                std::string_view className)
+    -> std::optional<ExternMethodInfo> {
+  SL::NodeId const kClassMethod = fileContent->Child(classItem);
+  if (!kClassMethod ||
+      fileContent->Type(kClassMethod) != SL::VObjectType::paClass_method) {
+    return std::nullopt;
+  }
+
+  SL::NodeId const kFirstChild = fileContent->Child(kClassMethod);
+  if (!kFirstChild ||
+      fileContent->Type(kFirstChild) != SL::VObjectType::paExtern_qualifier) {
+    return std::nullopt;
+  }
+
+  SL::NodeId const kMethodProtoContainer = FindSiblingOfType(
+      fileContent, kFirstChild, SL::VObjectType::paMethod_prototype);
+  if (!kMethodProtoContainer) {
+    return std::nullopt;
+  }
+
+  SL::NodeId const kProto = fileContent->Child(kMethodProtoContainer);
+  if (!kProto) {
+    return std::nullopt;
+  }
+
+  SL::VObjectType const kProtoType = fileContent->Type(kProto);
+  if (kProtoType != SL::VObjectType::paFunction_prototype &&
+      kProtoType != SL::VObjectType::paTask_prototype) {
+    return std::nullopt;
+  }
+
+  std::string_view const kMethodName =
+      ExtractMethodNameFromPrototype(fileContent, kProto);
+  if (kMethodName.empty()) {
+    return std::nullopt;
+  }
+
+  return ExternMethodInfo{
+      .className = className,
+      .methodName = kMethodName,
+      .reportNode = kMethodProtoContainer,
+      .fileContent = fileContent,
+      .isTask = (kProtoType == SL::VObjectType::paTask_prototype),
+  };
+}
+
+auto CollectExternMethodsFromClassDeclaration(
+    const SL::FileContent* fileContent, SL::NodeId classDecl,
+    std::vector<ExternMethodInfo>& out) -> void {
+  std::string_view const kClassName =
+      GetClassNameFromClassDeclaration(fileContent, classDecl);
+  if (kClassName.empty()) {
+    return;
+  }
+
+  for (SL::NodeId const kClassItem :
+       fileContent->sl_collect_all(classDecl, SL::VObjectType::paClass_item)) {
+    std::optional<ExternMethodInfo> const kInfo =
+        TryCollectExternMethodInfo(fileContent, kClassItem, kClassName);
+    if (kInfo.has_value()) {
+      out.push_back(*kInfo);
+    }
+  }
+}
+
 auto CollectExternMethods(const SL::FileContent* fileContent)
     -> std::vector<ExternMethodInfo> {
   std::vector<ExternMethodInfo> result;
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return result;
   }
 
-  for (SL::NodeId const classDecl : fileContent->sl_collect_all(
-           root, SL::VObjectType::paClass_declaration)) {
-    SL::NodeId const classKw = fileContent->Child(classDecl);
-    if (!classKw || fileContent->Type(classKw) != SL::VObjectType::paCLASS) {
-      continue;
-    }
-    SL::NodeId const classNameNode = fileContent->Sibling(classKw);
-    if (!classNameNode ||
-        fileContent->Type(classNameNode) != SL::VObjectType::slStringConst) {
-      continue;
-    }
-    std::string_view const className = fileContent->SymName(classNameNode);
-
-    for (SL::NodeId const classItem : fileContent->sl_collect_all(
-             classDecl, SL::VObjectType::paClass_item)) {
-      SL::NodeId const classMethod = fileContent->Child(classItem);
-      if (!classMethod ||
-          fileContent->Type(classMethod) != SL::VObjectType::paClass_method) {
-        continue;
-      }
-
-      SL::NodeId const firstChild = fileContent->Child(classMethod);
-      if (!firstChild || fileContent->Type(firstChild) !=
-                             SL::VObjectType::paExtern_qualifier) {
-        continue;
-      }
-
-      SL::NodeId const methodProtoContainer = FindSiblingOfType(
-          fileContent, firstChild, SL::VObjectType::paMethod_prototype);
-      if (!methodProtoContainer) {
-        continue;
-      }
-
-      SL::NodeId const proto = fileContent->Child(methodProtoContainer);
-      if (!proto) {
-        continue;
-      }
-
-      SL::VObjectType const protoType = fileContent->Type(proto);
-      if (protoType != SL::VObjectType::paFunction_prototype &&
-          protoType != SL::VObjectType::paTask_prototype) {
-        continue;
-      }
-
-      std::string_view const methodName =
-          ExtractMethodNameFromPrototype(fileContent, proto);
-      if (methodName.empty()) {
-        continue;
-      }
-
-      result.push_back(ExternMethodInfo{
-          .className = className,
-          .methodName = methodName,
-          .reportNode = methodProtoContainer,
-          .fileContent = fileContent,
-          .isTask = (protoType == SL::VObjectType::paTask_prototype),
-      });
-    }
+  for (SL::NodeId const kClassDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paClass_declaration)) {
+    CollectExternMethodsFromClassDeclaration(fileContent, kClassDecl, result);
   }
 
   return result;
@@ -148,20 +178,20 @@ auto CollectExternMethods(const SL::FileContent* fileContent)
 
 auto ExtractImplementationKey(const SL::FileContent* fileContent,
                               SL::NodeId bodyDecl) -> std::string {
-  SL::NodeId const classScope =
+  SL::NodeId const kClassScope =
       FindChildOfType(fileContent, bodyDecl, SL::VObjectType::paClass_scope);
 
-  if (!classScope) {
+  if (!kClassScope) {
     return {};
   }
 
-  SL::NodeId const classType = fileContent->Child(classScope);
-  if (!classType ||
-      fileContent->Type(classType) != SL::VObjectType::paClass_type) {
+  SL::NodeId const kClassType = fileContent->Child(kClassScope);
+  if (!kClassType ||
+      fileContent->Type(kClassType) != SL::VObjectType::paClass_type) {
     return {};
   }
   SL::NodeId classNameNode = SL::InvalidNodeId;
-  for (SL::NodeId cur = fileContent->Child(classType); cur;
+  for (SL::NodeId cur = fileContent->Child(kClassType); cur;
        cur = fileContent->Sibling(cur)) {
     if (fileContent->Type(cur) == SL::VObjectType::slStringConst) {
       classNameNode = cur;
@@ -170,48 +200,48 @@ auto ExtractImplementationKey(const SL::FileContent* fileContent,
   if (!classNameNode) {
     return {};
   }
-  std::string_view const className = fileContent->SymName(classNameNode);
+  std::string_view const kClassName = fileContent->SymName(classNameNode);
 
-  SL::NodeId const methodNameNode = fileContent->Sibling(classScope);
-  if (!methodNameNode ||
-      fileContent->Type(methodNameNode) != SL::VObjectType::slStringConst) {
+  SL::NodeId const kMethodNameNode = fileContent->Sibling(kClassScope);
+  if (!kMethodNameNode ||
+      fileContent->Type(kMethodNameNode) != SL::VObjectType::slStringConst) {
     return {};
   }
-  std::string_view const methodName = fileContent->SymName(methodNameNode);
+  std::string_view const kMethodName = fileContent->SymName(kMethodNameNode);
 
-  return MakeKey(className, methodName);
+  return MakeKey(kClassName, kMethodName);
 }
 
 auto CollectImplementedMethods(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string> {
   std::unordered_set<std::string> result;
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return result;
   }
 
-  for (SL::NodeId const funcDecl : fileContent->sl_collect_all(
-           root, SL::VObjectType::paFunction_declaration)) {
-    SL::NodeId const bodyDecl = fileContent->Child(funcDecl);
-    if (!bodyDecl || fileContent->Type(bodyDecl) !=
-                         SL::VObjectType::paFunction_body_declaration) {
+  for (SL::NodeId const kFuncDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paFunction_declaration)) {
+    SL::NodeId const kBodyDecl = fileContent->Child(kFuncDecl);
+    if (!kBodyDecl || fileContent->Type(kBodyDecl) !=
+                          SL::VObjectType::paFunction_body_declaration) {
       continue;
     }
-    std::string key = ExtractImplementationKey(fileContent, bodyDecl);
+    std::string key = ExtractImplementationKey(fileContent, kBodyDecl);
     if (!key.empty()) {
       result.insert(std::move(key));
     }
   }
 
-  for (SL::NodeId const taskDecl :
-       fileContent->sl_collect_all(root, SL::VObjectType::paTask_declaration)) {
-    SL::NodeId const bodyDecl = fileContent->Child(taskDecl);
-    if (!bodyDecl || fileContent->Type(bodyDecl) !=
-                         SL::VObjectType::paTask_body_declaration) {
+  for (SL::NodeId const kTaskDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paTask_declaration)) {
+    SL::NodeId const kBodyDecl = fileContent->Child(kTaskDecl);
+    if (!kBodyDecl || fileContent->Type(kBodyDecl) !=
+                          SL::VObjectType::paTask_body_declaration) {
       continue;
     }
-    std::string key = ExtractImplementationKey(fileContent, bodyDecl);
+    std::string key = ExtractImplementationKey(fileContent, kBodyDecl);
     if (!key.empty()) {
       result.insert(std::move(key));
     }
@@ -230,8 +260,8 @@ void CheckMissingFunctionImplementation(SL::Design* design,
   }
 
   std::vector<ExternMethodInfo> allExternMethods;
-  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fc) {
-    auto local = CollectExternMethods(fc);
+  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fileCont) {
+    auto local = CollectExternMethods(fileCont);
     allExternMethods.insert(allExternMethods.end(), local.begin(), local.end());
   });
 
@@ -249,17 +279,17 @@ void CheckMissingFunctionImplementation(SL::Design* design,
   }
 
   for (const auto& externInfo : allExternMethods) {
-    std::string const key =
+    std::string const kEy =
         MakeKey(externInfo.className, externInfo.methodName);
-    if (implementedMethods.count(key) > 0) {
+    if (implementedMethods.contains(kEy)) {
       continue;
     }
 
-    SL::ErrorDefinition::ErrorType const errorType =
+    SL::ErrorDefinition::ErrorType const kErrorType =
         externInfo.isTask ? verihogg_lint::LINT_MISSING_TASK_IMPLEMENTATION
                           : verihogg_lint::LINT_MISSING_FUNCTION_IMPLEMENTATION;
 
     ReportError(externInfo.fileContent, externInfo.reportNode,
-                externInfo.methodName, errorType, errors, symbols);
+                externInfo.methodName, kErrorType, errors, symbols);
   }
 }

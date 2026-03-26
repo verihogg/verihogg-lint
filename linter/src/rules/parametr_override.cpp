@@ -39,33 +39,33 @@ auto IsParameterOverrideValid(const SL::FileContent* fileContent,
     return true;
   }
 
-  SL::NodeId const child = fileContent->Child(instNode);
-  if (!child) {
+  SL::NodeId const kChild = fileContent->Child(instNode);
+  if (!kChild) {
     return true;
   }
 
-  SL::NodeId const secondChild = fileContent->Sibling(child);
-  if (!secondChild) {
+  SL::NodeId const kSecondChild = fileContent->Sibling(kChild);
+  if (!kSecondChild) {
     return true;
   }
 
-  SL::VObjectType const secondType = fileContent->Type(secondChild);
+  SL::VObjectType const kSecondType = fileContent->Type(kSecondChild);
 
-  if (std::ranges::any_of(kLiteralTypes, [secondType](SL::VObjectType type) {
-        return type == secondType;
+  if (std::ranges::any_of(kLiteralTypes, [kSecondType](SL::VObjectType type) {
+        return type == kSecondType;
       })) {
     return false;
   }
 
-  if (std::ranges::any_of(kConstantTypes, [secondType](SL::VObjectType type) {
-        return type == secondType;
+  if (std::ranges::any_of(kConstantTypes, [kSecondType](SL::VObjectType type) {
+        return type == kSecondType;
       })) {
-    SL::NodeId const thirdChild = fileContent->Sibling(secondChild);
-    if (thirdChild) {
-      SL::VObjectType const thirdType = fileContent->Type(thirdChild);
+    SL::NodeId const kThirdChild = fileContent->Sibling(kSecondChild);
+    if (kThirdChild) {
+      SL::VObjectType const kThirdType = fileContent->Type(kThirdChild);
       if (std::ranges::any_of(kInstanceTypes,
-                              [thirdType](SL::VObjectType type) {
-                                return type == thirdType;
+                              [kThirdType](SL::VObjectType type) {
+                                return type == kThirdType;
                               })) {
         return false;
       }
@@ -83,22 +83,22 @@ void CheckParameterOverride(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const inst : fileContent->sl_collect_all(
-           root, SL::VObjectType::paModule_instantiation)) {
-    if (IsParameterOverrideValid(fileContent, inst)) {
+  for (SL::NodeId const kInst : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paModule_instantiation)) {
+    if (IsParameterOverrideValid(fileContent, kInst)) {
       continue;
     }
 
-    SL::NodeId const moduleName = fileContent->Child(inst);
+    SL::NodeId const kModuleName = fileContent->Child(kInst);
     SL::NodeId badNode =
-        moduleName ? fileContent->Sibling(moduleName) : SL::NodeId{};
+        kModuleName ? fileContent->Sibling(kModuleName) : SL::NodeId{};
     if (!badNode) {
-      badNode = inst;
+      badNode = kInst;
     }
 
     ReportError(fileContent, badNode, ExtractName(fileContent, badNode),

@@ -108,7 +108,7 @@ static constexpr std::array<RuleInfo, 40> kRules = {{
 static constexpr int kRuleCount =
     static_cast<int>(sizeof(kRules) / sizeof(kRules[0]));
 
-auto parse_args(int argc, const char** argv) -> Options {
+auto ParseArgs(int argc, const char** argv) -> Options {
   Options opts;
 
   opts.surelog_args.push_back(argv[0]);
@@ -132,13 +132,13 @@ auto parse_args(int argc, const char** argv) -> Options {
   return opts;
 }
 
-void print_version() { std::cout << "verihogg-lint " << kVersion << "\n"; }
+void PrintVersion() { std::cout << "verihogg-lint " << kVersion << "\n"; }
 
-void print_help(const char* program_name) {
+void PrintHelp(const char* programName) {
   // clang-format off
   std::cout
-    << "Usage: " << program_name << " [OPTIONS] <file.sv> [<file.sv>...]\n"
-    << "       " << program_name << " [OPTIONS] -f <filelist>\n"
+    << "Usage: " << programName << " [OPTIONS] <file.sv> [<file.sv>...]\n"
+    << "       " << programName << " [OPTIONS] -f <filelist>\n"
     << "\n"
     << "A SystemVerilog linter with static analysis rules built on Surelog.\n"
     << "\n"
@@ -165,16 +165,16 @@ void print_help(const char* program_name) {
     << "    rtl/core/top.sv\n"
     << "\n"
     << "EXAMPLES:\n"
-    << "  " << program_name << " file.sv -nobuiltin\n"
-    << "  " << program_name << " -f files.f -nobuiltin\n"
-    << "  " << program_name << " --list-rules\n"
+    << "  " << programName << " file.sv -nobuiltin\n"
+    << "  " << programName << " -f files.f -nobuiltin\n"
+    << "  " << programName << " --list-rules\n"
     << "\n"
     << "All other flags are forwarded to Surelog (parser/elaboration).\n"
-    << "Run '" << program_name << " --surelog-help' for the full list.\n";
+    << "Run '" << programName << " --surelog-help' for the full list.\n";
   // clang-format on
 }
 
-void print_rules() {
+void PrintRules() {
   std::cout << "Available lint rules (" << kRuleCount << "):\n";
 
   for (const auto& rule : kRules) {

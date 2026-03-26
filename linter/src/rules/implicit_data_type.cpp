@@ -53,9 +53,10 @@ auto CollectProceduralRanges(const SL::FileContent* fileContent,
 
   std::vector<LineRange> ranges;
   for (auto procType : kProceduralTypes) {
-    for (SL::NodeId const block : fileContent->sl_collect_all(root, procType)) {
-      ranges.emplace_back(fileContent->Line(block),
-                          fileContent->EndLine(block));
+    for (SL::NodeId const kBlock :
+         fileContent->sl_collect_all(root, procType)) {
+      ranges.emplace_back(fileContent->Line(kBlock),
+                          fileContent->EndLine(kBlock));
     }
   }
   return ranges;
@@ -67,9 +68,9 @@ auto IsPhantomNode(const SL::FileContent* fileContent, SL::NodeId dataDecl,
     return true;
   }
 
-  uint32_t const declLine = fileContent->Line(dataDecl);
-  return std::ranges::any_of(ranges, [declLine](const LineRange& range) {
-    return Includes(range, declLine);
+  uint32_t const kDeclLine = fileContent->Line(dataDecl);
+  return std::ranges::any_of(ranges, [kDeclLine](const LineRange& range) {
+    return Includes(range, kDeclLine);
   });
 }
 }  // namespace
@@ -80,30 +81,30 @@ void CheckImplicitDataTypeInDeclaration(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId const root = fileContent->getRootNode();
-  if (root == SL::InvalidNodeId) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (kRoot == SL::InvalidNodeId) {
     return;
   }
 
-  auto proceduralRanges = CollectProceduralRanges(fileContent, root);
+  auto proceduralRanges = CollectProceduralRanges(fileContent, kRoot);
 
-  for (SL::NodeId const dataDecl :
-       fileContent->sl_collect_all(root, SL::VObjectType::paData_declaration)) {
+  for (SL::NodeId const kDataDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paData_declaration)) {
     auto packedDims = fileContent->sl_collect_all(
-        dataDecl, SL::VObjectType::paPacked_dimension);
+        kDataDecl, SL::VObjectType::paPacked_dimension);
     if (packedDims.empty()) {
       continue;
     }
 
-    if (HasExplicitType(fileContent, dataDecl)) {
+    if (HasExplicitType(fileContent, kDataDecl)) {
       continue;
     }
-    if (IsPhantomNode(fileContent, dataDecl, proceduralRanges)) {
+    if (IsPhantomNode(fileContent, kDataDecl, proceduralRanges)) {
       continue;
     }
 
     ReportError(fileContent, packedDims.front(),
-                ExtractVariableName(fileContent, dataDecl),
+                ExtractVariableName(fileContent, kDataDecl),
                 verihogg_lint::LINT_IMPLICIT_DATA_TYPE, errors, symbols);
   }
 }

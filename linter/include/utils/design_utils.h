@@ -10,6 +10,6 @@ namespace DesignUtils {
 
 void ForEachFileContent(
     SURELOG::Design* design,
-    const std::function<void(const SURELOG::FileContent*)>& fn);
+    const std::function<void(const SURELOG::FileContent*)>& func);
 
 }  // namespace DesignUtils

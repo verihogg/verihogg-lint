@@ -49,7 +49,7 @@
 namespace SL = SURELOG;
 
 struct Rule {
-  std::string_view name = {};
+  std::string_view name;
   bool enabled = true;
   std::function<void(const SL::FileContent*, SL::ErrorContainer*,
                      SL::SymbolTable*)>
@@ -57,7 +57,7 @@ struct Rule {
 };
 
 struct GlobalRule {
-  std::string_view name = {};
+  std::string_view name;
   bool enabled = true;
   std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)> check;
 };

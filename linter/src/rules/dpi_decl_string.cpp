@@ -21,26 +21,26 @@ void CheckDpiDeclarationString(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const dpiId : fileContent->sl_collect_all(
-           root, SL::VObjectType::paDpi_import_export)) {
-    SL::NodeId const importNode = fileContent->Child(dpiId);
-    if (!importNode ||
-        fileContent->Type(importNode) != SL::VObjectType::paIMPORT) {
+  for (SL::NodeId const kDpiId : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paDpi_import_export)) {
+    SL::NodeId const kImportNode = fileContent->Child(kDpiId);
+    if (!kImportNode ||
+        fileContent->Type(kImportNode) != SL::VObjectType::paIMPORT) {
       continue;
     }
 
-    SL::NodeId const stringNode = fileContent->Sibling(importNode);
-    if (!stringNode ||
-        fileContent->Type(stringNode) != SL::VObjectType::slStringLiteral) {
+    SL::NodeId const kStringNode = fileContent->Sibling(kImportNode);
+    if (!kStringNode ||
+        fileContent->Type(kStringNode) != SL::VObjectType::slStringLiteral) {
       continue;
     }
 
-    std::string dpiStr = std::string(fileContent->SymName(stringNode));
+    std::string dpiStr = std::string(fileContent->SymName(kStringNode));
 
     if (!dpiStr.empty() && dpiStr.front() == '"' && dpiStr.back() == '"') {
       dpiStr = dpiStr.substr(1, dpiStr.size() - 2);
@@ -49,7 +49,7 @@ void CheckDpiDeclarationString(const SL::FileContent* fileContent,
     dpiStr = Trim(dpiStr);
 
     if (dpiStr != "DPI-C" && dpiStr != "DPI") {
-      ReportError(fileContent, stringNode, dpiStr,
+      ReportError(fileContent, kStringNode, dpiStr,
                   verihogg_lint::LINT_DPI_DECLARATION_STRING, errors, symbols);
     }
   }

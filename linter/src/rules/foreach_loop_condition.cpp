@@ -18,17 +18,17 @@ namespace SL = SURELOG;
 namespace {
 auto CountForeachDimensionGroups(const SL::FileContent* fileContent,
                                  SL::NodeId foreachKeyword) -> int {
-  SL::NodeId const arrayIdNode = FindArrayIdNode(fileContent, foreachKeyword);
-  if (arrayIdNode == SL::InvalidNodeId) {
+  SL::NodeId const kArrayIdNode = FindArrayIdNode(fileContent, foreachKeyword);
+  if (kArrayIdNode == SL::InvalidNodeId) {
     return 0;
   }
 
   int groups = 0;
-  for (SL::NodeId sib = fileContent->Sibling(arrayIdNode); sib;
+  for (SL::NodeId sib = fileContent->Sibling(kArrayIdNode); sib;
        sib = fileContent->Sibling(sib)) {
-    SL::VObjectType const type = fileContent->Type(sib);
-    if (type == SL::VObjectType::paLoop_variables ||
-        type == SL::VObjectType::slStringConst) {
+    SL::VObjectType const kType = fileContent->Type(sib);
+    if (kType == SL::VObjectType::paLoop_variables ||
+        kType == SL::VObjectType::slStringConst) {
       ++groups;
     }
   }
@@ -43,27 +43,27 @@ void CheckForeachLoopCondition(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (root == SL::InvalidNodeId) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (kRoot == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId const foreachNode :
-       fileContent->sl_collect_all(root, SL::VObjectType::paFOREACH)) {
-    if (foreachNode == SL::InvalidNodeId) {
+  for (SL::NodeId const kForeachNode :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paFOREACH)) {
+    if (kForeachNode == SL::InvalidNodeId) {
       continue;
     }
 
-    if (CountForeachDimensionGroups(fileContent, foreachNode) <= 1) {
+    if (CountForeachDimensionGroups(fileContent, kForeachNode) <= 1) {
       continue;
     }
 
-    SL::NodeId const arrayIdNode = FindArrayIdNode(fileContent, foreachNode);
-    std::string_view const arrayName =
-        arrayIdNode ? ExtractName(fileContent, arrayIdNode, "unknown")
-                    : "unknown";
+    SL::NodeId const kArrayIdNode = FindArrayIdNode(fileContent, kForeachNode);
+    std::string_view const kArrayName =
+        kArrayIdNode ? ExtractName(fileContent, kArrayIdNode, "unknown")
+                     : "unknown";
 
-    ReportError(fileContent, foreachNode, arrayName,
+    ReportError(fileContent, kForeachNode, kArrayName,
                 verihogg_lint::LINT_FOREACH_LOOP_CONDITION, errors, symbols);
   }
 }

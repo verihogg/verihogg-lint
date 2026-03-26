@@ -15,10 +15,10 @@ struct Options {
   std::vector<const char*> surelog_args;
 };
 
-auto parse_args(int argc, const char** argv) -> Options;
+auto ParseArgs(int argc, const char** argv) -> Options;
 
-void print_help(const char* program_name);
-void print_version();
-void print_rules();
+void PrintHelp(const char* programName);
+void PrintVersion();
+void PrintRules();
 
 }  // namespace cli

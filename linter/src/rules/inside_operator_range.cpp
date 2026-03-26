@@ -16,18 +16,18 @@ namespace SL = SURELOG;
 namespace {
 auto GetInsideContextName(const SL::FileContent* fileContent,
                           SL::NodeId insideNode) -> std::string_view {
-  SL::NodeId const exprNode = fileContent->Parent(insideNode);
-  if (exprNode == SL::InvalidNodeId) {
+  SL::NodeId const kExprNode = fileContent->Parent(insideNode);
+  if (kExprNode == SL::InvalidNodeId) {
     return "<unknown>";
   }
 
-  SL::NodeId const leftOperand = fileContent->Child(exprNode);
-  if (leftOperand == SL::InvalidNodeId) {
+  SL::NodeId const kLeftOperand = fileContent->Child(kExprNode);
+  if (kLeftOperand == SL::InvalidNodeId) {
     return "<unknown>";
   }
 
   auto stringNodes =
-      fileContent->sl_collect_all(leftOperand, SL::VObjectType::slStringConst);
+      fileContent->sl_collect_all(kLeftOperand, SL::VObjectType::slStringConst);
   if (!stringNodes.empty()) {
     return fileContent->SymName(stringNodes.front());
   }
@@ -41,22 +41,22 @@ auto IsValidInsideRange(const SL::FileContent* fileContent,
     return false;
   }
 
-  SL::VObjectType const sibType = fileContent->Type(siblingNode);
+  SL::VObjectType const kSibType = fileContent->Type(siblingNode);
 
-  if (sibType == SL::VObjectType::paOpen_range_list) {
+  if (kSibType == SL::VObjectType::paOpen_range_list) {
     return true;
   }
 
-  if (sibType == SL::VObjectType::paExpression) {
-    SL::NodeId const primaryNode = fileContent->Child(siblingNode);
-    if (!primaryNode ||
-        fileContent->Type(primaryNode) != SL::VObjectType::paPrimary) {
+  if (kSibType == SL::VObjectType::paExpression) {
+    SL::NodeId const kPrimaryNode = fileContent->Child(siblingNode);
+    if (!kPrimaryNode ||
+        fileContent->Type(kPrimaryNode) != SL::VObjectType::paPrimary) {
       return false;
     }
 
-    SL::NodeId const concatNode = fileContent->Child(primaryNode);
-    if (concatNode &&
-        fileContent->Type(concatNode) == SL::VObjectType::paConcatenation) {
+    SL::NodeId const kConcatNode = fileContent->Child(kPrimaryNode);
+    if (kConcatNode &&
+        fileContent->Type(kConcatNode) == SL::VObjectType::paConcatenation) {
       return true;
     }
   }
@@ -72,16 +72,16 @@ void CheckInsideOperatorRange(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (root == SL::InvalidNodeId) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (kRoot == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId const insideId :
-       fileContent->sl_collect_all(root, SL::VObjectType::paINSIDE)) {
-    if (!IsValidInsideRange(fileContent, fileContent->Sibling(insideId))) {
-      ReportError(fileContent, insideId,
-                  GetInsideContextName(fileContent, insideId),
+  for (SL::NodeId const kInsideId :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paINSIDE)) {
+    if (!IsValidInsideRange(fileContent, fileContent->Sibling(kInsideId))) {
+      ReportError(fileContent, kInsideId,
+                  GetInsideContextName(fileContent, kInsideId),
                   verihogg_lint::LINT_INSIDE_OPERATOR_RANGE, errors, symbols);
     }
   }

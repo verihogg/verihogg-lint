@@ -21,24 +21,24 @@ void CheckEmptyAssignmentPattern(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const pat : fileContent->sl_collect_all(
-           root, SL::VObjectType::paAssignment_pattern)) {
-    if (!pat) {
+  for (SL::NodeId const kPat : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paAssignment_pattern)) {
+    if (!kPat) {
       continue;
     }
 
-    if (fileContent->Child(pat)) {
+    if (fileContent->Child(kPat)) {
       continue;
     }
 
-    std::string_view const varName = FindDirectRhsLhsName(fileContent, pat);
+    std::string_view const kVarName = FindDirectRhsLhsName(fileContent, kPat);
 
-    ReportError(fileContent, pat, varName,
+    ReportError(fileContent, kPat, kVarName,
                 verihogg_lint::LINT_EMPTY_ASSIGNMENT_PATTERN, errors, symbols);
   }
 }

@@ -32,24 +32,24 @@ auto CountInSiblingChain(const SL::FileContent* fileContent,
 
 auto CountModuleParams(const SL::FileContent* fileContent,
                        SL::NodeId moduleDecl) -> int {
-  SL::NodeId const header = fileContent->Child(moduleDecl);
-  if (!header) {
+  SL::NodeId const kHeader = fileContent->Child(moduleDecl);
+  if (!kHeader) {
     return 0;
   }
 
-  SL::NodeId const portList = FindChildOfType(
-      fileContent, header, SL::VObjectType::paParameter_port_list);
+  SL::NodeId const kPortList = FindChildOfType(
+      fileContent, kHeader, SL::VObjectType::paParameter_port_list);
 
-  if (!portList) {
+  if (!kPortList) {
     return 0;
   }
 
-  SL::NodeId const firstDecl = fileContent->Child(portList);
-  if (!firstDecl) {
+  SL::NodeId const kFirstDecl = fileContent->Child(kPortList);
+  if (!kFirstDecl) {
     return 0;
   }
 
-  return CountInSiblingChain(fileContent, firstDecl,
+  return CountInSiblingChain(fileContent, kFirstDecl,
                              SL::VObjectType::paParameter_port_declaration);
 }
 
@@ -57,29 +57,29 @@ auto BuildModuleParamMap(const SL::FileContent* fileContent)
     -> std::unordered_map<std::string_view, int> {
   std::unordered_map<std::string_view, int> result;
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return result;
   }
 
-  for (SL::NodeId const moduleDecl : fileContent->sl_collect_all(
-           root, SL::VObjectType::paModule_declaration)) {
-    SL::NodeId const header = fileContent->Child(moduleDecl);
-    if (!header) {
+  for (SL::NodeId const kModuleDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paModule_declaration)) {
+    SL::NodeId const kHeader = fileContent->Child(kModuleDecl);
+    if (!kHeader) {
       continue;
     }
-    SL::NodeId const keyword = fileContent->Child(header);
-    if (!keyword) {
+    SL::NodeId const kEyword = fileContent->Child(kHeader);
+    if (!kEyword) {
       continue;
     }
-    SL::NodeId const nameNode = fileContent->Sibling(keyword);
-    if (!nameNode ||
-        fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
+    SL::NodeId const kNameNode = fileContent->Sibling(kEyword);
+    if (!kNameNode ||
+        fileContent->Type(kNameNode) != SL::VObjectType::slStringConst) {
       continue;
     }
 
-    std::string_view const moduleName = fileContent->SymName(nameNode);
-    result[moduleName] = CountModuleParams(fileContent, moduleDecl);
+    std::string_view const kModuleName = fileContent->SymName(kNameNode);
+    result[kModuleName] = CountModuleParams(fileContent, kModuleDecl);
   }
 
   return result;
@@ -87,36 +87,36 @@ auto BuildModuleParamMap(const SL::FileContent* fileContent)
 
 auto CountOrderedOverrides(const SL::FileContent* fileContent,
                            SL::NodeId instNode) -> int {
-  SL::NodeId const moduleNameNode = fileContent->Child(instNode);
-  if (!moduleNameNode) {
+  SL::NodeId const kModuleNameNode = fileContent->Child(instNode);
+  if (!kModuleNameNode) {
     return -1;
   }
 
-  SL::NodeId const paramValueAssign =
-      FindSiblingOfType(fileContent, moduleNameNode,
+  SL::NodeId const kParamValueAssign =
+      FindSiblingOfType(fileContent, kModuleNameNode,
                         SL::VObjectType::paParameter_value_assignment);
 
-  if (!paramValueAssign) {
+  if (!kParamValueAssign) {
     return -1;
   }
 
-  SL::NodeId const list = fileContent->Child(paramValueAssign);
-  if (!list || fileContent->Type(list) !=
-                   SL::VObjectType::paList_of_parameter_assignments) {
+  SL::NodeId const kList = fileContent->Child(kParamValueAssign);
+  if (!kList || fileContent->Type(kList) !=
+                    SL::VObjectType::paList_of_parameter_assignments) {
     return -1;
   }
 
-  SL::NodeId const firstAssign = fileContent->Child(list);
-  if (!firstAssign) {
+  SL::NodeId const kFirstAssign = fileContent->Child(kList);
+  if (!kFirstAssign) {
     return -1;
   }
 
-  if (fileContent->Type(firstAssign) ==
+  if (fileContent->Type(kFirstAssign) ==
       SL::VObjectType::paNamed_parameter_assignment) {
     return -1;
   }
 
-  return CountInSiblingChain(fileContent, firstAssign,
+  return CountInSiblingChain(fileContent, kFirstAssign,
                              SL::VObjectType::paOrdered_parameter_assignment);
 }
 
@@ -124,39 +124,39 @@ void CheckInstantiationsInFile(
     const SL::FileContent* fileContent,
     const std::unordered_map<std::string_view, int>& globalParamMap,
     SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const inst : fileContent->sl_collect_all(
-           root, SL::VObjectType::paModule_instantiation)) {
-    int const overrideCount = CountOrderedOverrides(fileContent, inst);
-    if (overrideCount < 0) {
+  for (SL::NodeId const kInst : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paModule_instantiation)) {
+    int const kOverrideCount = CountOrderedOverrides(fileContent, kInst);
+    if (kOverrideCount < 0) {
       continue;
     }
 
-    SL::NodeId const moduleNameNode = fileContent->Child(inst);
-    if (!moduleNameNode) {
+    SL::NodeId const kModuleNameNode = fileContent->Child(kInst);
+    if (!kModuleNameNode) {
       continue;
     }
-    std::string_view const moduleName = fileContent->SymName(moduleNameNode);
+    std::string_view const kModuleName = fileContent->SymName(kModuleNameNode);
 
-    auto const it = globalParamMap.find(moduleName);
-    if (it == globalParamMap.end()) {
-      continue;
-    }
-
-    if (overrideCount == it->second) {
+    auto const kIt = globalParamMap.find(kModuleName);
+    if (kIt == globalParamMap.end()) {
       continue;
     }
 
-    SL::NodeId badNode = fileContent->Sibling(moduleNameNode);
+    if (kOverrideCount == kIt->second) {
+      continue;
+    }
+
+    SL::NodeId badNode = fileContent->Sibling(kModuleNameNode);
     if (!badNode) {
-      badNode = inst;
+      badNode = kInst;
     }
 
-    ReportError(fileContent, badNode, moduleName,
+    ReportError(fileContent, badNode, kModuleName,
                 verihogg_lint::LINT_NOF_PARAMETER_OVERRIDE, errors, symbols);
   }
 }
@@ -169,8 +169,8 @@ void CheckNofParameterOverrides(SL::Design* design, SL::ErrorContainer* errors,
   }
 
   std::unordered_map<std::string_view, int> globalParamMap;
-  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fc) {
-    globalParamMap.merge(BuildModuleParamMap(fc));
+  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fileCont) {
+    globalParamMap.merge(BuildModuleParamMap(fileCont));
   });
 
   for (auto& [name, fileContent] : design->getAllFileContents()) {

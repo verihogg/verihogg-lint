@@ -22,25 +22,25 @@ auto CollectUnpackedVarsInModule(const SL::FileContent* fileContent,
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> unpacked;
 
-  for (SL::NodeId const assignId : fileContent->sl_collect_all(
+  for (SL::NodeId const kAssignId : fileContent->sl_collect_all(
            moduleNode, SL::VObjectType::paVariable_decl_assignment)) {
-    SL::NodeId const nameNode = fileContent->Child(assignId);
-    if (!nameNode ||
-        fileContent->Type(nameNode) != SL::VObjectType::slStringConst) {
+    SL::NodeId const kNameNode = fileContent->Child(kAssignId);
+    if (!kNameNode ||
+        fileContent->Type(kNameNode) != SL::VObjectType::slStringConst) {
       continue;
     }
 
-    std::string_view const name = fileContent->SymName(nameNode);
+    std::string_view const kName = fileContent->SymName(kNameNode);
 
-    for (SL::NodeId sib = fileContent->Sibling(nameNode); sib;
+    for (SL::NodeId sib = fileContent->Sibling(kNameNode); sib;
          sib = fileContent->Sibling(sib)) {
       if (fileContent->Type(sib) != SL::VObjectType::paVariable_dimension) {
         continue;
       }
-      SL::NodeId const dimChild = fileContent->Child(sib);
-      if (dimChild && fileContent->Type(dimChild) ==
-                          SL::VObjectType::paUnpacked_dimension) {
-        unpacked.insert(name);
+      SL::NodeId const kDimChild = fileContent->Child(sib);
+      if (kDimChild && fileContent->Type(kDimChild) ==
+                           SL::VObjectType::paUnpacked_dimension) {
+        unpacked.insert(kName);
         break;
       }
     }
@@ -61,24 +61,24 @@ auto FindFirstUnpackedVarInSubtree(
   worklist.push(node);
 
   while (!worklist.empty()) {
-    SL::NodeId const node = worklist.top();
+    SL::NodeId const kNode = worklist.top();
     worklist.pop();
 
-    if (fileContent->Type(node) == SL::VObjectType::slStringConst) {
-      std::string_view const name = fileContent->SymName(node);
-      if (unpackedVars.contains(name)) {
-        return name;
+    if (fileContent->Type(kNode) == SL::VObjectType::slStringConst) {
+      std::string_view const kName = fileContent->SymName(kNode);
+      if (unpackedVars.contains(kName)) {
+        return kName;
       }
     }
 
     std::vector<SL::NodeId> children;
-    for (SL::NodeId child = fileContent->Child(node); child;
+    for (SL::NodeId child = fileContent->Child(kNode); child;
          child = fileContent->Sibling(child)) {
       children.push_back(child);
     }
     std::ranges::reverse(children);
-    for (SL::NodeId const child : children) {
-      worklist.push(child);
+    for (SL::NodeId const kChild : children) {
+      worklist.push(kChild);
     }
   }
 
@@ -89,21 +89,21 @@ void CheckVariableLvalueConcatenations(
     const SL::FileContent* fileContent, SL::NodeId moduleNode,
     const std::unordered_set<std::string_view>& unpackedVars,
     SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
-  for (SL::NodeId const lvalueId : fileContent->sl_collect_all(
+  for (SL::NodeId const kLvalueId : fileContent->sl_collect_all(
            moduleNode, SL::VObjectType::paVariable_lvalue)) {
-    SL::NodeId const firstChild = fileContent->Child(lvalueId);
-    if (!firstChild) {
+    SL::NodeId const kFirstChild = fileContent->Child(kLvalueId);
+    if (!kFirstChild) {
       continue;
     }
 
-    if (fileContent->Type(firstChild) != SL::VObjectType::paVariable_lvalue) {
+    if (fileContent->Type(kFirstChild) != SL::VObjectType::paVariable_lvalue) {
       continue;
     }
 
     if (auto foundVar =
-            FindFirstUnpackedVarInSubtree(fileContent, lvalueId, unpackedVars);
+            FindFirstUnpackedVarInSubtree(fileContent, kLvalueId, unpackedVars);
         !foundVar.empty()) {
-      ReportError(fileContent, lvalueId, foundVar,
+      ReportError(fileContent, kLvalueId, foundVar,
                   verihogg_lint::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
                   errors, symbols);
     }
@@ -114,14 +114,14 @@ void CheckNamedPortConnectionConcatenations(
     const SL::FileContent* fileContent, SL::NodeId moduleNode,
     const std::unordered_set<std::string_view>& unpackedVars,
     SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
-  for (SL::NodeId const portConnId : fileContent->sl_collect_all(
+  for (SL::NodeId const kPortConnId : fileContent->sl_collect_all(
            moduleNode, SL::VObjectType::paNamed_port_connection)) {
-    for (SL::NodeId const concatId : fileContent->sl_collect_all(
-             portConnId, SL::VObjectType::paConcatenation)) {
-      if (auto foundVar = FindFirstUnpackedVarInSubtree(fileContent, concatId,
+    for (SL::NodeId const kConcatId : fileContent->sl_collect_all(
+             kPortConnId, SL::VObjectType::paConcatenation)) {
+      if (auto foundVar = FindFirstUnpackedVarInSubtree(fileContent, kConcatId,
                                                         unpackedVars);
           !foundVar.empty()) {
-        ReportError(fileContent, concatId, foundVar,
+        ReportError(fileContent, kConcatId, foundVar,
                     verihogg_lint::LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
                     errors, symbols);
         break;
@@ -153,13 +153,13 @@ void CheckTargetUnpackedArrayConcatenation(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const moduleNode : fileContent->sl_collect_all(
-           root, SL::VObjectType::paModule_declaration)) {
-    CheckSingleModule(fileContent, moduleNode, errors, symbols);
+  for (SL::NodeId const kModuleNode : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paModule_declaration)) {
+    CheckSingleModule(fileContent, kModuleNode, errors, symbols);
   }
 }

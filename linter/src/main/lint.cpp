@@ -17,18 +17,18 @@
 namespace SL = SURELOG;
 
 auto main(int argc, const char** argv) -> int {
-  const cli::Options opts = cli::parse_args(argc, argv);
+  const cli::Options kOpts = cli::ParseArgs(argc, argv);
 
-  if (opts.show_version) {
-    cli::print_version();
+  if (kOpts.show_version) {
+    cli::PrintVersion();
     return 0;
   }
-  if (opts.show_help) {
-    cli::print_help(argv[0]);
+  if (kOpts.show_help) {
+    cli::PrintHelp(argv[0]);
     return 0;
   }
-  if (opts.show_rules) {
-    cli::print_rules();
+  if (kOpts.show_rules) {
+    cli::PrintRules();
     return 0;
   }
 
@@ -50,19 +50,19 @@ auto main(int argc, const char** argv) -> int {
   clp->setFilterNote();
   clp->setFilterWarning();
 
-  if (opts.show_surelog_help) {
-    std::array<const char*, 2> help_argv = {argv[0], "--help"};
-    clp->parseCommandLine(static_cast<int>(help_argv.size()), help_argv.data());
+  if (kOpts.show_surelog_help) {
+    std::array<const char*, 2> helpArgv = {argv[0], "--help"};
+    clp->parseCommandLine(static_cast<int>(helpArgv.size()), helpArgv.data());
     return 0;
   }
 
-  std::vector<const char*> sl_argv = opts.surelog_args;
-  if (opts.show_surelog_help) {
-    sl_argv.push_back("--help");
+  std::vector<const char*> slArgv = kOpts.surelog_args;
+  if (kOpts.show_surelog_help) {
+    slArgv.push_back("--help");
   }
 
-  const int sl_argc = static_cast<int>(sl_argv.size());
-  const bool kSuccess = clp->parseCommandLine(sl_argc, sl_argv.data());
+  const int kSlArgc = static_cast<int>(slArgv.size());
+  const bool kSuccess = clp->parseCommandLine(kSlArgc, slArgv.data());
 
   if (clp->help()) {
     return 0;

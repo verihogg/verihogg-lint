@@ -20,19 +20,19 @@ void CheckMissingForLoopStep(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const forNode :
-       fileContent->sl_collect_all(root, SL::VObjectType::paFOR)) {
-    if (HasSiblingOfType(fileContent, forNode, SL::VObjectType::paFor_step)) {
+  for (SL::NodeId const kForNode :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paFOR)) {
+    if (HasSiblingOfType(fileContent, kForNode, SL::VObjectType::paFor_step)) {
       continue;
     }
 
-    ReportError(fileContent, forNode,
-                FindForLoopVariableName(fileContent, forNode),
+    ReportError(fileContent, kForNode,
+                FindForLoopVariableName(fileContent, kForNode),
                 verihogg_lint::LINT_MISSING_FOR_LOOP_STEP, errors, symbols);
   }
 }

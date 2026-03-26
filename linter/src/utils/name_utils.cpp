@@ -17,16 +17,16 @@ auto ExtractName(const SL::FileContent* fileContent, SL::NodeId node,
 
   auto stringNodes =
       fileContent->sl_collect_all(node, SL::VObjectType::slStringConst);
-  for (SL::NodeId const nameNode : stringNodes) {
-    if (nameNode &&
-        fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
-      return fileContent->SymName(nameNode);
+  for (SL::NodeId const kNameNode : stringNodes) {
+    if (kNameNode &&
+        fileContent->Type(kNameNode) == SL::VObjectType::slStringConst) {
+      return fileContent->SymName(kNameNode);
     }
   }
 
-  SL::NodeId const child = fileContent->Child(node);
-  if (child && fileContent->Type(child) == SL::VObjectType::slStringConst) {
-    return fileContent->SymName(child);
+  SL::NodeId const kChild = fileContent->Child(node);
+  if (kChild && fileContent->Type(kChild) == SL::VObjectType::slStringConst) {
+    return fileContent->SymName(kChild);
   }
 
   return defaultName;
@@ -44,32 +44,32 @@ auto FindForLoopVariableName(const SL::FileContent* fileContent,
 
   for (SL::NodeId tmp = fileContent->Sibling(forNode); tmp;
        tmp = fileContent->Sibling(tmp)) {
-    SL::VObjectType const type = fileContent->Type(tmp);
-    if (type == SL::VObjectType::paFor_initialization && !forInit) {
+    SL::VObjectType const kType = fileContent->Type(tmp);
+    if (kType == SL::VObjectType::paFor_initialization && !forInit) {
       forInit = tmp;
-    } else if (type == SL::VObjectType::paExpression && !condition) {
+    } else if (kType == SL::VObjectType::paExpression && !condition) {
       condition = tmp;
-    } else if (type == SL::VObjectType::paFor_step && !forStep) {
+    } else if (kType == SL::VObjectType::paFor_step && !forStep) {
       forStep = tmp;
     }
   }
 
   if (forInit) {
-    std::string_view const name = ExtractName(fileContent, forInit, "");
-    if (!name.empty()) {
-      return name;
+    std::string_view const kName = ExtractName(fileContent, forInit, "");
+    if (!kName.empty()) {
+      return kName;
     }
   }
   if (condition) {
-    std::string_view const name = ExtractName(fileContent, condition, "");
-    if (!name.empty()) {
-      return name;
+    std::string_view const kName = ExtractName(fileContent, condition, "");
+    if (!kName.empty()) {
+      return kName;
     }
   }
   if (forStep) {
-    std::string_view const name = ExtractName(fileContent, forStep, "");
-    if (!name.empty()) {
-      return name;
+    std::string_view const kName = ExtractName(fileContent, forStep, "");
+    if (!kName.empty()) {
+      return kName;
     }
   }
 
@@ -84,14 +84,14 @@ auto ExtractVariableName(const SL::FileContent* fileContent,
 
   auto listNodes = fileContent->sl_collect_all(
       parentNode, SL::VObjectType::paList_of_variable_decl_assignments);
-  for (SL::NodeId const listNode : listNodes) {
+  for (SL::NodeId const kListNode : listNodes) {
     auto assignNodes = fileContent->sl_collect_all(
-        listNode, SL::VObjectType::paVariable_decl_assignment);
-    for (SL::NodeId const assignNode : assignNodes) {
-      SL::NodeId const nameNode = fileContent->Child(assignNode);
-      if (nameNode &&
-          fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
-        return fileContent->SymName(nameNode);
+        kListNode, SL::VObjectType::paVariable_decl_assignment);
+    for (SL::NodeId const kAssignNode : assignNodes) {
+      SL::NodeId const kNameNode = fileContent->Child(kAssignNode);
+      if (kNameNode &&
+          fileContent->Type(kNameNode) == SL::VObjectType::slStringConst) {
+        return fileContent->SymName(kNameNode);
       }
     }
   }
@@ -106,14 +106,14 @@ auto ExtractParameterName(const SL::FileContent* fileContent,
 
   auto listNodes = fileContent->sl_collect_all(
       parentNode, SL::VObjectType::paList_of_param_assignments);
-  for (SL::NodeId const listNode : listNodes) {
+  for (SL::NodeId const kListNode : listNodes) {
     auto assignNodes = fileContent->sl_collect_all(
-        listNode, SL::VObjectType::paParam_assignment);
-    for (SL::NodeId const assignNode : assignNodes) {
-      SL::NodeId const nameNode = fileContent->Child(assignNode);
-      if (nameNode &&
-          fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
-        return fileContent->SymName(nameNode);
+        kListNode, SL::VObjectType::paParam_assignment);
+    for (SL::NodeId const kAssignNode : assignNodes) {
+      SL::NodeId const kNameNode = fileContent->Child(kAssignNode);
+      if (kNameNode &&
+          fileContent->Type(kNameNode) == SL::VObjectType::slStringConst) {
+        return fileContent->SymName(kNameNode);
       }
     }
   }
@@ -124,23 +124,23 @@ namespace {
 auto LvalueHasIndex(const SL::FileContent* fileContent, SL::NodeId lvalueNode) {
   for (SL::NodeId ch = fileContent->Child(lvalueNode); ch;
        ch = fileContent->Sibling(ch)) {
-    SL::VObjectType const cont = fileContent->Type(ch);
+    SL::VObjectType const kCont = fileContent->Type(ch);
 
-    if (cont == SL::VObjectType::paSelect) {
-      SL::NodeId const bitSel = fileContent->Child(ch);
-      if (bitSel &&
-          fileContent->Type(bitSel) == SL::VObjectType::paBit_select) {
-        if (fileContent->Child(bitSel)) {
+    if (kCont == SL::VObjectType::paSelect) {
+      SL::NodeId const kBitSel = fileContent->Child(ch);
+      if (kBitSel &&
+          fileContent->Type(kBitSel) == SL::VObjectType::paBit_select) {
+        if (fileContent->Child(kBitSel)) {
           return true;
         }
       }
     }
 
-    if (cont == SL::VObjectType::paConstant_select) {
-      SL::NodeId const bitSel = fileContent->Child(ch);
-      if (bitSel &&
-          fileContent->Type(bitSel) == SL::VObjectType::paConstant_bit_select) {
-        if (fileContent->Child(bitSel)) {
+    if (kCont == SL::VObjectType::paConstant_select) {
+      SL::NodeId const kBitSel = fileContent->Child(ch);
+      if (kBitSel && fileContent->Type(kBitSel) ==
+                         SL::VObjectType::paConstant_bit_select) {
+        if (fileContent->Child(kBitSel)) {
           return true;
         }
       }
@@ -170,9 +170,9 @@ auto LvalueName(const SL::FileContent* fileContent, SL::NodeId assignNode)
     -> std::string_view {
   for (SL::NodeId child = fileContent->Child(assignNode); child;
        child = fileContent->Sibling(child)) {
-    SL::VObjectType const cont = fileContent->Type(child);
-    if (cont == SL::VObjectType::paVariable_lvalue ||
-        cont == SL::VObjectType::paNet_lvalue) {
+    SL::VObjectType const kCont = fileContent->Type(child);
+    if (kCont == SL::VObjectType::paVariable_lvalue ||
+        kCont == SL::VObjectType::paNet_lvalue) {
       if (LvalueHasIndex(fileContent, child)) {
         return "<indexed>";
       }
@@ -184,10 +184,10 @@ auto LvalueName(const SL::FileContent* fileContent, SL::NodeId assignNode)
 
 auto DeclAssignmentName(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string_view {
-  SL::NodeId const nameNode = fileContent->Child(node);
-  if (nameNode &&
-      fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
-    return fileContent->SymName(nameNode);
+  SL::NodeId const kNameNode = fileContent->Child(node);
+  if (kNameNode &&
+      fileContent->Type(kNameNode) == SL::VObjectType::slStringConst) {
+    return fileContent->SymName(kNameNode);
   }
   return "<unknown>";
 }
@@ -196,12 +196,12 @@ auto ExpressionIsCompound(const SL::FileContent* fileContent, SL::NodeId node)
     -> bool {
   for (SL::NodeId ch = fileContent->Child(node); ch;
        ch = fileContent->Sibling(ch)) {
-    SL::VObjectType const cont = fileContent->Type(ch);
-    if (cont != SL::VObjectType::paExpression &&
-        cont != SL::VObjectType::paPrimary &&
-        cont != SL::VObjectType::paSelect &&
-        cont != SL::VObjectType::paBit_select &&
-        cont != SL::VObjectType::slStringConst) {
+    SL::VObjectType const kCont = fileContent->Type(ch);
+    if (kCont != SL::VObjectType::paExpression &&
+        kCont != SL::VObjectType::paPrimary &&
+        kCont != SL::VObjectType::paSelect &&
+        kCont != SL::VObjectType::paBit_select &&
+        kCont != SL::VObjectType::slStringConst) {
       return true;
     }
   }
@@ -213,23 +213,23 @@ auto FindDirectRhsLhsName(const SL::FileContent* fileContent,
                           SL::NodeId concatNode) -> std::string_view {
   SL::NodeId current = fileContent->Parent(concatNode);
   while (current) {
-    SL::VObjectType const type = fileContent->Type(current);
+    SL::VObjectType const kType = fileContent->Type(current);
 
-    if (IsDirectAssignment(type)) {
+    if (IsDirectAssignment(kType)) {
       return LvalueName(fileContent, current);
     }
 
-    if (type == SL::VObjectType::paVariable_decl_assignment ||
-        type == SL::VObjectType::paNet_decl_assignment) {
+    if (kType == SL::VObjectType::paVariable_decl_assignment ||
+        kType == SL::VObjectType::paNet_decl_assignment) {
       return DeclAssignmentName(fileContent, current);
     }
 
-    if (IsTransparentWrapper(type)) {
+    if (IsTransparentWrapper(kType)) {
       current = fileContent->Parent(current);
       continue;
     }
 
-    if (type == SL::VObjectType::paExpression) {
+    if (kType == SL::VObjectType::paExpression) {
       if (ExpressionIsCompound(fileContent, current)) {
         return "<unknown>";
       }
@@ -245,14 +245,14 @@ auto FindDirectRhsLhsName(const SL::FileContent* fileContent,
 void CollectNames(const SL::FileContent* fileContent, SL::NodeId root,
                   SL::VObjectType parentType, SL::VObjectType assignType,
                   std::unordered_set<std::string_view>& out) {
-  for (SL::NodeId const declId :
+  for (SL::NodeId const kDeclId :
        fileContent->sl_collect_all(root, parentType)) {
-    for (SL::NodeId const assignId :
-         fileContent->sl_collect_all(declId, assignType, true)) {
-      SL::NodeId const nameNode = fileContent->Child(assignId);
-      if (nameNode &&
-          fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
-        out.insert(fileContent->SymName(nameNode));
+    for (SL::NodeId const kAssignId :
+         fileContent->sl_collect_all(kDeclId, assignType, true)) {
+      SL::NodeId const kNameNode = fileContent->Child(kAssignId);
+      if (kNameNode &&
+          fileContent->Type(kNameNode) == SL::VObjectType::slStringConst) {
+        out.insert(fileContent->SymName(kNameNode));
       }
     }
   }

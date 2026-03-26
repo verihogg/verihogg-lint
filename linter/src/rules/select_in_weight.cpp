@@ -32,22 +32,22 @@ auto ContainsSelectInExpr(const SL::FileContent* fileContent, SL::NodeId node)
   worklist.push(node);
 
   while (!worklist.empty()) {
-    SL::NodeId const node = worklist.top();
+    SL::NodeId const kNode = worklist.top();
     worklist.pop();
 
-    SL::VObjectType const type = fileContent->Type(node);
+    SL::VObjectType const kType = fileContent->Type(kNode);
 
-    if (type == SL::VObjectType::paRs_code_block) {
+    if (kType == SL::VObjectType::paRs_code_block) {
       continue;
     }
 
-    if (std::ranges::any_of(kSelectTypes, [type](SL::VObjectType selectType) {
-          return selectType == type;
+    if (std::ranges::any_of(kSelectTypes, [kType](SL::VObjectType selectType) {
+          return selectType == kType;
         })) {
       return true;
     }
 
-    for (SL::NodeId child = fileContent->Child(node); child;
+    for (SL::NodeId child = fileContent->Child(kNode); child;
          child = fileContent->Sibling(child)) {
       worklist.push(child);
     }
@@ -62,33 +62,33 @@ void CheckSelectInWeight(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const rsRuleId :
-       fileContent->sl_collect_all(root, SL::VObjectType::paRs_rule)) {
-    SL::NodeId const rsProdList = fileContent->Child(rsRuleId);
-    if (!rsProdList) {
+  for (SL::NodeId const kRsRuleId :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paRs_rule)) {
+    SL::NodeId const kRsProdList = fileContent->Child(kRsRuleId);
+    if (!kRsProdList) {
       continue;
     }
-    if (fileContent->Type(rsProdList) !=
+    if (fileContent->Type(kRsProdList) !=
         SL::VObjectType::paRs_production_list) {
       continue;
     }
 
-    SL::NodeId const weightExpr = fileContent->Sibling(rsProdList);
-    if (!weightExpr) {
+    SL::NodeId const kWeightExpr = fileContent->Sibling(kRsProdList);
+    if (!kWeightExpr) {
       continue;
     }
-    if (fileContent->Type(weightExpr) != SL::VObjectType::paExpression) {
+    if (fileContent->Type(kWeightExpr) != SL::VObjectType::paExpression) {
       continue;
     }
 
-    if (ContainsSelectInExpr(fileContent, weightExpr)) {
-      ReportError(fileContent, rsRuleId,
-                  ExtractName(fileContent, rsProdList, "<unknown>"),
+    if (ContainsSelectInExpr(fileContent, kWeightExpr)) {
+      ReportError(fileContent, kRsRuleId,
+                  ExtractName(fileContent, kRsProdList, "<unknown>"),
                   verihogg_lint::LINT_SELECT_IN_WEIGHT, errors, symbols);
     }
   }

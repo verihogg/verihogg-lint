@@ -61,9 +61,9 @@ auto CollectConstantParameters(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> constants;
 
-  SL::NodeId const root = fileContent->getRootNode();
+  SL::NodeId const kRoot = fileContent->getRootNode();
   for (const auto& [parentType, assignType] : kParamDeclTypes) {
-    CollectNames(fileContent, root, parentType, assignType, constants);
+    CollectNames(fileContent, kRoot, parentType, assignType, constants);
   }
   return constants;
 }
@@ -72,9 +72,9 @@ auto CollectVariables(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> variables;
 
-  SL::NodeId const root = fileContent->getRootNode();
+  SL::NodeId const kRoot = fileContent->getRootNode();
   for (const auto& [parentType, assignType] : kVarDeclTypes) {
-    CollectNames(fileContent, root, parentType, assignType, variables);
+    CollectNames(fileContent, kRoot, parentType, assignType, variables);
   }
   return variables;
 }
@@ -164,15 +164,15 @@ void CheckSingleMultipleConcatenation(
     return;
   }
 
-  SL::NodeId const multiplierExpr = fileContent->Child(multiConcatNode);
-  if (!multiplierExpr) {
+  SL::NodeId const kMultiplierExpr = fileContent->Child(multiConcatNode);
+  if (!kMultiplierExpr) {
     return;
   }
 
   std::string_view nonConstantVar;
-  if (!IsConstantExpression(fileContent, multiplierExpr, variables,
+  if (!IsConstantExpression(fileContent, kMultiplierExpr, variables,
                             &nonConstantVar)) {
-    ReportError(fileContent, multiplierExpr, nonConstantVar,
+    ReportError(fileContent, kMultiplierExpr, nonConstantVar,
                 verihogg_lint::LINT_CONCATENATION_MULTIPLIER, errors, symbols);
   }
 }
@@ -185,17 +185,17 @@ void CheckConcatenationMultiplier(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
   auto constantParams = CollectConstantParameters(fileContent);
   auto variables = CollectVariables(fileContent);
 
-  for (SL::NodeId const node : fileContent->sl_collect_all(
-           root, SL::VObjectType::paMultiple_concatenation)) {
-    CheckSingleMultipleConcatenation(fileContent, node, variables, errors,
+  for (SL::NodeId const kNode : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paMultiple_concatenation)) {
+    CheckSingleMultipleConcatenation(fileContent, kNode, variables, errors,
                                      symbols);
   }
 }

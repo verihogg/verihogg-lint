@@ -32,7 +32,7 @@ auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
   }
 
   return SL::Location{fileContent->getFileId(node), fileContent->Line(node),
-                      static_cast<uint16_t>(GetColumnSafe(fileContent, node)),
+                      GetColumnSafe(fileContent, node),
                       symbols->registerSymbol(symbolName)};
 }
 
@@ -45,8 +45,8 @@ void ReportError(const SL::FileContent* fileContent, SL::NodeId node,
     return;
   }
 
-  SL::Location const loc = GetLocation(fileContent, node, symbolName, symbols);
-  SL::Error err(errorType, loc);
+  SL::Location const kLoc = GetLocation(fileContent, node, symbolName, symbols);
+  SL::Error err(errorType, kLoc);
   errors->addError(err, false);
 }
 

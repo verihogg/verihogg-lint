@@ -23,11 +23,11 @@ auto JoinNames(const SL::FileContent* fileContent,
   }
   std::string res;
   bool first = true;
-  for (SL::NodeId const part : parts) {
+  for (SL::NodeId const kPart : parts) {
     if (!first) {
       res += '.';
     }
-    res += std::string(fileContent->SymName(part));
+    res += std::string(fileContent->SymName(kPart));
     first = false;
   }
   return res;
@@ -40,20 +40,20 @@ void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId const root = fileContent->getRootNode();
-  if (root == SL::InvalidNodeId) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (kRoot == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId const iid : fileContent->sl_collect_all(
-           root, SL::VObjectType::paInterface_identifier)) {
+  for (SL::NodeId const kIid : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paInterface_identifier)) {
     auto parts =
-        fileContent->sl_collect_all(iid, SL::VObjectType::slStringConst);
+        fileContent->sl_collect_all(kIid, SL::VObjectType::slStringConst);
     if (parts.size() <= 1) {
       continue;
     }
 
-    ReportError(fileContent, iid, JoinNames(fileContent, parts),
+    ReportError(fileContent, kIid, JoinNames(fileContent, parts),
                 verihogg_lint::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
                 symbols);
   }

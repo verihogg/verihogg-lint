@@ -37,13 +37,13 @@ auto HasUnpackedDimension(const SL::FileContent* fileContent,
       fileContent->sl_collect_all(varDecl,
                                   SL::VObjectType::paVariable_decl_assignment),
       [fileContent](SL::NodeId vda) {
-        SL::NodeId const nameNode = fileContent->Child(vda);
-        if (!nameNode) {
+        SL::NodeId const kNameNode = fileContent->Child(vda);
+        if (!kNameNode) {
           return false;
         }
-        return HasSiblingOfType(fileContent, nameNode,
+        return HasSiblingOfType(fileContent, kNameNode,
                                 SL::VObjectType::paUnpacked_dimension) ||
-               HasSiblingOfType(fileContent, nameNode,
+               HasSiblingOfType(fileContent, kNameNode,
                                 SL::VObjectType::paVariable_dimension);
       });
 }

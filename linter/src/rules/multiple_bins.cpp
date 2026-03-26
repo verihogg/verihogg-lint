@@ -39,24 +39,25 @@ auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
   stack.push(node);
 
   while (!stack.empty()) {
-    SL::NodeId const current = stack.top();
+    SL::NodeId const kCurrent = stack.top();
     stack.pop();
 
-    SL::VObjectType const type = fileContent->Type(current);
+    SL::VObjectType const kType = fileContent->Type(kCurrent);
 
-    if (type == SL::VObjectType::paNumber_1Tickbx) {
-      return current;
+    if (kType == SL::VObjectType::paNumber_1Tickbx) {
+      return kCurrent;
     }
 
-    if (std::ranges::any_of(
-            kValueTypes, [type](SL::VObjectType tpe) { return tpe == type; })) {
-      if (ValueHasWildcard(fileContent->SymName(current))) {
-        return current;
+    if (std::ranges::any_of(kValueTypes, [kType](SL::VObjectType tpe) {
+          return tpe == kType;
+        })) {
+      if (ValueHasWildcard(fileContent->SymName(kCurrent))) {
+        return kCurrent;
       }
     }
 
     std::stack<SL::NodeId> children;
-    for (SL::NodeId child = fileContent->Child(current); child;
+    for (SL::NodeId child = fileContent->Child(kCurrent); child;
          child = fileContent->Sibling(child)) {
       children.push(child);
     }
@@ -88,10 +89,10 @@ auto FindWildcardInTransList(const SL::FileContent* fileContent,
         continue;
       }
 
-      SL::NodeId const wildcardNode =
+      SL::NodeId const kWildcardNode =
           FindWildcardInTransRangeList(fileContent, transRange);
-      if (wildcardNode) {
-        return wildcardNode;
+      if (kWildcardNode) {
+        return kWildcardNode;
       }
     }
   }
@@ -108,10 +109,10 @@ auto ExtractBinName(const SL::FileContent* fileContent,
   for (SL::NodeId child = fileContent->Child(binsOrOptions); child;
        child = fileContent->Sibling(child)) {
     if (fileContent->Type(child) == SL::VObjectType::paBins_Bins) {
-      SL::NodeId const nameNode = fileContent->Sibling(child);
-      if (nameNode &&
-          fileContent->Type(nameNode) == SL::VObjectType::slStringConst) {
-        return fileContent->SymName(nameNode);
+      SL::NodeId const kNameNode = fileContent->Sibling(child);
+      if (kNameNode &&
+          fileContent->Type(kNameNode) == SL::VObjectType::slStringConst) {
+        return fileContent->SymName(kNameNode);
       }
     }
   }
@@ -136,27 +137,27 @@ void CheckMultipleBins(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (root == SL::InvalidNodeId) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (kRoot == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId const binsNode :
-       fileContent->sl_collect_all(root, SL::VObjectType::paBins_or_options)) {
-    SL::NodeId const transList =
-        FindTransListInBinsOrOptions(fileContent, binsNode);
-    if (transList == SL::InvalidNodeId) {
+  for (SL::NodeId const kBinsNode :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paBins_or_options)) {
+    SL::NodeId const kTransList =
+        FindTransListInBinsOrOptions(fileContent, kBinsNode);
+    if (kTransList == SL::InvalidNodeId) {
       continue;
     }
 
-    SL::NodeId const wildcardNode =
-        FindWildcardInTransList(fileContent, transList);
-    if (wildcardNode == SL::InvalidNodeId) {
+    SL::NodeId const kWildcardNode =
+        FindWildcardInTransList(fileContent, kTransList);
+    if (kWildcardNode == SL::InvalidNodeId) {
       continue;
     }
 
-    ReportError(fileContent, wildcardNode,
-                ExtractBinName(fileContent, binsNode),
+    ReportError(fileContent, kWildcardNode,
+                ExtractBinName(fileContent, kBinsNode),
                 verihogg_lint::LINT_MULTIPLE_BINS, errors, symbols);
   }
 }

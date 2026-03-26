@@ -44,23 +44,23 @@ auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
   stack.push(node);
 
   while (!stack.empty()) {
-    SL::NodeId const node = stack.top();
+    SL::NodeId const kNode = stack.top();
     stack.pop();
 
-    SL::VObjectType const type = fileContent->Type(node);
+    SL::VObjectType const kType = fileContent->Type(kNode);
 
-    if (type == SL::VObjectType::paEvent_expression &&
-        EventExprHasEdge(fileContent, node)) {
+    if (kType == SL::VObjectType::paEvent_expression &&
+        EventExprHasEdge(fileContent, kNode)) {
       continue;
     }
 
-    if (std::ranges::any_of(kSelectTypes, [type](SL::VObjectType selectType) {
-          return selectType == type;
+    if (std::ranges::any_of(kSelectTypes, [kType](SL::VObjectType selectType) {
+          return selectType == kType;
         })) {
       return true;
     }
 
-    for (SL::NodeId child = fileContent->Child(node); child;
+    for (SL::NodeId child = fileContent->Child(kNode); child;
          child = fileContent->Sibling(child)) {
       stack.push(child);
     }
@@ -77,16 +77,16 @@ void CheckSelectInEventControl(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const eventControlId :
-       fileContent->sl_collect_all(root, SL::VObjectType::paEvent_control)) {
-    if (ContainsSelectInEventExpr(fileContent, eventControlId)) {
-      ReportError(fileContent, eventControlId,
-                  ExtractName(fileContent, eventControlId),
+  for (SL::NodeId const kEventControlId :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paEvent_control)) {
+    if (ContainsSelectInEventExpr(fileContent, kEventControlId)) {
+      ReportError(fileContent, kEventControlId,
+                  ExtractName(fileContent, kEventControlId),
                   verihogg_lint::LINT_SELECT_IN_EVENT_CONTROL, errors, symbols);
     }
   }

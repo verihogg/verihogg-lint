@@ -11,7 +11,7 @@ namespace ClassScopeUtils {
 
 struct ClassScopeInfo {
   SURELOG::VObjectType scopeType{};
-  std::string_view scopeName{};
+  std::string_view scopeName;
 };
 
 auto FindScopeContainer(const SURELOG::FileContent* fileContent,

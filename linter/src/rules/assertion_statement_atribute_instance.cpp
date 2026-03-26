@@ -31,9 +31,9 @@ auto CheckModuleLevelCover(const SL::FileContent* fileContent,
     return false;
   }
 
-  SL::NodeId const firstChild = fileContent->Child(assertionItem);
-  if (!firstChild ||
-      fileContent->Type(firstChild) != SL::VObjectType::slStringConst) {
+  SL::NodeId const kFirstChild = fileContent->Child(assertionItem);
+  if (!kFirstChild ||
+      fileContent->Type(kFirstChild) != SL::VObjectType::slStringConst) {
     return false;
   }
 
@@ -43,56 +43,56 @@ auto CheckModuleLevelCover(const SL::FileContent* fileContent,
     return false;
   }
 
-  SL::NodeId const firstItemChild = fileContent->Child(moduleOrGenItem);
-  if (!firstItemChild) {
+  SL::NodeId const kFirstItemChild = fileContent->Child(moduleOrGenItem);
+  if (!kFirstItemChild) {
     return true;
   }
 
-  return (fileContent->Type(firstItemChild) !=
+  return (fileContent->Type(kFirstItemChild) !=
           SL::VObjectType::paAttribute_instance);
 }
 
 auto CheckProceduralCover(const SL::FileContent* fileContent,
                           SL::NodeId coverPropertyStmt) {
-  SL::NodeId const proceduralAssert =
+  SL::NodeId const kProceduralAssert =
       FindAncestorOfType(fileContent, coverPropertyStmt,
                          SL::VObjectType::paProcedural_assertion_statement);
-  if (!proceduralAssert) {
+  if (!kProceduralAssert) {
     return false;
   }
 
-  auto stmt = FindAncestorOfType(fileContent, proceduralAssert,
+  auto stmt = FindAncestorOfType(fileContent, kProceduralAssert,
                                  SL::VObjectType::paStatement);
   if (!stmt) {
     return false;
   }
 
-  SL::NodeId const firstChild = fileContent->Child(stmt);
-  if (!firstChild ||
-      fileContent->Type(firstChild) != SL::VObjectType::slStringConst) {
+  SL::NodeId const kFirstChild = fileContent->Child(stmt);
+  if (!kFirstChild ||
+      fileContent->Type(kFirstChild) != SL::VObjectType::slStringConst) {
     return false;
   }
 
-  SL::NodeId const afterLabel = fileContent->Sibling(firstChild);
-  if (!afterLabel) {
+  SL::NodeId const kAfterLabel = fileContent->Sibling(kFirstChild);
+  if (!kAfterLabel) {
     {
       return true;
     }
   }
 
-  SL::VObjectType const afterLabelType = fileContent->Type(afterLabel);
+  SL::VObjectType const kAfterLabelType = fileContent->Type(kAfterLabel);
   return std::ranges::any_of(kValidAfterLabelTypes,
-                             [afterLabelType](SL::VObjectType type) {
-                               return type == afterLabelType;
+                             [kAfterLabelType](SL::VObjectType type) {
+                               return type == kAfterLabelType;
                              });
 }
 
 auto ExtractLabelName(const SL::FileContent* fileContent,
                       SL::NodeId coverPropertyStmt) {
   auto getFirstStringConst = [&](SL::NodeId node) -> std::string_view {
-    SL::NodeId const child = fileContent->Child(node);
-    if (child && fileContent->Type(child) == SL::VObjectType::slStringConst) {
-      return fileContent->SymName(child);
+    SL::NodeId const kChild = fileContent->Child(node);
+    if (kChild && fileContent->Type(kChild) == SL::VObjectType::slStringConst) {
+      return fileContent->SymName(kChild);
     }
     return {};
   };
@@ -117,28 +117,28 @@ void CheckAssertionStatementAttributeInstance(
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const coverStmt : fileContent->sl_collect_all(
-           root, SL::VObjectType::paCover_property_statement)) {
+  for (SL::NodeId const kCoverStmt : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paCover_property_statement)) {
     const bool kIsProcedural =
-        FindAncestorOfType(fileContent, coverStmt,
+        FindAncestorOfType(fileContent, kCoverStmt,
                            SL::VObjectType::paProcedural_assertion_statement) !=
         SL::InvalidNodeId;
 
     const bool kHasViolation =
-        kIsProcedural ? CheckProceduralCover(fileContent, coverStmt)
-                      : CheckModuleLevelCover(fileContent, coverStmt);
+        kIsProcedural ? CheckProceduralCover(fileContent, kCoverStmt)
+                      : CheckModuleLevelCover(fileContent, kCoverStmt);
 
     if (!kHasViolation) {
       continue;
     }
 
-    ReportError(fileContent, coverStmt,
-                ExtractLabelName(fileContent, coverStmt),
+    ReportError(fileContent, kCoverStmt,
+                ExtractLabelName(fileContent, kCoverStmt),
                 verihogg_lint::LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
                 errors, symbols);
   }

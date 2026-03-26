@@ -21,20 +21,20 @@ void CheckClassVariableLifetime(const SL::FileContent* fileContent,
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const classId : fileContent->sl_collect_all(
-           root, SL::VObjectType::paClass_declaration)) {
-    for (SL::NodeId const propId : fileContent->sl_collect_all(
-             classId, SL::VObjectType::paClass_property)) {
-      for (SL::NodeId const autoId : fileContent->sl_collect_all(
-               propId, SL::VObjectType::paLifetime_Automatic)) {
-        std::string_view const varName =
-            ExtractVariableName(fileContent, propId);
-        ReportError(fileContent, autoId, varName,
+  for (SL::NodeId const kClassId : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paClass_declaration)) {
+    for (SL::NodeId const kPropId : fileContent->sl_collect_all(
+             kClassId, SL::VObjectType::paClass_property)) {
+      for (SL::NodeId const kAutoId : fileContent->sl_collect_all(
+               kPropId, SL::VObjectType::paLifetime_Automatic)) {
+        std::string_view const kVarName =
+            ExtractVariableName(fileContent, kPropId);
+        ReportError(fileContent, kAutoId, kVarName,
                     verihogg_lint::LINT_CLASS_VARIABLE_LIFETIME, errors,
                     symbols);
       }

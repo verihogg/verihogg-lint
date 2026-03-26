@@ -25,7 +25,7 @@ namespace SL = SURELOG;
 
 namespace {
 
-enum class ImplKind : std::uint8_t { Function, Task, Constraint };
+enum class ImplKind : std::uint8_t { kFunction, kTask, kConstraint };
 
 struct ImplInfo {
   std::string_view className;
@@ -39,20 +39,20 @@ struct ImplInfo {
 auto ExtractSubroutineImplInfo(const SL::FileContent* fileContent,
                                SL::NodeId bodyDecl, ImplKind kind)
     -> std::optional<ImplInfo> {
-  SL::NodeId const classScope =
+  SL::NodeId const kClassScope =
       FindChildOfType(fileContent, bodyDecl, SL::VObjectType::paClass_scope);
-  if (!classScope) {
+  if (!kClassScope) {
     return std::nullopt;
   }
 
-  SL::NodeId const classType = fileContent->Child(classScope);
-  if (!classType ||
-      fileContent->Type(classType) != SL::VObjectType::paClass_type) {
+  SL::NodeId const kClassType = fileContent->Child(kClassScope);
+  if (!kClassType ||
+      fileContent->Type(kClassType) != SL::VObjectType::paClass_type) {
     return std::nullopt;
   }
 
   SL::NodeId classNameNode = SL::InvalidNodeId;
-  for (SL::NodeId cur = fileContent->Child(classType); cur;
+  for (SL::NodeId cur = fileContent->Child(kClassType); cur;
        cur = fileContent->Sibling(cur)) {
     if (fileContent->Type(cur) == SL::VObjectType::slStringConst) {
       classNameNode = cur;
@@ -61,29 +61,29 @@ auto ExtractSubroutineImplInfo(const SL::FileContent* fileContent,
   if (!classNameNode) {
     return std::nullopt;
   }
-  std::string_view const className = fileContent->SymName(classNameNode);
+  std::string_view const kClassName = fileContent->SymName(classNameNode);
 
-  SL::NodeId const methodNameNode = fileContent->Sibling(classScope);
-  if (!methodNameNode ||
-      fileContent->Type(methodNameNode) != SL::VObjectType::slStringConst) {
+  SL::NodeId const kMethodNameNode = fileContent->Sibling(kClassScope);
+  if (!kMethodNameNode ||
+      fileContent->Type(kMethodNameNode) != SL::VObjectType::slStringConst) {
     return std::nullopt;
   }
-  std::string_view const memberName = fileContent->SymName(methodNameNode);
+  std::string_view const kMemberName = fileContent->SymName(kMethodNameNode);
 
-  SL::NodeId const scopeContainer =
+  SL::NodeId const kScopeContainer =
       ClassScopeUtils::FindScopeContainer(fileContent, bodyDecl);
-  if (!scopeContainer) {
+  if (!kScopeContainer) {
     return std::nullopt;
   }
 
-  return ImplInfo{.className = className,
-                  .memberName = memberName,
-                  .reportNode = classScope,
+  return ImplInfo{.className = kClassName,
+                  .memberName = kMemberName,
+                  .reportNode = kClassScope,
                   .scopeInfo =
                       ClassScopeUtils::ClassScopeInfo{
-                          .scopeType = fileContent->Type(scopeContainer),
+                          .scopeType = fileContent->Type(kScopeContainer),
                           .scopeName = ClassScopeUtils::GetScopeContainerName(
-                              fileContent, scopeContainer),
+                              fileContent, kScopeContainer),
                       },
                   .fileContent = fileContent,
                   .kind = kind};
@@ -91,20 +91,20 @@ auto ExtractSubroutineImplInfo(const SL::FileContent* fileContent,
 
 auto ExtractConstraintImplInfo(const SL::FileContent* fileContent,
                                SL::NodeId node) -> std::optional<ImplInfo> {
-  SL::NodeId const classScope =
+  SL::NodeId const kClassScope =
       FindChildOfType(fileContent, node, SL::VObjectType::paClass_scope);
-  if (!classScope) {
+  if (!kClassScope) {
     return std::nullopt;
   }
 
-  SL::NodeId const classType = fileContent->Child(classScope);
-  if (!classType ||
-      fileContent->Type(classType) != SL::VObjectType::paClass_type) {
+  SL::NodeId const kClassType = fileContent->Child(kClassScope);
+  if (!kClassType ||
+      fileContent->Type(kClassType) != SL::VObjectType::paClass_type) {
     return std::nullopt;
   }
 
   SL::NodeId classNameNode = SL::InvalidNodeId;
-  for (SL::NodeId cur = fileContent->Child(classType); cur;
+  for (SL::NodeId cur = fileContent->Child(kClassType); cur;
        cur = fileContent->Sibling(cur)) {
     if (fileContent->Type(cur) == SL::VObjectType::slStringConst) {
       classNameNode = cur;
@@ -115,72 +115,73 @@ auto ExtractConstraintImplInfo(const SL::FileContent* fileContent,
     return std::nullopt;
   }
 
-  std::string_view const className = fileContent->SymName(classNameNode);
+  std::string_view const kClassName = fileContent->SymName(classNameNode);
 
-  SL::NodeId const constraintNameNode = fileContent->Sibling(classScope);
-  if (!constraintNameNode ||
-      fileContent->Type(constraintNameNode) != SL::VObjectType::slStringConst) {
+  SL::NodeId const kConstraintNameNode = fileContent->Sibling(kClassScope);
+  if (!kConstraintNameNode || fileContent->Type(kConstraintNameNode) !=
+                                  SL::VObjectType::slStringConst) {
     return std::nullopt;
   }
 
-  std::string_view const constraintName =
-      fileContent->SymName(constraintNameNode);
+  std::string_view const kConstraintName =
+      fileContent->SymName(kConstraintNameNode);
 
-  SL::NodeId const scopeContainer =
+  SL::NodeId const kScopeContainer =
       ClassScopeUtils::FindScopeContainer(fileContent, node);
-  if (!scopeContainer) {
+  if (!kScopeContainer) {
     return std::nullopt;
   }
 
-  return ImplInfo{.className = className,
-                  .memberName = constraintName,
-                  .reportNode = classScope,
+  return ImplInfo{.className = kClassName,
+                  .memberName = kConstraintName,
+                  .reportNode = kClassScope,
                   .scopeInfo =
                       ClassScopeUtils::ClassScopeInfo{
-                          .scopeType = fileContent->Type(scopeContainer),
+                          .scopeType = fileContent->Type(kScopeContainer),
                           .scopeName = ClassScopeUtils::GetScopeContainerName(
-                              fileContent, scopeContainer)},
+                              fileContent, kScopeContainer)},
                   .fileContent = fileContent,
-                  .kind = ImplKind::Constraint};
+                  .kind = ImplKind::kConstraint};
 }
 
 auto CollectImplInfos(const SL::FileContent* fileContent)
     -> std::vector<ImplInfo> {
   std::vector<ImplInfo> result;
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return result;
   }
 
-  for (SL::NodeId const funcDecl : fileContent->sl_collect_all(
-           root, SL::VObjectType::paFunction_declaration)) {
-    SL::NodeId const body = fileContent->Child(funcDecl);
-    if (body && fileContent->Type(body) ==
-                    SL::VObjectType::paFunction_body_declaration) {
+  for (SL::NodeId const kFuncDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paFunction_declaration)) {
+    SL::NodeId const kBody = fileContent->Child(kFuncDecl);
+    if (kBody && fileContent->Type(kBody) ==
+                     SL::VObjectType::paFunction_body_declaration) {
       auto info =
-          ExtractSubroutineImplInfo(fileContent, body, ImplKind::Function);
+          ExtractSubroutineImplInfo(fileContent, kBody, ImplKind::kFunction);
       if (info) {
         result.push_back(*info);
       }
     }
   }
 
-  for (SL::NodeId const taskDecl :
-       fileContent->sl_collect_all(root, SL::VObjectType::paTask_declaration)) {
-    SL::NodeId const body = fileContent->Child(taskDecl);
-    if (body &&
-        fileContent->Type(body) == SL::VObjectType::paTask_body_declaration) {
-      auto info = ExtractSubroutineImplInfo(fileContent, body, ImplKind::Task);
+  for (SL::NodeId const kTaskDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paTask_declaration)) {
+    SL::NodeId const kBody = fileContent->Child(kTaskDecl);
+    if (kBody &&
+        fileContent->Type(kBody) == SL::VObjectType::paTask_body_declaration) {
+      auto info =
+          ExtractSubroutineImplInfo(fileContent, kBody, ImplKind::kTask);
       if (info) {
         result.push_back(*info);
       }
     }
   }
 
-  for (SL::NodeId const node : fileContent->sl_collect_all(
-           root, SL::VObjectType::paExtern_constraint_declaration)) {
-    auto info = ExtractConstraintImplInfo(fileContent, node);
+  for (SL::NodeId const kNode : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paExtern_constraint_declaration)) {
+    auto info = ExtractConstraintImplInfo(fileContent, kNode);
     if (info) {
       result.push_back(*info);
     }
@@ -199,8 +200,8 @@ void CheckFuncImplScope(SL::Design* design, SL::ErrorContainer* errors,
 
   std::unordered_map<std::string_view, ClassScopeUtils::ClassScopeInfo>
       globalClassScopeMap;
-  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fc) {
-    globalClassScopeMap.merge(ClassScopeUtils::BuildClassScopeMap(fc));
+  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fileCont) {
+    globalClassScopeMap.merge(ClassScopeUtils::BuildClassScopeMap(fileCont));
   });
 
   if (globalClassScopeMap.empty()) {
@@ -208,33 +209,33 @@ void CheckFuncImplScope(SL::Design* design, SL::ErrorContainer* errors,
   }
 
   std::vector<ImplInfo> allImpls;
-  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fc) {
-    auto local = CollectImplInfos(fc);
+  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fileCont) {
+    auto local = CollectImplInfos(fileCont);
     allImpls.insert(allImpls.end(), local.begin(), local.end());
   });
 
   for (const auto& impl : allImpls) {
-    auto it = globalClassScopeMap.find(impl.className);
-    if (it == globalClassScopeMap.end()) {
+    auto iter = globalClassScopeMap.find(impl.className);
+    if (iter == globalClassScopeMap.end()) {
       continue;
     }
 
-    if (ClassScopeUtils::ScopesMatch(impl.scopeInfo, it->second)) {
+    if (ClassScopeUtils::ScopesMatch(impl.scopeInfo, iter->second)) {
       continue;
     }
 
     SL::ErrorDefinition::ErrorType errorType{};
 
     switch (impl.kind) {
-      case ImplKind::Function:
+      case ImplKind::kFunction:
         errorType = verihogg_lint::LINT_FUNC_IMPL_SCOPE;
         break;
 
-      case ImplKind::Task:
+      case ImplKind::kTask:
         errorType = verihogg_lint::LINT_TASK_IMPL_SCOPE;
         break;
 
-      case ImplKind::Constraint:
+      case ImplKind::kConstraint:
         errorType = verihogg_lint::LINT_CONSTRAINT_IMPL_SCOPE;
         break;
     }

@@ -21,18 +21,19 @@ void CheckMissingForLoopCondition(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (root == SL::InvalidNodeId) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (kRoot == SL::InvalidNodeId) {
     return;
   }
 
-  for (SL::NodeId const forNode :
-       fileContent->sl_collect_all(root, SL::VObjectType::paFOR)) {
-    if (HasSiblingOfType(fileContent, forNode, SL::VObjectType::paExpression)) {
+  for (SL::NodeId const kForNode :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paFOR)) {
+    if (HasSiblingOfType(fileContent, kForNode,
+                         SL::VObjectType::paExpression)) {
       continue;
     }
     ReportError(
-        fileContent, forNode, FindForLoopVariableName(fileContent, forNode),
+        fileContent, kForNode, FindForLoopVariableName(fileContent, kForNode),
         verihogg_lint::LINT_MISSING_FOR_LOOP_CONDITION, errors, symbols);
   }
 }

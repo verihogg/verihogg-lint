@@ -21,13 +21,13 @@ auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> userTypes;
 
-  for (SL::NodeId const declNode :
+  for (SL::NodeId const kDeclNode :
        fileContent->sl_collect_all(root, SL::VObjectType::paType_declaration)) {
-    for (SL::NodeId const child : fileContent->sl_collect_all(
-             declNode, SL::VObjectType::slStringConst, false)) {
-      std::string_view const typeName = fileContent->SymName(child);
-      if (!typeName.empty()) {
-        userTypes.insert(typeName);
+    for (SL::NodeId const kChild : fileContent->sl_collect_all(
+             kDeclNode, SL::VObjectType::slStringConst, false)) {
+      std::string_view const kTypeName = fileContent->SymName(kChild);
+      if (!kTypeName.empty()) {
+        userTypes.insert(kTypeName);
       }
     }
   }
@@ -42,25 +42,25 @@ void CheckTypeCasting(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  auto userTypes = CollectUserDefinedTypes(fileContent, root);
+  auto userTypes = CollectUserDefinedTypes(fileContent, kRoot);
   if (userTypes.empty()) {
     return;
   }
 
-  for (SL::NodeId const funcCallNode : fileContent->sl_collect_all(
-           root, SL::VObjectType::paComplex_func_call)) {
-    std::string_view const typeName = ExtractName(fileContent, funcCallNode);
-    if (typeName.empty()) {
+  for (SL::NodeId const kFuncCallNode : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paComplex_func_call)) {
+    std::string_view const kTypeName = ExtractName(fileContent, kFuncCallNode);
+    if (kTypeName.empty()) {
       continue;
     }
 
-    if (userTypes.contains(typeName)) {
-      ReportError(fileContent, fileContent->Child(funcCallNode), typeName,
+    if (userTypes.contains(kTypeName)) {
+      ReportError(fileContent, fileContent->Child(kFuncCallNode), kTypeName,
                   verihogg_lint::LINT_TYPE_CASTING, errors, symbols);
     }
   }

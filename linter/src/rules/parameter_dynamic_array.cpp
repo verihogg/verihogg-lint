@@ -21,8 +21,8 @@ void CheckParameterDynamicArray(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (root == SL::InvalidNodeId) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (kRoot == SL::InvalidNodeId) {
     return;
   }
 
@@ -31,15 +31,16 @@ void CheckParameterDynamicArray(const SL::FileContent* fileContent,
       SL::VObjectType::paLocal_parameter_declaration,
   };
   for (auto declType : kDeclTypes) {
-    for (SL::NodeId const decl : fileContent->sl_collect_all(root, declType)) {
+    for (SL::NodeId const kDecl :
+         fileContent->sl_collect_all(kRoot, declType)) {
       auto unsizedDims = fileContent->sl_collect_all(
-          decl, SL::VObjectType::paUnsized_dimension);
+          kDecl, SL::VObjectType::paUnsized_dimension);
       if (unsizedDims.empty()) {
         continue;
       }
       {
         ReportError(fileContent, unsizedDims.front(),
-                    ExtractParameterName(fileContent, decl),
+                    ExtractParameterName(fileContent, kDecl),
                     verihogg_lint::LINT_PARAMETR_DYNAMIC_ARRAY, errors,
                     symbols);
       }

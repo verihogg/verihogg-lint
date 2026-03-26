@@ -18,37 +18,37 @@ namespace {
 void CheckTimeLiteral(const SL::FileContent* fileContent,
                       SL::NodeId timeLiteral, SL::ErrorContainer* errors,
                       SL::SymbolTable* symbols) {
-  SL::NodeId const intConst = fileContent->Child(timeLiteral);
-  if (!intConst) {
+  SL::NodeId const kIntConst = fileContent->Child(timeLiteral);
+  if (!kIntConst) {
     return;
   }
-  if (fileContent->Type(intConst) != SL::VObjectType::slIntConst) {
-    return;
-  }
-
-  SL::NodeId const timeUnit = fileContent->Sibling(intConst);
-  if (!timeUnit) {
-    return;
-  }
-  if (fileContent->Type(timeUnit) != SL::VObjectType::paTime_unit) {
+  if (fileContent->Type(kIntConst) != SL::VObjectType::slIntConst) {
     return;
   }
 
-  const auto kEndOfNumber = fileContent->EndColumn(intConst);
-  const auto kStartOfUnit = fileContent->Column(timeUnit);
+  SL::NodeId const kTimeUnit = fileContent->Sibling(kIntConst);
+  if (!kTimeUnit) {
+    return;
+  }
+  if (fileContent->Type(kTimeUnit) != SL::VObjectType::paTime_unit) {
+    return;
+  }
+
+  const auto kEndOfNumber = fileContent->EndColumn(kIntConst);
+  const auto kStartOfUnit = fileContent->Column(kTimeUnit);
 
   if (kStartOfUnit <= kEndOfNumber) {
     return;
   }
 
-  const auto kNumber = fileContent->SymName(intConst);
-  const auto kUnit = fileContent->SymName(timeUnit);
+  const auto kNumber = fileContent->SymName(kIntConst);
+  const auto kUnit = fileContent->SymName(kTimeUnit);
 
   std::string badValue;
   badValue.reserve(kNumber.size() + 1 + kUnit.size());
   badValue.append(kNumber).append(1, ' ').append(kUnit);
 
-  ReportError(fileContent, intConst, badValue, verihogg_lint::LINT_TIME_VALUE,
+  ReportError(fileContent, kIntConst, badValue, verihogg_lint::LINT_TIME_VALUE,
               errors, symbols);
 }
 }  // namespace
@@ -59,13 +59,13 @@ void CheckTimeValue(const SL::FileContent* fileContent,
     return;
   }
 
-  SL::NodeId const root = fileContent->getRootNode();
-  if (!root) {
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
     return;
   }
 
-  for (SL::NodeId const timeLiteral :
-       fileContent->sl_collect_all(root, SL::VObjectType::paTime_literal)) {
-    CheckTimeLiteral(fileContent, timeLiteral, errors, symbols);
+  for (SL::NodeId const kTimeLiteral :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paTime_literal)) {
+    CheckTimeLiteral(fileContent, kTimeLiteral, errors, symbols);
   }
 }
