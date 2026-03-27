@@ -38,3 +38,7 @@
 #include "duplicate_constructor.h"
 #include "duplicate_class.h"
 #include "extern_constraint_undeclared.h"
+#include "extern_function_undeclared.h"
+#include "extern_task_undeclared.h"
+#include "extend_interface_class.h"
+

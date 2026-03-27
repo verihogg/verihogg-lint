@@ -1,10 +1,5 @@
 #pragma once
 
-#include <Surelog/Common/NodeId.h>
-#include <Surelog/Design/FileContent.h>
-#include <Surelog/SourceCompile/VObjectTypes.h>
-
-namespace SL = SURELOG;
 #include <cassert>
 #include <cstdint>
 #include <string>
@@ -36,3 +31,5 @@ std::string getPrefix(const FileContent* fC, NodeId id);
 std::string getFullName(const FileContent* fC, NodeId id);
 
 std::unordered_map<std::string, NodeId> getClassIds(const FileContent* fC);
+
+std::string removeFilePrefix(std::string str);

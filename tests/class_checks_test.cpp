@@ -2,6 +2,7 @@
 #include <rules/duplicate_class.h>
 #include <rules/duplicate_constructor.h>
 #include <rules/extend_class.h>
+#include <rules/extend_interface_class.h>
 #include <rules/extern_constraint_undeclared.h>
 #include <rules/extern_function_undeclared.h>
 #include <rules/extern_task_undeclared.h>
@@ -197,6 +198,22 @@ TEST(ExternTaskUndeclaredTest, RaiseError) {
   testCheckWithErrorsExpected(tests_path,
                               ErrorDefinition::LINT_EXTERN_TASK_UNDECLARED,
                               ignoreList, checkExternTaskUndeclared);
+}
+
+TEST(ExtendInterfaceClassTest, NoError) {
+  const fs::path tests_path{base_path / "ExtendInterfaceClass" / "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, checkExtendInterfaceClass);
+}
+
+TEST(ExtendInterfaceClassTest, RaiseError) {
+  const fs::path tests_path{base_path / "ExtendInterfaceClass" / "RaiseError"};
+
+  std::set<ErrorDefinition::ErrorType> ignoreList{};
+
+  testCheckWithErrorsExpected(tests_path,
+                              ErrorDefinition::LINT_EXTEND_INTERFACE_CLASS,
+                              ignoreList, checkExtendInterfaceClass);
 }
 
 int main(int argc, char** argv) {

@@ -168,3 +168,9 @@ std::unordered_map<std::string, NodeId> getClassIds(const FileContent* fC) {
   }
   return classes;
 }
+
+std::string removeFilePrefix(std::string str) {
+  size_t i = 0;
+  while (str[i++] != '@');
+  return std::string(str).substr(i, str.size());
+}
