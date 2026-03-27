@@ -43,3 +43,4 @@
 #include "extend_interface_class.h"
 #include "implement_class.h"
 #include "implement_interface_class.h"
+#include "circular_inheritance.h"

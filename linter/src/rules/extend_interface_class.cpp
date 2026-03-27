@@ -12,8 +12,8 @@
 using namespace SURELOG;
 
 namespace {
-std::vector<std::string> getSuperclassStrings(const FileContent* fC,
-                                              NodeId id) {
+std::vector<std::string> getSuperclassStringsFromInterfaceClasses(
+    const FileContent* fC, NodeId id) {
   assert(fC->Type(id) != VObjectType::paClass_declaration);
 
   std::vector<std::string> result;
@@ -48,7 +48,7 @@ void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
     std::string className = getStringConst(fC, interfaceId);
     const std::string mainPrefix = getPrefix(fC, interfaceId);
     const std::vector<std::string> superclasses =
-        getSuperclassStrings(fC, interfaceId);
+        getSuperclassStringsFromInterfaceClasses(fC, interfaceId);
 
     for (auto& superclassName : superclasses) {
       if (isBuiltinClass(className) || superclassName == "") continue;

@@ -5,23 +5,10 @@
 #include <string_view>
 #include <vector>
 
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/Library/Library.h"
-#include "Surelog/Testbench/ClassDefinition.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
 using namespace SURELOG;
-
-namespace {
-std::string getSuperclassString(const FileContent* fC, NodeId id) {
-  assert(fC->Type(id) != VObjectType::paClass_declaration);
-
-  const NodeId classType = fC->sl_get(id, VObjectType::paClass_type);
-  if (classType == NodeId(InvalidRawNodeId)) return "";
-  return getStringConst(fC, classType);
-}
-}  // namespace
 
 void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
                       SymbolTable* symbols) {

@@ -6,7 +6,7 @@ void initCommandLineParser(CommandLineParser* clp) {
   clp->noPython();
   clp->setParse(true);
   clp->setCompile(true);
-  clp->setElaborate(true);
+  clp->setElaborate(false);
   clp->setwritePpOutput(true);
   clp->setCacheAllowed(false);
   clp->setFilterInfo();

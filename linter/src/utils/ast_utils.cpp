@@ -88,9 +88,12 @@ auto isBuiltinClass(const std::string& className) -> bool {
 }
 
 auto getStringConst(const SL::FileContent* fC, SL::NodeId id) -> std::string {
-  const SL::NodeId kString = fC->sl_get(id, SL::VObjectType::slStringConst);
-  std::string str{fC->SymName(kString)};
-  return str;
+  NodeId kStringId = fC->sl_get(id, VObjectType::slStringConst);
+  if (kStringId == zeroId) {
+    return "";
+  }
+  std::string kStr{fC->SymName(kStringId)};
+  return kStr;
 }
 
 auto getPrefix(const SL::FileContent* fC, SL::NodeId id) -> std::string {
@@ -160,9 +163,10 @@ auto getFullName(const SL::FileContent* fC, SL::NodeId id) -> std::string {
   return kPrefix + kName;
 }
 
-std::unordered_map<std::string, SL::NodeId> getClassIds(const FileContent* fC) {
-  const std::vector<SL::NodeId> classDeclarations =
-      fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
+auto getClassIds(const SL::FileContent* fC)
+    -> std::unordered_map<std::string, SL::NodeId> {
+  const std::vector<SL::NodeId> classDeclarations = fC->sl_collect_all(
+      fC->getRootNode(), SL::VObjectType::paClass_declaration);
   std::unordered_map<std::string, SL::NodeId> classes;
 
   for (NodeId classId : classDeclarations) {
@@ -180,21 +184,23 @@ auto removeFilePrefix(std::string str) -> std::string {
   return std::string(str).substr(ind, str.size());
 }
 
-std::vector<std::string> getClassScope(const FileContent* fC,
-                                       NodeId funcBodyId) {
+auto getClassScope(const SL::FileContent* fC, SL::NodeId funcBodyId)
+    -> std::vector<std::string> {
   std::vector<std::string> scopes;
-  const NodeId classScopeId =
-      fC->sl_collect(funcBodyId, VObjectType::paClass_scope);
-  const NodeId classTypeId =
-      fC->sl_get(classScopeId, VObjectType::paClass_type);
+  const SL::NodeId classScopeId =
+      fC->sl_collect(funcBodyId, SL::VObjectType::paClass_scope);
+  const SL::NodeId classTypeId =
+      fC->sl_get(classScopeId, SL::VObjectType::paClass_type);
 
-  if (classTypeId == zeroId) return scopes;
-  const std::vector<NodeId> ids =
-      fC->sl_collect_all(funcBodyId, VObjectType::slStringConst);
+  if (classTypeId == zeroId) {
+    return scopes;
+  }
+  const std::vector<SL::NodeId> kIds =
+      fC->sl_collect_all(funcBodyId, SL::VObjectType::slStringConst);
 
-  for (auto& id : ids) {
-    std::string str{fC->SymName(id)};
-    scopes.push_back(str);
+  for (auto& kId : kIds) {
+    std::string kStr{fC->SymName(kId)};
+    scopes.push_back(kStr);
   }
 
   return scopes;
@@ -224,7 +230,8 @@ auto getClassSet(const SL::FileContent* fC) -> std::unordered_set<std::string> {
   return classSet;
 }
 
-std::string getFullNameFromScope(const FileContent* fC, NodeId id) {
+auto getFullNameFromScope(const SL::FileContent* fC, SL::NodeId id)
+    -> std::string {
   std::stringstream sstream;
   std::string prefix = getPrefix(fC, id);
   sstream << prefix;
@@ -243,4 +250,12 @@ std::string getFullNameFromScope(const FileContent* fC, NodeId id) {
     sstream << "::" << scopeName;
   }
   return sstream.str();
+}
+
+std::string getSuperclassString(const FileContent* fC, NodeId id) {
+  assert(fC->Type(id) != VObjectType::paClass_declaration);
+
+  const NodeId classType = fC->sl_get(id, VObjectType::paClass_type);
+  if (classType == zeroId) return "";
+  return getStringConst(fC, classType);
 }

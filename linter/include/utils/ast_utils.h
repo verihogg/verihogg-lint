@@ -42,3 +42,5 @@ std::unordered_set<std::string> getInterfaceClassSet(const FileContent* fC);
 std::unordered_set<std::string> getClassSet(const FileContent* fC);
 
 std::string getFullNameFromScope(const FileContent* fC, NodeId id);
+
+std::string getSuperclassString(const FileContent* fC, NodeId id);

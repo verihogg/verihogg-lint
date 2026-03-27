@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <rules/circular_inheritance.h>
 #include <rules/duplicate_class.h>
 #include <rules/duplicate_constructor.h>
 #include <rules/extend_class.h>
@@ -252,6 +253,22 @@ TEST(ImplementInterfaceClassTest, RaiseError) {
   testCheckWithErrorsExpected(tests_path,
                               ErrorDefinition::LINT_IMPLEMENT_INTERFACE_CLASS,
                               ignoreList, checkImplementInterfaceClass);
+}
+
+TEST(ImplementCircularInheritanceTest, NoError) {
+  const fs::path tests_path{base_path / "CircularInheritance" / "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, checkCircularInheritance);
+}
+
+TEST(ImplementCircularInheritanceTest, RaiseError) {
+  const fs::path tests_path{base_path / "CircularInheritance" / "RaiseError"};
+
+  std::unordered_set<ErrorDefinition::ErrorType> ignoreList{};
+
+  testCheckWithErrorsExpected(tests_path,
+                              ErrorDefinition::LINT_CIRCULAR_INHERITANCE,
+                              ignoreList, checkCircularInheritance);
 }
 
 int main(int argc, char** argv) {

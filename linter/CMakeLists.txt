@@ -8,6 +8,7 @@ add_library(linter
   src/rules/extend_interface_class.cpp
   src/rules/implement_class.cpp
   src/rules/implement_interface_class.cpp
+  src/rules/circular_inheritance.cpp
   src/utils/init.cpp
   src/utils/ast_utils.cpp
   src/utils/location_utils.cpp

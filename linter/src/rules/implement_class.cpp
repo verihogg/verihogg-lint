@@ -13,7 +13,8 @@ using namespace SURELOG;
 
 namespace {
 
-std::string getSuperclassString(const FileContent* fC, NodeId id) {
+std::string getSuperclassStringFromInterfaceClass(const FileContent* fC,
+                                                  NodeId id) {
   NodeId classType = id;
   classType = fC->sl_get(classType, VObjectType::paInterface_class_type);
   classType = fC->sl_get(classType, VObjectType::paPs_identifier);
@@ -37,7 +38,8 @@ void checkImplementClass(const FileContent* fC, ErrorContainer* errors,
     const NodeId implementsId = fC->sl_get(classId, VObjectType::paIMPLEMENTS);
     if (implementsId == zeroId) continue;
 
-    const std::string superclassName = getSuperclassString(fC, classId);
+    const std::string superclassName =
+        getSuperclassStringFromInterfaceClass(fC, classId);
 
     if (superclassName == "") continue;
 
