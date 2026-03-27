@@ -2,6 +2,4 @@
 
 #include "Surelog/CommandLine/CommandLineParser.h"
 
-using namespace SURELOG;
-
-void initCommandLineParser(CommandLineParser* clp);
+void InitCommandLineParser(SURELOG::CommandLineParser* clp);

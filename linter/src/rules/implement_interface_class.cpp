@@ -15,7 +15,7 @@ auto getSuperInterfaceString(const FileContent* fC, SURELOG::NodeId id)
   SURELOG::NodeId classType = id;
   classType = fC->sl_get(classType, VObjectType::paInterface_class_type);
   classType = fC->sl_get(classType, VObjectType::paPs_identifier);
-  if (classType == zeroId) {
+  if (classType == kZeroId) {
     return "";
   }
   return getStringConst(fC, classType);
@@ -37,7 +37,7 @@ void checkImplementInterfaceClass(const FileContent* fC, ErrorContainer* errors,
   for (auto& classId : classDeclarations) {
     const SURELOG::NodeId implementsId =
         fC->sl_get(classId, VObjectType::paIMPLEMENTS);
-    if (implementsId == zeroId) {
+    if (implementsId == kZeroId) {
       continue;
     }
 

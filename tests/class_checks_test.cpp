@@ -24,7 +24,7 @@ FileContent* getFileContentFromPath(fs::path path, ErrorContainer* errors,
                                     SymbolTable* symbols) {
   const auto clp =
       std::make_unique<CommandLineParser>(errors, symbols, false, false);
-  initCommandLineParser(clp.get());
+  InitCommandLineParser(clp.get());
 
   const std::string path_str = path.string();
   const char* argv[2] = {"", path_str.c_str()};

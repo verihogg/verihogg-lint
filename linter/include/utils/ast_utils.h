@@ -1,9 +1,15 @@
 #pragma once
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+
 #include <cassert>
-#include <cstdint>
 #include <string>
-#include <string_view>
+
+namespace SL = SURELOG;
 
 auto FindEnclosingModule(const SL::FileContent* fileContent, SL::NodeId node)
     -> SL::NodeId;
@@ -24,23 +30,33 @@ auto FindSiblingOfType(const SL::FileContent* fileContent, SL::NodeId start,
 
 auto FindChildOfType(const SL::FileContent* fileContent, SL::NodeId node,
                      SL::VObjectType type) -> SL::NodeId;
-std::string getStringConst(const FileContent* fC, NodeId id);
+auto GetStringConst(const SL::FileContent* fileContent, SL::NodeId node)
+    -> std::string;
 
-std::string getPrefix(const FileContent* fC, NodeId id);
+auto GetPrefix(const SL::FileContent* fileContent, SL::NodeId node)
+    -> std::string;
 
-std::string getFullName(const FileContent* fC, NodeId id);
+auto IsBuiltinClass(const std::string& className) -> bool;
 
-std::unordered_map<std::string, NodeId> getClassIds(const FileContent* fC);
+auto GetFullName(const SL::FileContent* fileContent, SL::NodeId node)
+    -> std::string;
 
-std::string removeFilePrefix(std::string str);
+auto GetClassIds(const SL::FileContent* fileContent)
+    -> std::unordered_map<std::string, SL::NodeId>;
 
-std::vector<std::string> getClassScope(const FileContent* fC,
-                                       NodeId funcBodyId);
+auto RemoveFilePrefix(std::string str) -> std::string;
 
-std::unordered_set<std::string> getInterfaceClassSet(const FileContent* fC);
+auto GetClassScope(const SL::FileContent* fileContent, SL::NodeId funcBodyNode)
+    -> std::vector<std::string>;
 
-std::unordered_set<std::string> getClassSet(const FileContent* fC);
+auto GetInterfaceClassSet(const SL::FileContent* fileContent)
+    -> std::unordered_set<std::string>;
 
-std::string getFullNameFromScope(const FileContent* fC, NodeId id);
+auto GetClassSet(const SL::FileContent* fileContent)
+    -> std::unordered_set<std::string>;
 
-std::string getSuperclassString(const FileContent* fC, NodeId id);
+auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
+    -> std::string;
+
+auto GetSuperclassString(const SL::FileContent* fileContent, SL::NodeId node)
+    -> std::string;

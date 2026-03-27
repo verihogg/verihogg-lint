@@ -30,7 +30,7 @@ void checkExtendClass(const SURELOG::FileContent* fC,
     const std::string superclassName = getSuperclassString(fC, id);
 
     const NodeId extendsId = fC->sl_get(id, VObjectType::paEXTENDS);
-    if (extendsId == zeroId) {
+    if (extendsId == kZeroId) {
       continue;
     }
 

@@ -46,7 +46,7 @@ auto main(int argc, const char** argv) -> int {
   SL::ErrorDefinition::init();
   verihogg_lint::RegisterLintRules();
 
-  initCommandLineParser(clp.get());
+  InitCommandLineParser(clp.get());
 
   if (kOpts.show_surelog_help) {
     std::array<const char*, 2> helpArgv = {args[0], "--help"};

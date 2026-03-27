@@ -25,7 +25,7 @@ void checkExternFunctionUndeclared(const SURELOG::FileContent* fC,
   for (auto& funcId : kFuncBodyDeclarations) {
     const SURELOG::NodeId classScopeId =
         fC->sl_get(funcId, VObjectType::paClass_scope);
-    if (classScopeId == zeroId) {
+    if (classScopeId == kZeroId) {
       continue;
     }
 
@@ -45,7 +45,7 @@ void checkExternFunctionUndeclared(const SURELOG::FileContent* fC,
       const SURELOG::NodeId protoId =
           fC->sl_collect(methodId, VObjectType::paFunction_prototype);
       const std::string protoName = getStringConst(fC, protoId);
-      if (protoName == funcName && externId != zeroId) {
+      if (protoName == funcName && externId != kZeroId) {
         found = true;
         break;
       }

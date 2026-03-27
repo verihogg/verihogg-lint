@@ -24,7 +24,7 @@ void checkExternConstraintUndeclared(const SURELOG::FileContent* fC,
   for (auto& constrDeclId : externConstraintDeclarations) {
     const SURELOG::NodeId classScopeId =
         fC->sl_get(constrDeclId, VObjectType::paClass_scope);
-    if (classScopeId == zeroId) {
+    if (classScopeId == kZeroId) {
       continue;
     }
 
@@ -42,7 +42,7 @@ void checkExternConstraintUndeclared(const SURELOG::FileContent* fC,
       const std::string protoName = getStringConst(fC, constrId);
       const SURELOG::NodeId externId =
           fC->sl_get(constrId, VObjectType::paExtern_qualifier);
-      if (protoName == constrName && externId != zeroId) {
+      if (protoName == constrName && externId != kZeroId) {
         found = true;
         break;
       }

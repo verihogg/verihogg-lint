@@ -20,7 +20,7 @@ auto getSuperclassStringsFromInterfaceClasses(const SURELOG::FileContent* fC,
       fC->sl_collect_all(id, VObjectType::paInterface_class_type);
   for (auto& id : classType) {
     const SURELOG::NodeId ident = fC->sl_get(id, VObjectType::paPs_identifier);
-    std::string superName = (ident == zeroId) ? "" : getStringConst(fC, ident);
+    std::string superName = (ident == kZeroId) ? "" : getStringConst(fC, ident);
     result.push_back(superName);
   }
 
@@ -58,7 +58,7 @@ void checkExtendInterfaceClass(const SURELOG::FileContent* fC,
 
       const SURELOG::NodeId extendsId =
           fC->sl_get(interfaceId, VObjectType::paEXTENDS);
-      if (extendsId == zeroId) {
+      if (extendsId == kZeroId) {
         continue;
       }
 

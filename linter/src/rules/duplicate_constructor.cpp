@@ -34,7 +34,7 @@ void checkDuplicateConstructor(const SURELOG::FileContent* fC,
     for (auto& id : methods) {
       id = fC->sl_get(id, VObjectType::paClass_method);
       id = fC->sl_get(id, VObjectType::paClass_constructor_declaration);
-      if (id == zeroId) {
+      if (id == kZeroId) {
         continue;
       }
 
@@ -48,7 +48,7 @@ void checkDuplicateConstructor(const SURELOG::FileContent* fC,
         item = fC->sl_get(item, VObjectType::paData_type_or_implicit);
         item = fC->sl_get(item, VObjectType::paData_type);
         item = fC->Child(item);
-        if (item == zeroId) {
+        if (item == kZeroId) {
           continue;
         }
 
