@@ -164,6 +164,8 @@ set(LINTER_SRC
     linter/src/rules/extern_function_undeclared.cpp
     linter/src/rules/extern_task_undeclared.cpp
     linter/src/rules/extend_interface_class.cpp
+    linter/src/rules/implement_class.cpp
+    linter/src/rules/implement_interface_class.cpp
 )
 #     linter/src/rules/extern_function_undeclared.cpp
 #     linter/src/rules/extern_task_undeclared.cpp

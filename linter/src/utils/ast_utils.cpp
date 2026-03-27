@@ -5,6 +5,7 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace SL = SURELOG;
 
@@ -156,12 +157,12 @@ auto getFullName(const SL::FileContent* fC, SL::NodeId id) -> std::string {
   return kPrefix + kName;
 }
 
-std::unordered_map<std::string, NodeId> getClassIds(const FileContent* fC) {
-  const std::vector<NodeId> classDeclarations =
+std::unordered_map<std::string, SL::NodeId> getClassIds(const FileContent* fC) {
+  const std::vector<SL::NodeId> classDeclarations =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
-  std::unordered_map<std::string, NodeId> classes;
+  std::unordered_map<std::string, SL::NodeId> classes;
 
-  for (NodeId classId : classDeclarations) {
+  for (SL::NodeId classId : classDeclarations) {
     const std::string fullName = getFullName(fC, classId);
     assert(classes.find(fullName) == classes.end());
     classes[fullName] = classId;
@@ -169,8 +170,48 @@ std::unordered_map<std::string, NodeId> getClassIds(const FileContent* fC) {
   return classes;
 }
 
-std::string removeFilePrefix(std::string str) {
-  size_t i = 0;
-  while (str[i++] != '@');
-  return std::string(str).substr(i, str.size());
+auto removeFilePrefix(std::string str) -> std::string {
+  size_t ind = 0;
+  while (str[ind++] != '@') {
+  }
+  return std::string(str).substr(ind, str.size());
+}
+
+auto getClassScope(const SL::FileContent* fC, SL::NodeId funcBodyId)
+    -> std::string {
+  const SL::NodeId kClassScopeId =
+      fC->sl_collect(funcBodyId, SL:: : VObjectType::paClass_scope);
+  if (kClassScopeId == zeroId) {
+    return "";
+  }
+  const SL::NodeId kClassTypeId =
+      fC->sl_get(kClassScopeId, SL::VObjectType::paClass_type);
+  if (kClassTypeId == zeroId) {
+    return "";
+  }
+  return getStringConst(fC, kClassTypeId);
+}
+
+auto getInterfaceClassSet(const SL::FileContent* fC)
+    -> std::unordered_set<std::string> {
+  const std::vector<SL::NodeId> kInterfaceClassDeclarations =
+      fC->sl_collect_all(fC->getRootNode(),
+                         SL::VObjectType::paInterface_class_declaration);
+  std::unordered_set<std::string> interfaceClassSet;
+  for (auto& interfaceClass : kInterfaceClassDeclarations) {
+    std::string interfaceClassName = getStringConst(fC, interfaceClass);
+    interfaceClassSet.insert(interfaceClassName);
+  }
+  return interfaceClassSet;
+}
+
+auto getClassSet(const SL::FileContent* fC) -> std::unordered_set<std::string> {
+  const std::vector<SL::NodeId> kClassDeclarations = fC->sl_collect_all(
+      fC->getRootNode(), SL::VObjectType::paClass_declaration);
+  std::unordered_set<std::string> classSet;
+  for (auto& classId : kClassDeclarations) {
+    std::string className = getStringConst(fC, classId);
+    classSet.insert(className);
+  }
+  return classSet;
 }

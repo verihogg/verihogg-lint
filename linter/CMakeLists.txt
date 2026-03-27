@@ -7,7 +7,7 @@ add_library(linter
   src/rules/extern_task_undeclared.cpp
   src/rules/extend_interface_class.cpp
   src/rules/implement_class.cpp
-  # src/rules/implement_interface_class.cpp
+  src/rules/implement_interface_class.cpp
   src/utils/init.cpp
   src/utils/ast_utils.cpp
   src/utils/location_utils.cpp
