@@ -8,8 +8,6 @@
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
-
 namespace {
 class DependencyGraph {
  public:
@@ -17,13 +15,15 @@ class DependencyGraph {
   ~DependencyGraph() = default;
 
   DependencyGraph(const DependencyGraph&) = delete;
-  DependencyGraph& operator=(const DependencyGraph&) = delete;
+  auto operator=(const DependencyGraph&) -> DependencyGraph& = delete;
 
   DependencyGraph(DependencyGraph&&) = default;
-  DependencyGraph& operator=(DependencyGraph&&) = default;
+  auto operator=(DependencyGraph&&) -> DependencyGraph& = default;
 
-  bool addVertex(NodeId id) {
-    if (contains(id)) return true;
+  auto addVertex(NodeId id) -> bool {
+    if (contains(id)) {
+      return true;
+    }
 
     auto [it, inserted] =
         adjacencyList.try_emplace(id, std::forward_list<unsigned>{});
@@ -34,7 +34,7 @@ class DependencyGraph {
     return false;
   }
 
-  bool addEdge(NodeId from, NodeId to) {
+  auto addEdge(NodeId from, NodeId to) -> bool {
     auto fromIt = adjacencyList.find(from);
     auto toIt = adjacencyList.find(to);
 
@@ -50,10 +50,12 @@ class DependencyGraph {
     return true;
   }
 
-  std::unordered_set<unsigned> findCyclicDependencies() const {
+  auto findCyclicDependencies() -> std::unordered_set<unsigned> const {
     std::unordered_set<unsigned> cyclicDependencies;
 
-    if (vertexCount == 0) return cyclicDependencies;
+    if (vertexCount == 0) {
+      return cyclicDependencies;
+    }
 
     std::vector<unsigned> stack;
     std::vector<unsigned> path;
@@ -102,18 +104,18 @@ class DependencyGraph {
     return cyclicDependencies;
   }
 
-  size_t size() const noexcept { return vertexCount; }
-  bool empty() const noexcept { return vertexCount == 0; }
+  auto size() const noexcept -> size_t { return vertexCount; }
+  auto empty() const noexcept -> bool { return vertexCount == 0; }
   void clear() noexcept {
     adjacencyList.clear();
     vertexCount = 0;
   }
 
-  bool contains(NodeId id) const noexcept {
+  auto contains(NodeId id) const noexcept -> bool {
     return adjacencyList.find(id) != adjacencyList.end();
   }
 
-  size_t outDegree(NodeId id) const {
+  auto outDegree(NodeId id) const -> size_t {
     auto it = adjacencyList.find(id);
     if (it == adjacencyList.end()) {
       return 0;
@@ -130,38 +132,45 @@ class DependencyGraph {
 
 void checkCircularInheritance(const FileContent* fC, ErrorContainer* errors,
                               SymbolTable* symbols) {
-  if (!fC) return;
+  if (!fC) {
+    return;
+  }
 
   DependencyGraph dependencyGraph;
-  const std::unordered_map<std::string, NodeId> classSet = getClassIds(fC);
+  const std::unordered_map<std::string, SURELOG::NodeId> classSet =
+      getClassIds(fC);
 
-  const std::vector<NodeId> classDeclarations =
+  const std::vector<SURELOG::NodeId> classDeclarations =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
 
   for (auto& classId : classDeclarations) {
     const std::string className = getStringConst(fC, classId);
-    if (isBuiltinClass(className)) continue;
+    if (isBuiltinClass(className)) {
+      continue;
+    }
 
     if (!dependencyGraph.addVertex(classId)) {
       throw std::runtime_error("Failed to add vertex: " +
-                               std::to_string(RawNodeId(classId)));
+                               std::to_string(sizeof(classId)));
     }
 
     const std::string superName = getSuperclassString(fC, classId);
-    if (superName == "") continue;
+    if (superName == "") {
+      continue;
+    }
 
     const std::string fullName = getPrefix(fC, classId) + superName;
-    const NodeId superId = classSet.at(fullName);
+    const SURELOG::NodeId superId = classSet.at(fullName);
     if (!dependencyGraph.addVertex(superId)) {
       throw std::runtime_error("Failed to add vertex: " +
-                               std::to_string(RawNodeId(superId)));
+                               std::to_string(sizeof(superId)));
     }
     dependencyGraph.addEdge(classId, superId);
   }
   std::unordered_set cyclicDependencies =
       dependencyGraph.findCyclicDependencies();
   for (auto& numOfId : cyclicDependencies) {
-    const NodeId id(numOfId);
+    const SURELOG::NodeId id(numOfId);
     const std::string name = getStringConst(fC, id);
     ReportError(fC, id, name, ErrorDefinition::LINT_CIRCULAR_INHERITANCE,
                 errors, symbols);

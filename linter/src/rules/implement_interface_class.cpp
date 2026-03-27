@@ -9,34 +9,42 @@
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
-
 namespace {
-std::string getSuperInterfaceString(const FileContent* fC, NodeId id) {
-  NodeId classType = id;
+auto getSuperInterfaceString(const FileContent* fC, SURELOG::NodeId id)
+    -> std::string {
+  SURELOG::NodeId classType = id;
   classType = fC->sl_get(classType, VObjectType::paInterface_class_type);
   classType = fC->sl_get(classType, VObjectType::paPs_identifier);
-  if (classType == zeroId) return "";
+  if (classType == zeroId) {
+    return "";
+  }
   return getStringConst(fC, classType);
 }
 }  // namespace
 
 void checkImplementInterfaceClass(const FileContent* fC, ErrorContainer* errors,
                                   SymbolTable* symbols) {
-  if (!fC) return;
+  if (!fC) {
+    return;
+  }
 
   std::unordered_set<std::string> classSet = getClassSet(fC);
   std::unordered_set<std::string> interfaceClassSet = getInterfaceClassSet(fC);
 
-  const std::vector<NodeId> classDeclarations =
+  const std::vector<SURELOG::NodeId> classDeclarations =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
 
   for (auto& classId : classDeclarations) {
-    const NodeId implementsId = fC->sl_get(classId, VObjectType::paIMPLEMENTS);
-    if (implementsId == zeroId) continue;
+    const SURELOG::NodeId implementsId =
+        fC->sl_get(classId, VObjectType::paIMPLEMENTS);
+    if (implementsId == zeroId) {
+      continue;
+    }
 
     const std::string superInterfaceName = getSuperInterfaceString(fC, classId);
-    if (superInterfaceName == "") continue;
+    if (superInterfaceName == "") {
+      continue;
+    }
 
     if (interfaceClassSet.count(superInterfaceName) == 0) {
       std::string className = getStringConst(fC, classId);

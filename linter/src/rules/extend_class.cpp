@@ -8,11 +8,12 @@
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
-
-void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
-                      SymbolTable* symbols) {
-  if (!fC) return;
+void checkExtendClass(const SURELOG::FileContent* fC,
+                      SURELOG::ErrorContainer* errors,
+                      SURELOG::SymbolTable* symbols) {
+  if (!fC) {
+    return;
+  }
 
   const std::vector<NodeId> classDeclarations =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
@@ -29,9 +30,13 @@ void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
     const std::string superclassName = getSuperclassString(fC, id);
 
     const NodeId extendsId = fC->sl_get(id, VObjectType::paEXTENDS);
-    if (extendsId == zeroId) continue;
+    if (extendsId == zeroId) {
+      continue;
+    }
 
-    if (isBuiltinClass(className) || superclassName == "") continue;
+    if (isBuiltinClass(className) || superclassName == "") {
+      continue;
+    }
 
     const std::vector<NodeId> superIdVector = classMap[superclassName];
     bool found = false;
@@ -47,7 +52,9 @@ void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
       }
     }
 
-    if (found) continue;
+    if (found) {
+      continue;
+    }
 
     ReportError(fC, id, superclassName, ErrorDefinition::LINT_EXTEND_CLASS,
                 errors, symbols);

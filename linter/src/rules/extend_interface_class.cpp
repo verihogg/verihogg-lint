@@ -9,18 +9,17 @@
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
-
 namespace {
-std::vector<std::string> getSuperclassStringsFromInterfaceClasses(
-    const FileContent* fC, NodeId id) {
+auto getSuperclassStringsFromInterfaceClasses(const SURELOG::FileContent* fC,
+                                              SURELOG::NodeId id)
+    -> std::vector<std::string> {
   assert(fC->Type(id) != VObjectType::paClass_declaration);
 
   std::vector<std::string> result;
-  const std::vector<NodeId> classType =
+  const std::vector<SURELOG::NodeId> classType =
       fC->sl_collect_all(id, VObjectType::paInterface_class_type);
   for (auto& id : classType) {
-    const NodeId ident = fC->sl_get(id, VObjectType::paPs_identifier);
+    const SURELOG::NodeId ident = fC->sl_get(id, VObjectType::paPs_identifier);
     std::string superName = (ident == zeroId) ? "" : getStringConst(fC, ident);
     result.push_back(superName);
   }
@@ -29,16 +28,18 @@ std::vector<std::string> getSuperclassStringsFromInterfaceClasses(
 }
 }  // namespace
 
-void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
-                               SymbolTable* symbols) {
-  if (!fC) return;
+void checkExtendInterfaceClass(const SURELOG::FileContent* fC,
+                               SURELOG::ErrorContainer* errors,
+                               SURELOG::SymbolTable* symbols) {
+  if (!fC) {
+    return;
+  }
 
-  std::cout << fC->printSubTree(fC->getRootNode()) << std::endl;
-  const NodeId rootNode = fC->getRootNode();
-  const std::vector<NodeId> interfaceClassDeclarations =
+  const SURELOG::NodeId rootNode = fC->getRootNode();
+  const std::vector<SURELOG::NodeId> interfaceClassDeclarations =
       fC->sl_collect_all(rootNode, VObjectType::paInterface_class_declaration);
 
-  std::map<std::string, std::vector<NodeId>> interfaceClassMap;
+  std::map<std::string, std::vector<SURELOG::NodeId>> interfaceClassMap;
   for (auto& id : interfaceClassDeclarations) {
     const std::string className = getStringConst(fC, id);
     interfaceClassMap[className].push_back(id);
@@ -51,12 +52,17 @@ void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
         getSuperclassStringsFromInterfaceClasses(fC, interfaceId);
 
     for (auto& superclassName : superclasses) {
-      if (isBuiltinClass(className) || superclassName == "") continue;
+      if (isBuiltinClass(className) || superclassName == "") {
+        continue;
+      }
 
-      const NodeId extendsId = fC->sl_get(interfaceId, VObjectType::paEXTENDS);
-      if (extendsId == zeroId) continue;
+      const SURELOG::NodeId extendsId =
+          fC->sl_get(interfaceId, VObjectType::paEXTENDS);
+      if (extendsId == zeroId) {
+        continue;
+      }
 
-      const std::vector<NodeId> superIdVector =
+      const std::vector<SURELOG::NodeId> superIdVector =
           interfaceClassMap[superclassName];
       bool found = false;
       for (auto& superId : superIdVector) {
@@ -71,7 +77,9 @@ void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
         }
       }
 
-      if (found) continue;
+      if (found) {
+        continue;
+      }
 
       ReportError(fC, interfaceId, className,
                   ErrorDefinition::LINT_EXTEND_INTERFACE_CLASS, errors,

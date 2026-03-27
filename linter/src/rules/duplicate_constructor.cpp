@@ -15,36 +15,42 @@
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+void checkDuplicateConstructor(const SURELOG::FileContent* fC,
+                               SURELOG::ErrorContainer* errors,
+                               SURELOG::SymbolTable* symbols) {
+  if (!fC) {
+    return;
+  }
 
-void checkDuplicateConstructor(const FileContent* fC, ErrorContainer* errors,
-                               SymbolTable* symbols) {
-  if (!fC) return;
-
-  const std::vector<NodeId> classDeclarations =
+  const std::vector<SURELOG::NodeId> classDeclarations =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
 
   for (auto& id : classDeclarations) {
     const std::string className = getStringConst(fC, id);
     std::map<std::vector<VObjectType>, bool> argTree;
-    std::vector<NodeId> methods = fC->sl_get_all(id, VObjectType::paClass_item);
+    std::vector<SURELOG::NodeId> methods =
+        fC->sl_get_all(id, VObjectType::paClass_item);
 
     for (auto& id : methods) {
       id = fC->sl_get(id, VObjectType::paClass_method);
       id = fC->sl_get(id, VObjectType::paClass_constructor_declaration);
-      if (id == zeroId) continue;
+      if (id == zeroId) {
+        continue;
+      }
 
       std::vector<VObjectType> types;
-      std::vector<NodeId> arguments;
+      std::vector<SURELOG::NodeId> arguments;
 
       id = fC->sl_get(id, VObjectType::paTf_port_list);
-      std::vector<NodeId> items =
+      std::vector<SURELOG::NodeId> items =
           fC->sl_get_all(id, VObjectType::paTf_port_item);
       for (auto& item : items) {
         item = fC->sl_get(item, VObjectType::paData_type_or_implicit);
         item = fC->sl_get(item, VObjectType::paData_type);
         item = fC->Child(item);
-        if (item == zeroId) continue;
+        if (item == zeroId) {
+          continue;
+        }
 
         const VObjectType type = fC->Type(item);
         types.push_back(type);

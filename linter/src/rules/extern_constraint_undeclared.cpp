@@ -7,41 +7,49 @@
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+void checkExternConstraintUndeclared(const SURELOG::FileContent* fC,
+                                     SURELOG::ErrorContainer* errors,
+                                     SURELOG::SymbolTable* symbols) {
+  if (!fC) {
+    return;
+  }
 
-void checkExternConstraintUndeclared(const FileContent* fC,
-                                     ErrorContainer* errors,
-                                     SymbolTable* symbols) {
-  if (!fC) return;
+  const std::unordered_map<std::string, SURELOG::NodeId> classes =
+      getClassIds(fC);
 
-  const std::unordered_map<std::string, NodeId> classes = getClassIds(fC);
-
-  const std::vector<NodeId> externConstraintDeclarations = fC->sl_collect_all(
-      fC->getRootNode(), VObjectType::paExtern_constraint_declaration);
+  const std::vector<SURELOG::NodeId> externConstraintDeclarations =
+      fC->sl_collect_all(fC->getRootNode(),
+                         VObjectType::paExtern_constraint_declaration);
 
   for (auto& constrDeclId : externConstraintDeclarations) {
-    const NodeId classScopeId =
+    const SURELOG::NodeId classScopeId =
         fC->sl_get(constrDeclId, VObjectType::paClass_scope);
-    if (classScopeId == zeroId) continue;
+    if (classScopeId == zeroId) {
+      continue;
+    }
 
     std::string fullName = getFullNameFromScope(fC, classScopeId);
-    if (classes.find(fullName) == classes.end()) continue;
+    if (classes.find(fullName) == classes.end()) {
+      continue;
+    }
 
-    const NodeId classId = classes.at(fullName);
+    const SURELOG::NodeId classId = classes.at(fullName);
     const std::string constrName = getStringConst(fC, constrDeclId);
-    const std::vector<NodeId> constrIds =
+    const std::vector<SURELOG::NodeId> constrIds =
         fC->sl_collect_all(classId, VObjectType::paConstraint_prototype);
     bool found = false;
     for (auto& constrId : constrIds) {
       const std::string protoName = getStringConst(fC, constrId);
-      const NodeId externId =
+      const SURELOG::NodeId externId =
           fC->sl_get(constrId, VObjectType::paExtern_qualifier);
       if (protoName == constrName && externId != zeroId) {
         found = true;
         break;
       }
     }
-    if (found) continue;
+    if (found) {
+      continue;
+    }
     ReportError(fC, constrDeclId, constrName,
                 ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED, errors,
                 symbols);

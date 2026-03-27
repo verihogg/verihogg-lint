@@ -6,13 +6,14 @@
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-using namespace SURELOG;
+void checkDuplicateClass(const SURELOG::FileContent* fC,
+                         SURELOG::ErrorContainer* errors,
+                         SURELOG::SymbolTable* symbols) {
+  if (!fC) {
+    return;
+  }
 
-void checkDuplicateClass(const FileContent* fC, ErrorContainer* errors,
-                         SymbolTable* symbols) {
-  if (!fC) return;
-
-  const std::vector<NodeId> classDeclarations =
+  const std::vector<SURELOG::NodeId> classDeclarations =
       fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
 
   std::unordered_set<std::string> seenSet;
