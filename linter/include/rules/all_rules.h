@@ -37,3 +37,4 @@
 #include "extend_class.h"
 #include "duplicate_constructor.h"
 #include "duplicate_class.h"
+#include "extern_constraint_undeclared.h"

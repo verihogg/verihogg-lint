@@ -155,3 +155,16 @@ auto getFullName(const SL::FileContent* fC, SL::NodeId id) -> std::string {
   }
   return kPrefix + kName;
 }
+
+std::unordered_map<std::string, NodeId> getClassIds(const FileContent* fC) {
+  const std::vector<NodeId> classDeclarations =
+      fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
+  std::unordered_map<std::string, NodeId> classes;
+
+  for (NodeId classId : classDeclarations) {
+    const std::string fullName = getFullName(fC, classId);
+    assert(classes.find(fullName) == classes.end());
+    classes[fullName] = classId;
+  }
+  return classes;
+}
