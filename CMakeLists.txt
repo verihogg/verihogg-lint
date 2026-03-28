@@ -170,7 +170,7 @@ set(LINTER_SRC
 
 
 add_library(verihoggLintLib ${LINTER_SRC})
-target_include_directories(verihoggLintLib PUBLIC linter/include) 
+target_include_directories(verihoggLintLib PUBLIC linter/include)
 
 foreach(f ${LINTER_SRC})
   if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
