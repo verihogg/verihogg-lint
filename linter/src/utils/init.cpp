@@ -1,5 +1,7 @@
 #include "utils/init.h"
 
+#include <Surelog/CommandLine/CommandLineParser.h>
+
 void InitCommandLineParser(SURELOG::CommandLineParser* clp) {
   clp->noPython();
   clp->setParse(true);

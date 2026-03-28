@@ -1,6 +1,15 @@
 #include "rules/duplicate_class.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
+#include <string>
 #include <unordered_set>
+#include <vector>
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"

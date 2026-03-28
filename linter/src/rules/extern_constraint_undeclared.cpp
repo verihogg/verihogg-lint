@@ -1,7 +1,16 @@
 #include "rules/extern_constraint_undeclared.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <cassert>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
@@ -25,11 +34,12 @@ void CheckExternConstraintUndeclared(const SURELOG::FileContent* fileContent,
   for (const auto& constrDeclId : kExternConstraintDeclarations) {
     const SURELOG::NodeId kClassScopeId =
         fileContent->sl_get(constrDeclId, SURELOG::VObjectType::paClass_scope);
-    if (kClassScopeId == kZeroId) {
+    if (!kClassScopeId) {
       continue;
     }
 
-    std::string fullName = GetFullNameFromScope(fileContent, kClassScopeId);
+    const std::string fullName =
+        GetFullNameFromScope(fileContent, kClassScopeId);
     if (!kClasses.contains(fullName)) {
       continue;
     }
@@ -43,7 +53,7 @@ void CheckExternConstraintUndeclared(const SURELOG::FileContent* fileContent,
       const std::string kProtoName = GetStringConst(fileContent, constrId);
       const SURELOG::NodeId kExternId = fileContent->sl_get(
           constrId, SURELOG::VObjectType::paExtern_qualifier);
-      if (kProtoName == kConstrName && kExternId != kZeroId) {
+      if (kProtoName == kConstrName && kExternId) {
         found = true;
         break;
       }

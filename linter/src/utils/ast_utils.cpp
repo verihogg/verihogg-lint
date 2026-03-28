@@ -1,8 +1,18 @@
 #include "utils/ast_utils.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <algorithm>
+#include <cassert>
+#include <cstddef>
 #include <sstream>
+#include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 #include "Surelog/Library/Library.h"
 
@@ -89,24 +99,24 @@ auto IsBuiltinClass(const std::string& className) -> bool {
 
 auto GetStringConst(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string {
-  SL::NodeId kStringId =
+  const SL::NodeId kStringId =
       fileContent->sl_get(node, SL::VObjectType::slStringConst);
-  if (kStringId == kZeroId) {
+  if (!kStringId) {
     return "";
   }
-  std::string kStr{fileContent->SymName(kStringId)};
+  const std::string kStr{fileContent->SymName(kStringId)};
   return kStr;
 }
 
 auto GetPrefix(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string {
   std::vector<std::string> contexts;
-  std::string libName{fileContent->getLibrary()->getName()};
+  const std::string libName{fileContent->getLibrary()->getName()};
   SL::NodeId tempId = fileContent->Parent(node);
 
   while (tempId) {
     SL::NodeId intermediateTempId;
-    SL::VObjectType type = fileContent->Type(tempId);
+    const SL::VObjectType type = fileContent->Type(tempId);
 
     switch (type) {
       case SL::VObjectType::paProgram_declaration: {
@@ -138,7 +148,8 @@ auto GetPrefix(const SL::FileContent* fileContent, SL::NodeId node)
       }
     }
 
-    std::string stringConst = GetStringConst(fileContent, intermediateTempId);
+    const std::string stringConst =
+        GetStringConst(fileContent, intermediateTempId);
     contexts.push_back(stringConst);
     tempId = fileContent->Parent(tempId);
   }
@@ -175,7 +186,7 @@ auto GetClassIds(const SL::FileContent* fileContent)
                                   SL::VObjectType::paClass_declaration);
   std::unordered_map<std::string, SL::NodeId> classes;
 
-  for (SL::NodeId classId : kClassDeclarations) {
+  for (const SL::NodeId classId : kClassDeclarations) {
     const std::string kClassName = GetFullName(fileContent, classId);
     if (IsBuiltinClass(kClassName)) {
       continue;
@@ -200,14 +211,14 @@ auto GetClassScope(const SL::FileContent* fileContent, SL::NodeId funcBodyNode)
   const SL::NodeId kClassTypeId =
       fileContent->sl_get(kClassScopeId, SL::VObjectType::paClass_type);
 
-  if (kClassTypeId == kZeroId) {
+  if (!kClassTypeId) {
     return scopes;
   }
   const std::vector<SL::NodeId> kIds =
       fileContent->sl_collect_all(funcBodyNode, SL::VObjectType::slStringConst);
 
   for (const auto& kId : kIds) {
-    std::string kStr{fileContent->SymName(kId)};
+    const std::string kStr{fileContent->SymName(kId)};
     scopes.push_back(kStr);
   }
 
@@ -222,7 +233,7 @@ auto GetInterfaceClassSet(const SL::FileContent* fileContent)
           SL::VObjectType::paInterface_class_declaration);
   std::unordered_set<std::string> interfaceClassSet;
   for (const auto& interfaceClass : kInterfaceClassDeclarations) {
-    std::string interfaceClassName =
+    const std::string interfaceClassName =
         GetStringConst(fileContent, interfaceClass);
     interfaceClassSet.insert(interfaceClassName);
   }
@@ -236,7 +247,7 @@ auto GetClassSet(const SL::FileContent* fileContent)
                                   SL::VObjectType::paClass_declaration);
   std::unordered_set<std::string> classSet;
   for (const auto& classId : kClassDeclarations) {
-    std::string className = GetStringConst(fileContent, classId);
+    const std::string className = GetStringConst(fileContent, classId);
     classSet.insert(className);
   }
   return classSet;
@@ -245,8 +256,7 @@ auto GetClassSet(const SL::FileContent* fileContent)
 auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string {
   std::stringstream sstream;
-  std::string prefix = GetPrefix(fileContent, node);
-  sstream << prefix;
+  sstream << GetPrefix(fileContent, node);
 
   const SL::NodeId kTempId =
       fileContent->sl_get(node, SL::VObjectType::paClass_type);
@@ -254,12 +264,12 @@ auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
       fileContent->sl_collect_all(kTempId, SL::VObjectType::slStringConst);
   assert(strIds.size() > 0);
 
-  std::string firstString{fileContent->SymName(kStrIds[0])};
+  const std::string firstString{fileContent->SymName(kStrIds[0])};
   sstream << firstString;
 
   for (size_t i = 1; i < kStrIds.size(); i++) {
     const SL::NodeId kStringId = kStrIds[i];
-    std::string scopeName{fileContent->SymName(kStringId)};
+    const std::string scopeName{fileContent->SymName(kStringId)};
     sstream << "::" << scopeName;
   }
   return sstream.str();
@@ -271,7 +281,7 @@ auto GetSuperclassString(const SL::FileContent* fileContent, SL::NodeId node)
 
   const SL::NodeId kClassType =
       fileContent->sl_get(node, SL::VObjectType::paClass_type);
-  if (kClassType == kZeroId) {
+  if (!kClassType) {
     return "";
   }
   return GetStringConst(fileContent, kClassType);

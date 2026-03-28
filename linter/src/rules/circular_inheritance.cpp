@@ -1,6 +1,16 @@
 #include "rules/circular_inheritance.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
+#include <cstddef>
 #include <forward_list>
+#include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -111,7 +121,7 @@ auto DependencyGraph::FindCyclicDependencies() -> std::unordered_set<unsigned> {
     stack.push_back(vertex);
 
     while (!stack.empty()) {
-      unsigned current = stack.back();
+      const unsigned current = stack.back();
 
       if (!visited.contains(current)) {
         visited.insert(current);
@@ -182,7 +192,7 @@ void CheckCircularInheritance(const SURELOG::FileContent* fileContent,
     }
     dependencyGraph.AddEdge(classId, kSuperId);
   }
-  std::unordered_set cyclicDependencies =
+  const std::unordered_set cyclicDependencies =
       dependencyGraph.FindCyclicDependencies();
   for (const auto& numOfId : cyclicDependencies) {
     const SURELOG::NodeId kNode(numOfId);

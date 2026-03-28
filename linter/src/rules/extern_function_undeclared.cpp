@@ -1,6 +1,14 @@
 #include "rules/extern_function_undeclared.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <cassert>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -26,11 +34,12 @@ void CheckExternFunctionUndeclared(const SURELOG::FileContent* fileContent,
   for (const auto& funcId : kFuncBodyDeclarations) {
     const SURELOG::NodeId kClassScopeId =
         fileContent->sl_get(funcId, SURELOG::VObjectType::paClass_scope);
-    if (kClassScopeId == kZeroId) {
+    if (!kClassScopeId) {
       continue;
     }
 
-    std::string fullName = GetFullNameFromScope(fileContent, kClassScopeId);
+    const std::string fullName =
+        GetFullNameFromScope(fileContent, kClassScopeId);
     if (!kClasses.contains(fullName)) {
       continue;
     }
@@ -46,7 +55,7 @@ void CheckExternFunctionUndeclared(const SURELOG::FileContent* fileContent,
       const SURELOG::NodeId kProtoId = fileContent->sl_collect(
           methodId, SURELOG::VObjectType::paFunction_prototype);
       const std::string kProtoName = GetStringConst(fileContent, kProtoId);
-      if (kProtoName == kFuncName && kExternId != kZeroId) {
+      if (kProtoName == kFuncName && kExternId) {
         found = true;
         break;
       }

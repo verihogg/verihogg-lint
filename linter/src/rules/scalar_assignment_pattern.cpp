@@ -24,9 +24,10 @@ auto Is1BitScalarKeyword(SL::VObjectType type) -> bool {
       SL::VObjectType::paIntVec_TypeLogic,
       SL::VObjectType::paIntVec_TypeReg,
   };
-  return std::ranges::any_of(kScalarTypes, [type](SL::VObjectType vObjectType) {
-    return vObjectType == type;
-  });
+  return std::ranges::any_of(kScalarTypes,
+                             [type](SL::VObjectType vObjectType) -> bool {
+                               return vObjectType == type;
+                             });
 }
 
 auto IsScalarVariable(const SL::FileContent* fileContent, SL::NodeId root,

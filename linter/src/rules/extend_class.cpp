@@ -1,7 +1,15 @@
 #include "rules/extend_class.h"
 
-#include <cassert>
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
+#include <cstddef>
 #include <map>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -33,7 +41,7 @@ void CheckExtendClass(const SURELOG::FileContent* fileContent,
 
     const SURELOG::NodeId kExtendsId =
         fileContent->sl_get(kId, SURELOG::VObjectType::paEXTENDS);
-    if (kExtendsId == kZeroId) {
+    if (!kExtendsId) {
       continue;
     }
 

@@ -24,7 +24,7 @@ static constexpr std::array kValueTypes = {
 namespace {
 auto ValueHasWildcard(std::string_view val) -> bool {
   static constexpr std::string_view kWildcardChars = "xXzZ?";
-  return std::ranges::any_of(val, [](char chr) {
+  return std::ranges::any_of(val, [](char chr) -> bool {
     return kWildcardChars.find(chr) != std::string_view::npos;
   });
 }
@@ -48,7 +48,7 @@ auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
       return kCurrent;
     }
 
-    if (std::ranges::any_of(kValueTypes, [kType](SL::VObjectType tpe) {
+    if (std::ranges::any_of(kValueTypes, [kType](SL::VObjectType tpe) -> bool {
           return tpe == kType;
         })) {
       if (ValueHasWildcard(fileContent->SymName(kCurrent))) {

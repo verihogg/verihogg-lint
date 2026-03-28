@@ -87,7 +87,7 @@ void testCheckWithErrorsExpected(
                               fs::directory_iterator{});
 
   for (auto& file_path : paths) {
-    std::cout << "TESTING FILE:" << file_path << std::endl;
+    std::cout << "TESTING FILE:" << file_path << "\n";
     auto symbols = std::make_unique<SURELOG::SymbolTable>();
     auto errors = std::make_unique<SURELOG::ErrorContainer>(symbols.get());
 

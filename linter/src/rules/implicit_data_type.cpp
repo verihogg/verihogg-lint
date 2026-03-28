@@ -38,9 +38,10 @@ auto HasExplicitType(const SL::FileContent* fileContent, SL::NodeId dataDecl)
       SL::VObjectType::paClass_type,
       SL::VObjectType::paIntVec_TypeBit,
   };
-  return std::ranges::any_of(kExplicitTypeNodes, [&](SL::VObjectType type) {
-    return !fileContent->sl_collect_all(dataDecl, type).empty();
-  });
+  return std::ranges::any_of(
+      kExplicitTypeNodes, [&](SL::VObjectType type) -> bool {
+        return !fileContent->sl_collect_all(dataDecl, type).empty();
+      });
 }
 
 auto CollectProceduralRanges(const SL::FileContent* fileContent,
@@ -69,9 +70,10 @@ auto IsPhantomNode(const SL::FileContent* fileContent, SL::NodeId dataDecl,
   }
 
   uint32_t const kDeclLine = fileContent->Line(dataDecl);
-  return std::ranges::any_of(ranges, [kDeclLine](const LineRange& range) {
-    return Includes(range, kDeclLine);
-  });
+  return std::ranges::any_of(ranges,
+                             [kDeclLine](const LineRange& range) -> bool {
+                               return Includes(range, kDeclLine);
+                             });
 }
 }  // namespace
 

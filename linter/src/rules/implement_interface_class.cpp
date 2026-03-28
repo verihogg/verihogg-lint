@@ -1,5 +1,12 @@
 #include "rules/implement_interface_class.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <cassert>
 #include <string>
 #include <unordered_set>
@@ -17,7 +24,7 @@ auto GetSuperInterfaceString(const SURELOG::FileContent* fileContent,
                                   SURELOG::VObjectType::paInterface_class_type);
   classType =
       fileContent->sl_get(classType, SURELOG::VObjectType::paPs_identifier);
-  if (classType == kZeroId) {
+  if (!classType) {
     return "";
   }
   return GetStringConst(fileContent, classType);
@@ -31,8 +38,8 @@ void CheckImplementInterfaceClass(const SURELOG::FileContent* fileContent,
     return;
   }
 
-  std::unordered_set<std::string> classSet = GetClassSet(fileContent);
-  std::unordered_set<std::string> interfaceClassSet =
+  const std::unordered_set<std::string> classSet = GetClassSet(fileContent);
+  const std::unordered_set<std::string> interfaceClassSet =
       GetInterfaceClassSet(fileContent);
 
   const std::vector<SURELOG::NodeId> kClassDeclarations =
@@ -42,7 +49,7 @@ void CheckImplementInterfaceClass(const SURELOG::FileContent* fileContent,
   for (const auto& classId : kClassDeclarations) {
     const SURELOG::NodeId kImplementsId =
         fileContent->sl_get(classId, SURELOG::VObjectType::paIMPLEMENTS);
-    if (kImplementsId == kZeroId) {
+    if (!kImplementsId) {
       continue;
     }
 
@@ -53,7 +60,7 @@ void CheckImplementInterfaceClass(const SURELOG::FileContent* fileContent,
     }
 
     if (!interfaceClassSet.contains(kSuperInterfaceName)) {
-      std::string className = GetStringConst(fileContent, classId);
+      const std::string className = GetStringConst(fileContent, classId);
       ReportError(fileContent, classId, className,
                   verihogg_lint::LINT_IMPLEMENT_INTERFACE_CLASS, errors,
                   symbols);

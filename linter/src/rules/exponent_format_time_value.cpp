@@ -93,8 +93,8 @@ auto TokenContainsExponent(const SL::FileContent* fileContent,
     return false;
   }
 
-  return std::ranges::any_of(kText,
-                             [](char chr) { return chr == 'e' || chr == 'E'; });
+  return std::ranges::any_of(
+      kText, [](char chr) -> bool { return chr == 'e' || chr == 'E'; });
 }
 void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
                                  SL::NodeId timeLiteral,

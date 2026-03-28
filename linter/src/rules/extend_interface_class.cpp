@@ -1,7 +1,16 @@
 #include "rules/extend_interface_class.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <cassert>
+#include <cstddef>
 #include <map>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -21,8 +30,8 @@ auto GetSuperclassStringsFromInterfaceClasses(
   for (const auto& typeId : kClassType) {
     const SURELOG::NodeId kIdent =
         fileContent->sl_get(typeId, SURELOG::VObjectType::paPs_identifier);
-    std::string superName =
-        (kIdent == kZeroId) ? "" : GetStringConst(fileContent, kIdent);
+    const std::string superName =
+        (!kIdent) ? "" : GetStringConst(fileContent, kIdent);
     result.push_back(superName);
   }
 
@@ -49,7 +58,7 @@ void CheckExtendInterfaceClass(const SURELOG::FileContent* fileContent,
   }
 
   for (const auto& interfaceId : kInterfaceClassDeclarations) {
-    std::string className = GetStringConst(fileContent, interfaceId);
+    const std::string className = GetStringConst(fileContent, interfaceId);
     const std::string kMainPrefix = GetPrefix(fileContent, interfaceId);
     const std::vector<std::string> kSuperclasses =
         GetSuperclassStringsFromInterfaceClasses(fileContent, interfaceId);
@@ -61,7 +70,7 @@ void CheckExtendInterfaceClass(const SURELOG::FileContent* fileContent,
 
       const SURELOG::NodeId kExtendsId =
           fileContent->sl_get(interfaceId, SURELOG::VObjectType::paEXTENDS);
-      if (kExtendsId == kZeroId) {
+      if (!kExtendsId) {
         continue;
       }
 

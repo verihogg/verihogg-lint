@@ -1,5 +1,12 @@
 #include "rules/implement_class.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <cassert>
 #include <string>
 #include <unordered_set>
@@ -19,7 +26,7 @@ auto GetSuperclassStringFromInterfaceClass(
                                   SURELOG::VObjectType::paInterface_class_type);
   classType =
       fileContent->sl_get(classType, SURELOG::VObjectType::paPs_identifier);
-  if (classType == kZeroId) {
+  if (!classType) {
     return "";
   }
   return GetStringConst(fileContent, classType);
@@ -34,9 +41,9 @@ void CheckImplementClass(const SURELOG::FileContent* fileContent,
     return;
   }
 
-  std::unordered_set<std::string> interfaceClassSet =
+  const std::unordered_set<std::string> interfaceClassSet =
       GetInterfaceClassSet(fileContent);
-  std::unordered_set<std::string> classSet = GetClassSet(fileContent);
+  const std::unordered_set<std::string> classSet = GetClassSet(fileContent);
 
   const std::vector<SURELOG::NodeId> kClassDeclarations =
       fileContent->sl_collect_all(fileContent->getRootNode(),
@@ -45,7 +52,7 @@ void CheckImplementClass(const SURELOG::FileContent* fileContent,
   for (const auto& classId : kClassDeclarations) {
     const SURELOG::NodeId kImplementsId =
         fileContent->sl_get(classId, SURELOG::VObjectType::paIMPLEMENTS);
-    if (kImplementsId == kZeroId) {
+    if (!kImplementsId) {
       continue;
     }
 
@@ -57,7 +64,7 @@ void CheckImplementClass(const SURELOG::FileContent* fileContent,
     }
 
     if (classSet.contains(kSuperclassName)) {
-      std::string className = GetStringConst(fileContent, classId);
+      const std::string className = GetStringConst(fileContent, classId);
       ReportError(fileContent, classId, className,
                   verihogg_lint::LINT_IMPLEMENT_CLASS, errors, symbols);
     }

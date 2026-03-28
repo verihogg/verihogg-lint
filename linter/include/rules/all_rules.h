@@ -3,20 +3,16 @@
 #include "assertion_statement_atribute_instance.h"
 #include "assignment_pattern.h"
 #include "assignment_pattern_context.h"
-
 #include "class_variable_lifetime.h"
 #include "concatenation_multiplier.h"
 #include "covergroup_expression.h"
 #include "coverpoint_expression_type.h"
 #include "dpi_decl_string.h"
-
 #include "empty_assignment_pattern.h"
 #include "exponent_format_time_value.h"
-
 #include "fatal_rule.h"
 #include "foreach_loop_condition.h"
 #include "hierarchical_interface_identifier.h"
-
 #include "implicit_data_type.h"
 #include "inside_operator.h"
 #include "inside_operator_range.h"

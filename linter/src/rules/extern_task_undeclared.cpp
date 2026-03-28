@@ -1,7 +1,16 @@
 #include "rules/extern_task_undeclared.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <cassert>
+#include <string>
 #include <unordered_map>
+#include <vector>
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
@@ -31,11 +40,12 @@ void CheckExternTaskUndeclared(const SURELOG::FileContent* fileContent,
 
     const SURELOG::NodeId kClassScopeId =
         fileContent->sl_get(kTaskBodyId, SURELOG::VObjectType::paClass_scope);
-    if (kClassScopeId == kZeroId) {
+    if (!kClassScopeId) {
       continue;
     }
 
-    std::string fullName = GetFullNameFromScope(fileContent, kClassScopeId);
+    const std::string fullName =
+        GetFullNameFromScope(fileContent, kClassScopeId);
     if (!kClasses.contains(fullName)) {
       continue;
     }
@@ -51,7 +61,7 @@ void CheckExternTaskUndeclared(const SURELOG::FileContent* fileContent,
       const SURELOG::NodeId kProtoId = fileContent->sl_collect(
           methodId, SURELOG::VObjectType::paTask_prototype);
       const std::string kProtoName = GetStringConst(fileContent, kProtoId);
-      if (kProtoName == kFuncName && kExternId != kZeroId) {
+      if (kProtoName == kFuncName && kExternId) {
         found = true;
         break;
       }

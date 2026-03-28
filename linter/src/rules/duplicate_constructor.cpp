@@ -1,7 +1,15 @@
 #include "rules/duplicate_constructor.h"
 
+#include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
+
 #include <cassert>
 #include <map>
+#include <string>
 #include <vector>
 
 #include "main/lint_rules.h"
@@ -30,12 +38,12 @@ void CheckDuplicateConstructor(const SURELOG::FileContent* fileContent,
           fileContent->sl_get(methodId, SURELOG::VObjectType::paClass_method);
       methodId = fileContent->sl_get(
           methodId, SURELOG::VObjectType::paClass_constructor_declaration);
-      if (methodId == kZeroId) {
+      if (!methodId) {
         continue;
       }
 
       std::vector<SURELOG::VObjectType> types;
-      std::vector<SURELOG::NodeId> arguments;
+      const std::vector<SURELOG::NodeId> arguments;
 
       methodId =
           fileContent->sl_get(methodId, SURELOG::VObjectType::paTf_port_list);
@@ -46,7 +54,7 @@ void CheckDuplicateConstructor(const SURELOG::FileContent* fileContent,
             item, SURELOG::VObjectType::paData_type_or_implicit);
         item = fileContent->sl_get(item, SURELOG::VObjectType::paData_type);
         item = fileContent->Child(item);
-        if (item == kZeroId) {
+        if (!item) {
           continue;
         }
 
