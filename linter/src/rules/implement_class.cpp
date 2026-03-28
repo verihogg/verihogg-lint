@@ -15,9 +15,10 @@ auto GetSuperclassStringFromInterfaceClass(
     const SURELOG::FileContent* fileContent, SURELOG::NodeId node)
     -> std::string {
   SURELOG::NodeId classType = node;
+  classType = fileContent->sl_get(classType,
+                                  SURELOG::VObjectType::paInterface_class_type);
   classType =
-      fileContent->sl_get(classType, VObjectType::paInterface_class_type);
-  classType = fileContent->sl_get(classType, VObjectType::paPs_identifier);
+      fileContent->sl_get(classType, SURELOG::VObjectType::paPs_identifier);
   if (classType == kZeroId) {
     return "";
   }
@@ -26,8 +27,9 @@ auto GetSuperclassStringFromInterfaceClass(
 
 }  // namespace
 
-void CheckImplementClass(const FileContent* fileContent, ErrorContainer* errors,
-                         SymbolTable* symbols) {
+void CheckImplementClass(const SURELOG::FileContent* fileContent,
+                         SURELOG::ErrorContainer* errors,
+                         SURELOG::SymbolTable* symbols) {
   if (fileContent == nullptr) {
     return;
   }
@@ -38,11 +40,11 @@ void CheckImplementClass(const FileContent* fileContent, ErrorContainer* errors,
 
   const std::vector<SURELOG::NodeId> kClassDeclarations =
       fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  VObjectType::paClass_declaration);
+                                  SURELOG::VObjectType::paClass_declaration);
 
   for (const auto& classId : kClassDeclarations) {
     const SURELOG::NodeId kImplementsId =
-        fileContent->sl_get(classId, VObjectType::paIMPLEMENTS);
+        fileContent->sl_get(classId, SURELOG::VObjectType::paIMPLEMENTS);
     if (kImplementsId == kZeroId) {
       continue;
     }

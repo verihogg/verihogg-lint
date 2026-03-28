@@ -16,11 +16,11 @@ auto GetSuperclassStringsFromInterfaceClasses(
   assert(fileContent->Type(id) != VObjectType::paClass_declaration);
 
   std::vector<std::string> result;
-  const std::vector<SURELOG::NodeId> kClassType =
-      fileContent->sl_collect_all(node, VObjectType::paInterface_class_type);
+  const std::vector<SURELOG::NodeId> kClassType = fileContent->sl_collect_all(
+      node, SURELOG::VObjectType::paInterface_class_type);
   for (const auto& typeId : kClassType) {
     const SURELOG::NodeId kIdent =
-        fileContent->sl_get(typeId, VObjectType::paPs_identifier);
+        fileContent->sl_get(typeId, SURELOG::VObjectType::paPs_identifier);
     std::string superName =
         (kIdent == kZeroId) ? "" : GetStringConst(fileContent, kIdent);
     result.push_back(superName);
@@ -39,8 +39,8 @@ void CheckExtendInterfaceClass(const SURELOG::FileContent* fileContent,
 
   const SURELOG::NodeId kRootNode = fileContent->getRootNode();
   const std::vector<SURELOG::NodeId> kInterfaceClassDeclarations =
-      fileContent->sl_collect_all(kRootNode,
-                                  VObjectType::paInterface_class_declaration);
+      fileContent->sl_collect_all(
+          kRootNode, SURELOG::VObjectType::paInterface_class_declaration);
 
   std::map<std::string, std::vector<SURELOG::NodeId>> interfaceClassMap;
   for (const auto& node : kInterfaceClassDeclarations) {
@@ -60,7 +60,7 @@ void CheckExtendInterfaceClass(const SURELOG::FileContent* fileContent,
       }
 
       const SURELOG::NodeId kExtendsId =
-          fileContent->sl_get(interfaceId, VObjectType::paEXTENDS);
+          fileContent->sl_get(interfaceId, SURELOG::VObjectType::paEXTENDS);
       if (kExtendsId == kZeroId) {
         continue;
       }

@@ -15,7 +15,7 @@ void CheckDuplicateClass(const SURELOG::FileContent* fileContent,
 
   const std::vector<SURELOG::NodeId> kClassDeclarations =
       fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  VObjectType::paClass_declaration);
+                                  SURELOG::VObjectType::paClass_declaration);
 
   std::unordered_set<std::string> seenSet;
   std::unordered_set<std::string> duplicateSet;

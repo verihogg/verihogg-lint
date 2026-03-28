@@ -18,19 +18,19 @@ void CheckExternTaskUndeclared(const SURELOG::FileContent* fileContent,
 
   const std::vector<SURELOG::NodeId> kTaskDeclarations =
       fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  VObjectType::paTask_declaration);
+                                  SURELOG::VObjectType::paTask_declaration);
 
   for (const auto& taskId : kTaskDeclarations) {
     const SURELOG::NodeId kParent = fileContent->Parent(taskId);
-    if (fileContent->Type(kParent) == VObjectType::paClass_method) {
+    if (fileContent->Type(kParent) == SURELOG::VObjectType::paClass_method) {
       continue;
     }
 
-    const SURELOG::NodeId kTaskBodyId =
-        fileContent->sl_get(taskId, VObjectType::paTask_body_declaration);
+    const SURELOG::NodeId kTaskBodyId = fileContent->sl_get(
+        taskId, SURELOG::VObjectType::paTask_body_declaration);
 
     const SURELOG::NodeId kClassScopeId =
-        fileContent->sl_get(kTaskBodyId, VObjectType::paClass_scope);
+        fileContent->sl_get(kTaskBodyId, SURELOG::VObjectType::paClass_scope);
     if (kClassScopeId == kZeroId) {
       continue;
     }
@@ -42,14 +42,14 @@ void CheckExternTaskUndeclared(const SURELOG::FileContent* fileContent,
 
     const SURELOG::NodeId kClassId = kClasses.at(fullName);
     const std::string kFuncName = GetStringConst(fileContent, kTaskBodyId);
-    const std::vector<SURELOG::NodeId> kMethodIds =
-        fileContent->sl_collect_all(kClassId, VObjectType::paClass_method);
+    const std::vector<SURELOG::NodeId> kMethodIds = fileContent->sl_collect_all(
+        kClassId, SURELOG::VObjectType::paClass_method);
     bool found = false;
     for (const auto& methodId : kMethodIds) {
-      const SURELOG::NodeId kExternId =
-          fileContent->sl_collect(methodId, VObjectType::paExtern_qualifier);
-      const SURELOG::NodeId kProtoId =
-          fileContent->sl_collect(methodId, VObjectType::paTask_prototype);
+      const SURELOG::NodeId kExternId = fileContent->sl_collect(
+          methodId, SURELOG::VObjectType::paExtern_qualifier);
+      const SURELOG::NodeId kProtoId = fileContent->sl_collect(
+          methodId, SURELOG::VObjectType::paTask_prototype);
       const std::string kProtoName = GetStringConst(fileContent, kProtoId);
       if (kProtoName == kFuncName && kExternId != kZeroId) {
         found = true;

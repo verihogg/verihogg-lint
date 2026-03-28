@@ -18,12 +18,13 @@ void CheckExternConstraintUndeclared(const SURELOG::FileContent* fileContent,
       GetClassIds(fileContent);
 
   const std::vector<SURELOG::NodeId> kExternConstraintDeclarations =
-      fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  VObjectType::paExtern_constraint_declaration);
+      fileContent->sl_collect_all(
+          fileContent->getRootNode(),
+          SURELOG::VObjectType::paExtern_constraint_declaration);
 
   for (const auto& constrDeclId : kExternConstraintDeclarations) {
     const SURELOG::NodeId kClassScopeId =
-        fileContent->sl_get(constrDeclId, VObjectType::paClass_scope);
+        fileContent->sl_get(constrDeclId, SURELOG::VObjectType::paClass_scope);
     if (kClassScopeId == kZeroId) {
       continue;
     }
@@ -36,12 +37,12 @@ void CheckExternConstraintUndeclared(const SURELOG::FileContent* fileContent,
     const SURELOG::NodeId kClassId = kClasses.at(fullName);
     const std::string kConstrName = GetStringConst(fileContent, constrDeclId);
     const std::vector<SURELOG::NodeId> kConstrIds = fileContent->sl_collect_all(
-        kClassId, VObjectType::paConstraint_prototype);
+        kClassId, SURELOG::VObjectType::paConstraint_prototype);
     bool found = false;
     for (const auto& constrId : kConstrIds) {
       const std::string kProtoName = GetStringConst(fileContent, constrId);
-      const SURELOG::NodeId kExternId =
-          fileContent->sl_get(constrId, VObjectType::paExtern_qualifier);
+      const SURELOG::NodeId kExternId = fileContent->sl_get(
+          constrId, SURELOG::VObjectType::paExtern_qualifier);
       if (kProtoName == kConstrName && kExternId != kZeroId) {
         found = true;
         break;
