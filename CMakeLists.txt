@@ -169,8 +169,8 @@ set(LINTER_SRC
 #     linter/src/rules/extern_task_undeclared.cpp
 
 
-add_library(productionLibrary ${LINTER_SRC})
-target_include_directories(productionLibrary PUBLIC linter/include) 
+add_library(verihoggLintLib ${LINTER_SRC})
+target_include_directories(verihoggLintLib PUBLIC linter/include) 
 
 foreach(f ${LINTER_SRC})
   if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
@@ -182,7 +182,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 
-add_executable(${PROJECT_NAME} $<TARGET_OBJECTS:productionLibrary> linter/src/main/lint.cpp)
+add_executable(${PROJECT_NAME} $<TARGET_OBJECTS:verihoggLintLib> linter/src/main/lint.cpp)
 
 target_include_directories(${PROJECT_NAME}
   PUBLIC
@@ -193,8 +193,8 @@ target_include_directories(${PROJECT_NAME}
     ${ANTLR_INCLUDE_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC productionLibrary)
-TARGET_link_libraries(${PROJECT_NAME} PUBLIC ${SURELOG_LIBRARY})
+target_link_libraries(${PROJECT_NAME} PUBLIC verihoggLintLib)
+target_link_libraries(${PROJECT_NAME} PUBLIC ${SURELOG_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${UHDM_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${CAPNP_LIBRARY})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ANTLR_LIBRARY})
@@ -203,7 +203,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARY})
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /bigobj)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -ggdb -Og -Wextra -Wpedantic -Werror)
 endif()
 
 # Install rule
