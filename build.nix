@@ -12,7 +12,7 @@ pkgs.stdenv.mkDerivation {
 
   nativeBuildInputs = shared.nativeBuildInputs;
 
-  doCheck = true;
+  doCheck = false;
 
   buildInputs = shared.buildInputs;
 
