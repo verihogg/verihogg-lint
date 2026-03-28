@@ -51,25 +51,10 @@ class DependencyGraph {
     return true;
   }
 
-  auto FindCyclicDependencies() -> std::unordered_set<unsigned> const;
-
-  auto Size() const noexcept -> size_t { return vertexCount; }
-  auto Empty() const noexcept -> bool { return vertexCount == 0; }
-  void Clear() noexcept {
-    adjacencyList.clear();
-    vertexCount = 0;
-  }
+  auto FindCyclicDependencies() -> std::unordered_set<unsigned>;
 
   auto Contains(SURELOG::NodeId node) const noexcept -> bool {
     return adjacencyList.contains(node);
-  }
-
-  auto OutDegree(SURELOG::NodeId node) const -> size_t {
-    auto element = adjacencyList.find(node);
-    if (element == adjacencyList.end()) {
-      return 0;
-    }
-    return std::distance(element->second.begin(), element->second.end());
   }
 
  private:
@@ -85,15 +70,14 @@ void BackTrackVertex(std::vector<unsigned>& path, unsigned current,
   }
 }
 void CheckAdjacentElement(
-    std::unordered_map<unsigned, std::forward_list<unsigned>> adjacencyList,
-    unsigned current, std::unordered_set<unsigned> cyclicDependencies,
-    std::vector<unsigned> stack, std::unordered_set<unsigned>& visited,
+    std::unordered_map<unsigned, std::forward_list<unsigned>>& adjacencyList,
+    unsigned current, std::unordered_set<unsigned>& cyclicDependencies,
+    std::vector<unsigned>& stack, std::unordered_set<unsigned>& visited,
     std::unordered_set<unsigned>& inCurrentPath) {
   auto element = adjacencyList.find(current);
-  if (element != adjacencyList.end()) {
+  if (element == adjacencyList.end()) {
     return;
   }
-
   for (auto neighbor : element->second) {
     if (inCurrentPath.contains(neighbor)) {
       cyclicDependencies.insert(SURELOG::NodeId(current));
@@ -104,8 +88,7 @@ void CheckAdjacentElement(
   }
 }
 
-auto DependencyGraph::FindCyclicDependencies()
-    -> std::unordered_set<unsigned> const {
+auto DependencyGraph::FindCyclicDependencies() -> std::unordered_set<unsigned> {
   std::unordered_set<unsigned> cyclicDependencies;
 
   if (vertexCount == 0) {
@@ -134,8 +117,20 @@ auto DependencyGraph::FindCyclicDependencies()
         visited.insert(current);
         inCurrentPath.insert(current);
         path.push_back(current);
+
         CheckAdjacentElement(adjacencyList, current, cyclicDependencies, stack,
                              visited, inCurrentPath);
+        // auto element = adjacencyList.find(current);
+        // if (element != adjacencyList.end()) {
+        //   for (auto neighbor : element->second) {
+        //     if (inCurrentPath.contains(neighbor)) {
+        //       cyclicDependencies.insert(SURELOG::NodeId(current));
+        //     }
+        //     if (!visited.contains(neighbor)) {
+        //       stack.push_back(neighbor);
+        //     }
+        //   }
+        // }
       } else {
         stack.pop_back();
         BackTrackVertex(path, current, inCurrentPath);
