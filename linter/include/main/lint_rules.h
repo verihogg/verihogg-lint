@@ -59,6 +59,17 @@ inline constexpr ED::ErrorType LINT_MISSING_TASK_IMPLEMENTATION = LintId(770);
 inline constexpr ED::ErrorType LINT_FUNC_IMPL_SCOPE = LintId(771);
 inline constexpr ED::ErrorType LINT_TASK_IMPL_SCOPE = LintId(772);
 inline constexpr ED::ErrorType LINT_CONSTRAINT_IMPL_SCOPE = LintId(773);
+
+inline constexpr ED::ErrorType LINT_EXTEND_CLASS = LintId(774);
+inline constexpr ED::ErrorType LINT_DUPLICATE_CONSTRUCTOR = LintId(775);
+inline constexpr ED::ErrorType LINT_DUPLICATE_CLASS = LintId(776);
+inline constexpr ED::ErrorType LINT_EXTERN_CONSTRAINT_UNDECLARED = LintId(777);
+inline constexpr ED::ErrorType LINT_EXTERN_FUNCTION_UNDECLARED = LintId(778);
+inline constexpr ED::ErrorType LINT_EXTERN_TASK_UNDECLARED = LintId(779);
+inline constexpr ED::ErrorType LINT_EXTEND_INTERFACE_CLASS = LintId(780);
+inline constexpr ED::ErrorType LINT_IMPLEMENT_CLASS = LintId(781);
+inline constexpr ED::ErrorType LINT_IMPLEMENT_INTERFACE_CLASS = LintId(782);
+inline constexpr ED::ErrorType LINT_CIRCULAR_INHERITANCE = LintId(783);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -173,6 +184,34 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{
         .type = LINT_CONSTRAINT_IMPL_SCOPE,
         .text = "extern constraint implemented outside of its class scope: %s"},
+
+    LintRuleInfo{.type = LINT_EXTEND_CLASS,
+                 .text = "Extending non existing class %s"},
+    LintRuleInfo{.type = LINT_DUPLICATE_CONSTRUCTOR,
+                 .text = "Duplicate constructor %s already declared"},
+    LintRuleInfo{.type = LINT_DUPLICATE_CLASS,
+                 .text = "Duplicate class %s, already declared"},
+    LintRuleInfo{
+        .type = LINT_EXTERN_CONSTRAINT_UNDECLARED,
+        .text =
+            "Outer class constraint was not declared extern inside class %s"},
+    LintRuleInfo{
+        .type = LINT_EXTERN_FUNCTION_UNDECLARED,
+        .text = "Outer class function was not declared extern inside class %s"},
+    LintRuleInfo{
+        .type = LINT_EXTERN_TASK_UNDECLARED,
+        .text = "Outer class task was not declared extern inside class %s"},
+    LintRuleInfo{
+        .type = LINT_EXTEND_INTERFACE_CLASS,
+        .text =
+            "Extending interface class %s by non-interface class not allowed"},
+    LintRuleInfo{
+        .type = LINT_IMPLEMENT_CLASS,
+        .text = "Implementing non-interface class %s by class not allowed"},
+    LintRuleInfo{.type = LINT_IMPLEMENT_INTERFACE_CLASS,
+                 .text = "Implementing non existing interface class %s"},
+    LintRuleInfo{.type = LINT_CIRCULAR_INHERITANCE,
+                 .text = "Class %s extends itself"},
 };
 
 inline void RegisterLintRules() {

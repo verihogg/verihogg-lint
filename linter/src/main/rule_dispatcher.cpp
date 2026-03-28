@@ -12,17 +12,27 @@
 #include "rules/assertion_statement_atribute_instance.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
+#include "rules/circular_inheritance.h"
 #include "rules/class_variable_lifetime.h"
 #include "rules/concatenation_multiplier.h"
 #include "rules/covergroup_expression.h"
 #include "rules/coverpoint_expression_type.h"
 #include "rules/dpi_decl_string.h"
+#include "rules/duplicate_class.h"
+#include "rules/duplicate_constructor.h"
 #include "rules/empty_assignment_pattern.h"
 #include "rules/exponent_format_time_value.h"
+#include "rules/extend_class.h"
+#include "rules/extend_interface_class.h"
+#include "rules/extern_constraint_undeclared.h"
+#include "rules/extern_function_undeclared.h"
+#include "rules/extern_task_undeclared.h"
 #include "rules/fatal_rule.h"
 #include "rules/foreach_loop_condition.h"
 #include "rules/function_implemention_scope.h"
 #include "rules/hierarchical_interface_identifier.h"
+#include "rules/implement_class.h"
+#include "rules/implement_interface_class.h"
 #include "rules/implicit_data_type.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
@@ -149,7 +159,30 @@ static const std::array kAllRules = std::to_array<Rule>({
     {.name = "ExponentFormatTimeValue",
      .enabled = true,
      .check = CheckExponentFormatTimeValue},
-
+    {.name = "ExtendClass", .enabled = true, .check = CheckExtendClass},
+    {.name = "DuplicateConstructor",
+     .enabled = true,
+     .check = CheckDuplicateConstructor},
+    {.name = "DuplicateClass", .enabled = true, .check = CheckDuplicateClass},
+    {.name = "ExternConstraintUndeclared",
+     .enabled = true,
+     .check = CheckExternConstraintUndeclared},
+    {.name = "ExternFunctionUndeclared",
+     .enabled = true,
+     .check = CheckExternFunctionUndeclared},
+    {.name = "ExternTaskUndeclared",
+     .enabled = true,
+     .check = CheckExternTaskUndeclared},
+    {.name = "ExtendInterfaceClass",
+     .enabled = true,
+     .check = CheckExtendInterfaceClass},
+    {.name = "ImplementClass", .enabled = true, .check = CheckImplementClass},
+    {.name = "ImplementInterfaceClass",
+     .enabled = true,
+     .check = CheckImplementInterfaceClass},
+    {.name = "CircularInheritance",
+     .enabled = true,
+     .check = CheckCircularInheritance},
 });
 
 static const std::array kGlobalRules = std::to_array<GlobalRule>({

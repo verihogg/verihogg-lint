@@ -15,7 +15,7 @@ struct RuleInfo {
 
 namespace cli {
 
-static constexpr std::array<RuleInfo, 40> kRules = {{
+static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
      .description =
          "Expecting 0, 1 or 2 as first argument to '$fatal' system task"},
@@ -107,7 +107,27 @@ static constexpr std::array<RuleInfo, 40> kRules = {{
     {.id = "FUNCTION_IMPLEMENTATION_SCOPE",
      .description = "extern task implemented outside of its class scope"},
 
-}};
+    {.id = "EXTEND_CLASS", .description = "extending non existing class"},
+    {.id = "DUPLICATE_CONSTRUCTOR",
+     .description = "duplicate constructor already declared"},
+    {.id = "DUPLICATE_CLASS",
+     .description = "duplicate class, already declared"},
+
+    {.id = "EXTERN_CONSTRAINT_UNDECLARED",
+     .description = "outer class constraint was not declared extern"},
+    {.id = "EXTERN_FUNCTION_UNDECLARED",
+     .description = "outer class function was not declared extern"},
+    {.id = "EXTERN_TASK_UNDECLARED",
+     .description = "outer class task was not declared extern"},
+    {.id = "EXTEND_INTERFACE_CLASS",
+     .description =
+         "extending interface class by non-interface class not allowed"},
+    {.id = "IMPLEMENT_CLASS",
+     .description = "implementing non-interface class by class not allowed"},
+    {.id = "IMPLEMENT_INTERFACE_CLASS",
+     .description = "implementing non existing interface class"},
+    {.id = "CIRCULAR_INHERITANCE", .description = "class extends itself"},
+});
 
 static constexpr int kRuleCount =
     static_cast<int>(sizeof(kRules) / sizeof(kRules[0]));
