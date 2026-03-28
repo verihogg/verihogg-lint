@@ -1,51 +1,51 @@
 #include "rules/extern_function_undeclared.h"
 
 #include <cassert>
-#include <sstream>
 #include <unordered_map>
 #include <vector>
 
-#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-void checkExternFunctionUndeclared(const SURELOG::FileContent* fC,
+void CheckExternFunctionUndeclared(const SURELOG::FileContent* fileContent,
                                    SURELOG::ErrorContainer* errors,
                                    SURELOG::SymbolTable* symbols) {
-  if (fC == nullptr) {
+  if (fileContent == nullptr) {
     return;
   }
 
   const std::unordered_map<std::string, SURELOG::NodeId> kClasses =
-      getClassIds(fC);
+      GetClassIds(fileContent);
 
-  const std::vector<SURELOG::NodeId> kFuncBodyDeclarations = fC->sl_collect_all(
-      fC->getRootNode(), VObjectType::paFunction_body_declaration);
+  const std::vector<SURELOG::NodeId> kFuncBodyDeclarations =
+      fileContent->sl_collect_all(fileContent->getRootNode(),
+                                  VObjectType::paFunction_body_declaration);
 
-  for (auto& funcId : kFuncBodyDeclarations) {
-    const SURELOG::NodeId classScopeId =
-        fC->sl_get(funcId, VObjectType::paClass_scope);
-    if (classScopeId == kZeroId) {
+  for (const auto& funcId : kFuncBodyDeclarations) {
+    const SURELOG::NodeId kClassScopeId =
+        fileContent->sl_get(funcId, VObjectType::paClass_scope);
+    if (kClassScopeId == kZeroId) {
       continue;
     }
 
-    std::string fullName = getFullNameFromScope(fC, classScopeId);
-    if (kClasses.find(fullName) == kClasses.end()) {
+    std::string fullName = GetFullNameFromScope(fileContent, kClassScopeId);
+    if (!kClasses.contains(fullName)) {
       continue;
     }
 
-    const SURELOG::NodeId classId = kClasses.at(fullName);
-    const std::string funcName = getStringConst(fC, funcId);
-    const std::vector<SURELOG::NodeId> methodIds =
-        fC->sl_collect_all(classId, VObjectType::paClass_method);
+    const SURELOG::NodeId kClassId = kClasses.at(fullName);
+    const std::string kFuncName = GetStringConst(fileContent, funcId);
+    const std::vector<SURELOG::NodeId> kMethodIds =
+        fileContent->sl_collect_all(kClassId, VObjectType::paClass_method);
     bool found = false;
-    for (auto& methodId : methodIds) {
-      const SURELOG::NodeId externId =
-          fC->sl_collect(methodId, VObjectType::paExtern_qualifier);
-      const SURELOG::NodeId protoId =
-          fC->sl_collect(methodId, VObjectType::paFunction_prototype);
-      const std::string protoName = getStringConst(fC, protoId);
-      if (protoName == funcName && externId != kZeroId) {
+    for (const auto& methodId : kMethodIds) {
+      const SURELOG::NodeId kExternId =
+          fileContent->sl_collect(methodId, VObjectType::paExtern_qualifier);
+      const SURELOG::NodeId kProtoId =
+          fileContent->sl_collect(methodId, VObjectType::paFunction_prototype);
+      const std::string kProtoName = GetStringConst(fileContent, kProtoId);
+      if (kProtoName == kFuncName && kExternId != kZeroId) {
         found = true;
         break;
       }
@@ -53,8 +53,8 @@ void checkExternFunctionUndeclared(const SURELOG::FileContent* fC,
     if (found) {
       continue;
     }
-    ReportError(fC, funcId, funcName,
-                ErrorDefinition::LINT_EXTERN_FUNCTION_UNDECLARED, errors,
+    ReportError(fileContent, funcId, kFuncName,
+                verihogg_lint::LINT_EXTERN_FUNCTION_UNDECLARED, errors,
                 symbols);
   }
 }

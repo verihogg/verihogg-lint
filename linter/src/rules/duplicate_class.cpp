@@ -2,36 +2,37 @@
 
 #include <unordered_set>
 
-#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-void checkDuplicateClass(const SURELOG::FileContent* fC,
+void CheckDuplicateClass(const SURELOG::FileContent* fileContent,
                          SURELOG::ErrorContainer* errors,
                          SURELOG::SymbolTable* symbols) {
-  if (!fC) {
+  if (fileContent == nullptr) {
     return;
   }
 
-  const std::vector<SURELOG::NodeId> classDeclarations =
-      fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
+  const std::vector<SURELOG::NodeId> kClassDeclarations =
+      fileContent->sl_collect_all(fileContent->getRootNode(),
+                                  VObjectType::paClass_declaration);
 
   std::unordered_set<std::string> seenSet;
   std::unordered_set<std::string> duplicateSet;
 
-  for (auto& classId : classDeclarations) {
-    const std::string fullName = getFullName(fC, classId);
-    const bool isSeen = seenSet.count(fullName) > 0;
-    const bool isDuplicate = duplicateSet.count(fullName) > 0;
+  for (const auto& classId : kClassDeclarations) {
+    const std::string kFullName = GetFullName(fileContent, classId);
+    const bool kIsSeen = seenSet.contains(kFullName);
+    const bool kIsDuplicate = duplicateSet.contains(kFullName);
 
-    if (isDuplicate) {
-      duplicateSet.erase(fullName);
-    } else if (isSeen) {
-      duplicateSet.insert(fullName);
-      ReportError(fC, classId, fullName, ErrorDefinition::LINT_DUPLICATE_CLASS,
-                  errors, symbols);
+    if (kIsDuplicate) {
+      duplicateSet.erase(kFullName);
+    } else if (kIsSeen) {
+      duplicateSet.insert(kFullName);
+      ReportError(fileContent, classId, kFullName,
+                  verihogg_lint::LINT_DUPLICATE_CLASS, errors, symbols);
     } else {
-      seenSet.insert(fullName);
+      seenSet.insert(kFullName);
     }
   }
 }

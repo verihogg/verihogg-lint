@@ -3,46 +3,46 @@
 #include <cassert>
 #include <unordered_map>
 
-#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-void checkExternConstraintUndeclared(const SURELOG::FileContent* fC,
+void CheckExternConstraintUndeclared(const SURELOG::FileContent* fileContent,
                                      SURELOG::ErrorContainer* errors,
                                      SURELOG::SymbolTable* symbols) {
-  if (!fC) {
+  if (fileContent == nullptr) {
     return;
   }
 
-  const std::unordered_map<std::string, SURELOG::NodeId> classes =
-      getClassIds(fC);
+  const std::unordered_map<std::string, SURELOG::NodeId> kClasses =
+      GetClassIds(fileContent);
 
-  const std::vector<SURELOG::NodeId> externConstraintDeclarations =
-      fC->sl_collect_all(fC->getRootNode(),
-                         VObjectType::paExtern_constraint_declaration);
+  const std::vector<SURELOG::NodeId> kExternConstraintDeclarations =
+      fileContent->sl_collect_all(fileContent->getRootNode(),
+                                  VObjectType::paExtern_constraint_declaration);
 
-  for (auto& constrDeclId : externConstraintDeclarations) {
-    const SURELOG::NodeId classScopeId =
-        fC->sl_get(constrDeclId, VObjectType::paClass_scope);
-    if (classScopeId == kZeroId) {
+  for (const auto& constrDeclId : kExternConstraintDeclarations) {
+    const SURELOG::NodeId kClassScopeId =
+        fileContent->sl_get(constrDeclId, VObjectType::paClass_scope);
+    if (kClassScopeId == kZeroId) {
       continue;
     }
 
-    std::string fullName = getFullNameFromScope(fC, classScopeId);
-    if (classes.find(fullName) == classes.end()) {
+    std::string fullName = GetFullNameFromScope(fileContent, kClassScopeId);
+    if (!kClasses.contains(fullName)) {
       continue;
     }
 
-    const SURELOG::NodeId classId = classes.at(fullName);
-    const std::string constrName = getStringConst(fC, constrDeclId);
-    const std::vector<SURELOG::NodeId> constrIds =
-        fC->sl_collect_all(classId, VObjectType::paConstraint_prototype);
+    const SURELOG::NodeId kClassId = kClasses.at(fullName);
+    const std::string kConstrName = GetStringConst(fileContent, constrDeclId);
+    const std::vector<SURELOG::NodeId> kConstrIds = fileContent->sl_collect_all(
+        kClassId, VObjectType::paConstraint_prototype);
     bool found = false;
-    for (auto& constrId : constrIds) {
-      const std::string protoName = getStringConst(fC, constrId);
-      const SURELOG::NodeId externId =
-          fC->sl_get(constrId, VObjectType::paExtern_qualifier);
-      if (protoName == constrName && externId != kZeroId) {
+    for (const auto& constrId : kConstrIds) {
+      const std::string kProtoName = GetStringConst(fileContent, constrId);
+      const SURELOG::NodeId kExternId =
+          fileContent->sl_get(constrId, VObjectType::paExtern_qualifier);
+      if (kProtoName == kConstrName && kExternId != kZeroId) {
         found = true;
         break;
       }
@@ -50,8 +50,8 @@ void checkExternConstraintUndeclared(const SURELOG::FileContent* fC,
     if (found) {
       continue;
     }
-    ReportError(fC, constrDeclId, constrName,
-                ErrorDefinition::LINT_EXTERN_CONSTRAINT_UNDECLARED, errors,
+    ReportError(fileContent, constrDeclId, kConstrName,
+                verihogg_lint::LINT_EXTERN_CONSTRAINT_UNDECLARED, errors,
                 symbols);
   }
 }

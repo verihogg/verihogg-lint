@@ -3,54 +3,55 @@
 #include <cassert>
 #include <unordered_map>
 
-#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
-void checkExternTaskUndeclared(const SURELOG::FileContent* fC,
+void CheckExternTaskUndeclared(const SURELOG::FileContent* fileContent,
                                SURELOG::ErrorContainer* errors,
                                SURELOG::SymbolTable* symbols) {
-  if (!fC) {
+  if (fileContent == nullptr) {
     return;
   }
-  const std::unordered_map<std::string, SURELOG::NodeId> classes =
-      getClassIds(fC);
+  const std::unordered_map<std::string, SURELOG::NodeId> kClasses =
+      GetClassIds(fileContent);
 
-  const std::vector<SURELOG::NodeId> taskDeclarations =
-      fC->sl_collect_all(fC->getRootNode(), VObjectType::paTask_declaration);
+  const std::vector<SURELOG::NodeId> kTaskDeclarations =
+      fileContent->sl_collect_all(fileContent->getRootNode(),
+                                  VObjectType::paTask_declaration);
 
-  for (auto& taskId : taskDeclarations) {
-    const SURELOG::NodeId parent = fC->Parent(taskId);
-    if (fC->Type(parent) == VObjectType::paClass_method) {
+  for (const auto& taskId : kTaskDeclarations) {
+    const SURELOG::NodeId kParent = fileContent->Parent(taskId);
+    if (fileContent->Type(kParent) == VObjectType::paClass_method) {
       continue;
     }
 
-    const SURELOG::NodeId taskBodyId =
-        fC->sl_get(taskId, VObjectType::paTask_body_declaration);
+    const SURELOG::NodeId kTaskBodyId =
+        fileContent->sl_get(taskId, VObjectType::paTask_body_declaration);
 
-    const SURELOG::NodeId classScopeId =
-        fC->sl_get(taskBodyId, VObjectType::paClass_scope);
-    if (classScopeId == kZeroId) {
+    const SURELOG::NodeId kClassScopeId =
+        fileContent->sl_get(kTaskBodyId, VObjectType::paClass_scope);
+    if (kClassScopeId == kZeroId) {
       continue;
     }
 
-    std::string fullName = getFullNameFromScope(fC, classScopeId);
-    if (classes.find(fullName) == classes.end()) {
+    std::string fullName = GetFullNameFromScope(fileContent, kClassScopeId);
+    if (!kClasses.contains(fullName)) {
       continue;
     }
 
-    const SURELOG::NodeId classId = classes.at(fullName);
-    const std::string funcName = getStringConst(fC, taskBodyId);
-    const std::vector<SURELOG::NodeId> methodIds =
-        fC->sl_collect_all(classId, VObjectType::paClass_method);
+    const SURELOG::NodeId kClassId = kClasses.at(fullName);
+    const std::string kFuncName = GetStringConst(fileContent, kTaskBodyId);
+    const std::vector<SURELOG::NodeId> kMethodIds =
+        fileContent->sl_collect_all(kClassId, VObjectType::paClass_method);
     bool found = false;
-    for (auto& methodId : methodIds) {
-      const SURELOG::NodeId externId =
-          fC->sl_collect(methodId, VObjectType::paExtern_qualifier);
-      const SURELOG::NodeId protoId =
-          fC->sl_collect(methodId, VObjectType::paTask_prototype);
-      const std::string protoName = getStringConst(fC, protoId);
-      if (protoName == funcName && externId != kZeroId) {
+    for (const auto& methodId : kMethodIds) {
+      const SURELOG::NodeId kExternId =
+          fileContent->sl_collect(methodId, VObjectType::paExtern_qualifier);
+      const SURELOG::NodeId kProtoId =
+          fileContent->sl_collect(methodId, VObjectType::paTask_prototype);
+      const std::string kProtoName = GetStringConst(fileContent, kProtoId);
+      if (kProtoName == kFuncName && kExternId != kZeroId) {
         found = true;
         break;
       }
@@ -58,7 +59,7 @@ void checkExternTaskUndeclared(const SURELOG::FileContent* fC,
     if (found) {
       continue;
     }
-    ReportError(fC, taskId, funcName,
-                ErrorDefinition::LINT_EXTERN_TASK_UNDECLARED, errors, symbols);
+    ReportError(fileContent, taskId, kFuncName,
+                verihogg_lint::LINT_EXTERN_TASK_UNDECLARED, errors, symbols);
   }
 }

@@ -1,8 +1,6 @@
 #include "utils/init.h"
 
-using namespace SURELOG;
-
-void initCommandLineParser(CommandLineParser* clp) {
+void InitCommandLineParser(SURELOG::CommandLineParser* clp) {
   clp->noPython();
   clp->setParse(true);
   clp->setCompile(true);

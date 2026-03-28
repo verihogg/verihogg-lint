@@ -5,51 +5,57 @@
 #include <unordered_set>
 #include <vector>
 
-#include "Surelog/ErrorReporting/ErrorContainer.h"
+#include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 
 namespace {
-auto getSuperInterfaceString(const FileContent* fC, SURELOG::NodeId id)
-    -> std::string {
-  SURELOG::NodeId classType = id;
-  classType = fC->sl_get(classType, VObjectType::paInterface_class_type);
-  classType = fC->sl_get(classType, VObjectType::paPs_identifier);
+auto GetSuperInterfaceString(const SURELOG::FileContent* fileContent,
+                             SURELOG::NodeId node) -> std::string {
+  SURELOG::NodeId classType = node;
+  classType = fileContent->sl_get(classType,
+                                  SURELOG::VObjectType::paInterface_class_type);
+  classType =
+      fileContent->sl_get(classType, SURELOG::VObjectType::paPs_identifier);
   if (classType == kZeroId) {
     return "";
   }
-  return getStringConst(fC, classType);
+  return GetStringConst(fileContent, classType);
 }
 }  // namespace
 
-void checkImplementInterfaceClass(const FileContent* fC, ErrorContainer* errors,
-                                  SymbolTable* symbols) {
-  if (!fC) {
+void CheckImplementInterfaceClass(const SURELOG::FileContent* fileContent,
+                                  SURELOG::ErrorContainer* errors,
+                                  SURELOG::SymbolTable* symbols) {
+  if (fileContent == nullptr) {
     return;
   }
 
-  std::unordered_set<std::string> classSet = getClassSet(fC);
-  std::unordered_set<std::string> interfaceClassSet = getInterfaceClassSet(fC);
+  std::unordered_set<std::string> classSet = GetClassSet(fileContent);
+  std::unordered_set<std::string> interfaceClassSet =
+      GetInterfaceClassSet(fileContent);
 
-  const std::vector<SURELOG::NodeId> classDeclarations =
-      fC->sl_collect_all(fC->getRootNode(), VObjectType::paClass_declaration);
+  const std::vector<SURELOG::NodeId> kClassDeclarations =
+      fileContent->sl_collect_all(fileContent->getRootNode(),
+                                  SURELOG::VObjectType::paClass_declaration);
 
-  for (auto& classId : classDeclarations) {
-    const SURELOG::NodeId implementsId =
-        fC->sl_get(classId, VObjectType::paIMPLEMENTS);
-    if (implementsId == kZeroId) {
+  for (const auto& classId : kClassDeclarations) {
+    const SURELOG::NodeId kImplementsId =
+        fileContent->sl_get(classId, SURELOG::VObjectType::paIMPLEMENTS);
+    if (kImplementsId == kZeroId) {
       continue;
     }
 
-    const std::string superInterfaceName = getSuperInterfaceString(fC, classId);
-    if (superInterfaceName == "") {
+    const std::string kSuperInterfaceName =
+        GetSuperInterfaceString(fileContent, classId);
+    if (kSuperInterfaceName == "") {
       continue;
     }
 
-    if (interfaceClassSet.count(superInterfaceName) == 0) {
-      std::string className = getStringConst(fC, classId);
-      ReportError(fC, classId, className,
-                  ErrorDefinition::LINT_IMPLEMENT_INTERFACE_CLASS, errors,
+    if (!interfaceClassSet.contains(kSuperInterfaceName)) {
+      std::string className = GetStringConst(fileContent, classId);
+      ReportError(fileContent, classId, className,
+                  verihogg_lint::LINT_IMPLEMENT_INTERFACE_CLASS, errors,
                   symbols);
     }
   }
