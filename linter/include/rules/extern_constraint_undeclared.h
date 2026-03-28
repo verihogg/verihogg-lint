@@ -2,8 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-using namespace SURELOG;
-
-void checkExternConstraintUndeclared(const FileContent* fC,
-                                     ErrorContainer* errors,
-                                     SymbolTable* symbols);
+void CheckExternConstraintUndeclared(const SURELOG::FileContent* fileContent,
+                                     SURELOG::ErrorContainer* errors,
+                                     SURELOG::SymbolTable* symbols);

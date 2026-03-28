@@ -2,7 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-using namespace SURELOG;
-
-void checkExtendInterfaceClass(const FileContent* fC, ErrorContainer* errors,
-                               SymbolTable* symbols);
+void CheckExtendInterfaceClass(const SURELOG::FileContent* fileContent,
+                               SURELOG::ErrorContainer* errors,
+                               SURELOG::SymbolTable* symbols);

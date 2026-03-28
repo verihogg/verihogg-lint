@@ -2,7 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-using namespace SURELOG;
-
-void checkExtendClass(const FileContent* fC, ErrorContainer* errors,
-                      SymbolTable* symbols);
+void CheckExtendClass(const SURELOG::FileContent* fileContent,
+                      SURELOG::ErrorContainer* errors,
+                      SURELOG::SymbolTable* symbols);

@@ -2,7 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-using namespace SURELOG;
-
-void checkExternTaskUndeclared(const FileContent* fC, ErrorContainer* errors,
-                               SymbolTable* symbols);
+void CheckExternTaskUndeclared(const SURELOG::FileContent* fileContent,
+                               SURELOG::ErrorContainer* errors,
+                               SURELOG::SymbolTable* symbols);
