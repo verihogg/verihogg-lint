@@ -76,6 +76,7 @@ enum LintIdEnum : uint16_t {
   LINT_UNDECLARED_CELL,
   LINT_UNDECLARED_DESIGN,
   LINT_UNDECLARED_CONFIGURATION,
+  LINT_DUPLICATE_EVENT,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -278,6 +279,7 @@ inline constexpr std::array kLintRules = {
                  .text = "Top design %s is not declared"},
     LintRuleInfo{.type = LINT_UNDECLARED_CONFIGURATION,
                  .text = "Configuration %s is not declared"},
+    LintRuleInfo{.type = LINT_DUPLICATE_EVENT, .text = "Duplicate event: %s"},
 };
 
 inline void RegisterLintRules() {

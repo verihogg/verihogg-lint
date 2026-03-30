@@ -25,6 +25,7 @@
 #include "rules/dpi_decl_string.h"
 #include "rules/duplicate_class.h"
 #include "rules/duplicate_constructor.h"
+#include "rules/duplicate_event.h"
 #include "rules/empty_assignment_pattern.h"
 #include "rules/event_control_expression.h"
 #include "rules/exponent_format_time_value.h"
@@ -315,6 +316,9 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "UNDECLARED_CONFIGURATION",
      .description = "Configuration must be declared",
      .check = CheckUndeclaredConfiguration},
+    {.idName = "DUPLICATE_EVENT",
+     .description = "Duplicate event #, already declared at line # file #",
+     .check = CheckDuplicateEvents},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
