@@ -77,6 +77,7 @@ enum LintIdEnum : uint16_t {
   LINT_UNDECLARED_DESIGN,
   LINT_UNDECLARED_CONFIGURATION,
   LINT_DUPLICATE_EVENT,
+  LINT_EVENT_SINGULAR,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -280,6 +281,8 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{.type = LINT_UNDECLARED_CONFIGURATION,
                  .text = "Configuration %s is not declared"},
     LintRuleInfo{.type = LINT_DUPLICATE_EVENT, .text = "Duplicate event: %s"},
+    LintRuleInfo{.type = LINT_EVENT_SINGULAR,
+                 .text = "Events must be singular: %s"},
 };
 
 inline void RegisterLintRules() {

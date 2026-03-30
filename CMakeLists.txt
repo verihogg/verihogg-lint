@@ -208,14 +208,12 @@ set(LINTER_SRC
     linter/src/rules/circular_inheritance.cpp
     linter/src/rules/incomplete_assignment_pattern.cpp
     linter/src/rules/assignment_pattern_values.cpp
-<<<<<<< HEAD
     linter/src/rules/invalid_liblist.cpp
     linter/src/rules/undeclared_cell.cpp
     linter/src/rules/undeclared_design.cpp
     linter/src/rules/undeclared_configuration.cpp
-=======
     linter/src/rules/duplicate_event.cpp
->>>>>>> f172f7d (Add DuplicateEventCheck)
+    linter/src/rules/event_singular.cpp
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})

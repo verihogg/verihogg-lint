@@ -28,6 +28,7 @@
 #include "rules/duplicate_event.h"
 #include "rules/empty_assignment_pattern.h"
 #include "rules/event_control_expression.h"
+#include "rules/event_singular.h"
 #include "rules/exponent_format_time_value.h"
 #include "rules/extend_class.h"
 #include "rules/extend_interface_class.h"
@@ -319,6 +320,9 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "DUPLICATE_EVENT",
      .description = "Duplicate event #, already declared at line # file #",
      .check = CheckDuplicateEvents},
+    {.idName = "ILLEGAL_EVENT",
+     .description = "The following events must be of a singular data type:#",
+     .check = CheckEventSingular},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
