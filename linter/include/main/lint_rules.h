@@ -79,6 +79,7 @@ enum LintIdEnum : uint16_t {
   LINT_DUPLICATE_EVENT,
   LINT_EVENT_SINGULAR,
   LINT_DUPLICATE_ENUM_LITERAL,
+  LINT_DUPLICATE_COVER_CROSS,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -286,6 +287,8 @@ inline constexpr std::array kLintRules = {
                  .text = "Events must be singular: %s"},
     LintRuleInfo{.type = LINT_DUPLICATE_ENUM_LITERAL,
                  .text = "Duplicate enum literal: %s"},
+    LintRuleInfo{.type = LINT_DUPLICATE_COVER_CROSS,
+                 .text = "Duplicate cross label: %s"},
 };
 
 inline void RegisterLintRules() {

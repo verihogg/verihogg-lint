@@ -25,6 +25,7 @@
 #include "rules/dpi_decl_string.h"
 #include "rules/duplicate_class.h"
 #include "rules/duplicate_constructor.h"
+#include "rules/duplicate_cover_cross.h"
 #include "rules/duplicate_enum_literal.h"
 #include "rules/duplicate_event.h"
 #include "rules/empty_assignment_pattern.h"
@@ -328,6 +329,10 @@ const auto globalRules = std::to_array<GlobalRule>({
      .description =
          "Duplicate enumeration literal #, already declared at line # file #",
      .check = CheckDuplicateEnumLiteral},
+    {.idName = "DUPLICATE_COVER_CROSS",
+     .description =
+         "Duplicate cover cross #, already declared at line # file #",
+     .check = CheckDuplicateCoverCross},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();

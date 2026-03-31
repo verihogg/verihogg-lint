@@ -215,6 +215,9 @@ set(LINTER_SRC
     linter/src/rules/duplicate_event.cpp
     linter/src/rules/event_singular.cpp
     linter/src/rules/duplicate_enum_literal.cpp
+    linter/src/rules/duplicate_cover_cross.cpp
+    linter/src/rules/duplicate_covergroup.cpp
+    linter/src/rules/duplicate_coverpoint.cpp
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})
