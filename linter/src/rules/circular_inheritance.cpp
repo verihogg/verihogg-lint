@@ -185,6 +185,9 @@ void CheckCircularInheritance(const SURELOG::FileContent* fileContent,
     }
 
     const std::string kFullName = GetPrefix(fileContent, classId) + kSuperName;
+    if (kClassSet.find(kFullName) == kClassSet.end()) {
+      continue;
+    }
     const SURELOG::NodeId kSuperId = kClassSet.at(kFullName);
     if (!dependencyGraph.AddVertex(kSuperId)) {
       throw std::runtime_error("Failed to add vertex: " +
