@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <functional>
+#include <iostream>
 #include <memory>
 
 #include "Surelog/API/Surelog.h"

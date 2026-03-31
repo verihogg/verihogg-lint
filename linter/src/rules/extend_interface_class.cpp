@@ -22,7 +22,7 @@ namespace {
 auto GetSuperclassStringsFromInterfaceClasses(
     const SURELOG::FileContent* fileContent, SURELOG::NodeId node)
     -> std::vector<std::string> {
-  assert(fileContent->Type(id) != VObjectType::paClass_declaration);
+  assert(fileContent->Type(node) != SURELOG::VObjectType::paClass_declaration);
 
   std::vector<std::string> result;
   const std::vector<SURELOG::NodeId> kClassType = fileContent->sl_collect_all(

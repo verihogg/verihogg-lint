@@ -2,6 +2,7 @@
 {
   buildInputs = with pkgs; [
     surelog
+    yaml-cpp
   ] ++ surelog.buildInputs;
 
   nativeBuildInputs = with pkgs; [

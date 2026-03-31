@@ -9,5 +9,13 @@ target_link_libraries(class_checks_test PUBLIC ${CAPNP_LIBRARY})
 target_link_libraries(class_checks_test PUBLIC ${ANTLR_LIBRARY})
 target_link_libraries(class_checks_test PUBLIC ${ZLIB_LIBRARY})
 
+target_include_directories(class_checks_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
+
 include(GoogleTest)
 gtest_discover_tests(class_checks_test)

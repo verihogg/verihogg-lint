@@ -68,10 +68,29 @@ find_library(ZLIB_LIBRARY
 )
 
 set(GTEST_ROOT "" CACHE PATH "Path to GTest installation prefix")
+set(YAMLCPP_ROOT "" CACHE PATH "Path to YamlCpp installation prefix")
+
+find_path(GTEST_INCLUDE_DIR
+  NAMES gtest/gtest.h
+  HINTS ${GTEST_ROOT} ENV GTEST_ROOT
+  PATH_SUFFIXES include
+)
 
 find_library(GTEST_LIBRARY
   NAMES googletest gtest
   HINTS ${GTEST_ROOT} ENV GTEST_ROOT
+  PATH_SUFFIXES lib lib64
+)
+
+find_path(YAMLCPP_INCLUDE_DIR
+  NAMES yaml-cpp/yaml.h
+  HINTS ${YAMLCPP_ROOT} ENV YAMLCPP_ROOT
+  PATH_SUFFIXES include
+)
+
+find_library(YAMLCPP_LIBRARY
+  NAMES yaml-cpp
+  HINTS ${YAMLCPP_ROOT} ENV YAMLCPP_ROOT
   PATH_SUFFIXES lib lib64
 )
 
@@ -100,9 +119,14 @@ if(NOT ZLIB_LIBRARY)
     "zlib was not found. Install zlib and set ZLIB_ROOT (or pass -DZLIB_ROOT=<prefix>).")
 endif()
 
-if(NOT GTEST_LIBRARY)
+if(NOT GTEST_INCLUDE_DIR OR NOT GTEST_LIBRARY)
   message(FATAL_ERROR
     "gtest was not found. Install gtest and set GTEST_ROOT (or pass -DGTEST_ROOT=<prefix>).")
+endif()
+
+if(NOT YAMLCPP_INCLUDE_DIR OR NOT YAMLCPP_LIBRARY)
+  message(FATAL_ERROR
+    "yaml-cpp was not found. Install yaml-cpp and set YAMLCPP_ROOT (or pass -DYAMLCPP_ROOT=<prefix>).")
 endif()
 
 enable_testing()
@@ -165,11 +189,9 @@ set(LINTER_SRC
     linter/src/rules/implement_interface_class.cpp
     linter/src/rules/circular_inheritance.cpp
 )
-#     linter/src/rules/extern_function_undeclared.cpp
-#     linter/src/rules/extern_task_undeclared.cpp
-
 
 add_library(verihoggLintLib ${LINTER_SRC})
+target_link_libraries(verihoggLintLib PUBLIC ${YAMLCPP_LIBRARY})
 target_include_directories(verihoggLintLib PUBLIC linter/include)
 
 foreach(f ${LINTER_SRC})
@@ -191,6 +213,7 @@ target_include_directories(${PROJECT_NAME}
     ${SURELOG_INCLUDE_DIR}
     ${UHDM_INCLUDE_DIR}
     ${ANTLR_INCLUDE_DIR}
+    ${YAMLCPP_INCLUDE_DIR}
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC verihoggLintLib)
@@ -203,7 +226,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARY})
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /bigobj)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -ggdb -Og -Wextra -Wpedantic -Werror)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
 # Install rule

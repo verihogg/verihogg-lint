@@ -6,7 +6,6 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <sstream>
 #include <string>
@@ -262,7 +261,6 @@ auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
       fileContent->sl_get(node, SL::VObjectType::paClass_type);
   const std::vector<SL::NodeId> kStrIds =
       fileContent->sl_collect_all(kTempId, SL::VObjectType::slStringConst);
-  assert(strIds.size() > 0);
 
   const std::string firstString{fileContent->SymName(kStrIds[0])};
   sstream << firstString;
@@ -277,8 +275,6 @@ auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
 
 auto GetSuperclassString(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string {
-  assert(fileContent->Type(id) != VObjectType::paClass_declaration);
-
   const SL::NodeId kClassType =
       fileContent->sl_get(node, SL::VObjectType::paClass_type);
   if (!kClassType) {

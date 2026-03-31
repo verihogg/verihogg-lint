@@ -4,8 +4,10 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <uhdm/vpi_user.h>
+#include <yaml-cpp/yaml.h>
 
 #include <array>
+#include <filesystem>
 #include <functional>
 #include <string_view>
 
@@ -57,144 +59,76 @@
 #include "rules/wildcard_operator.h"
 
 namespace SL = SURELOG;
+constexpr const char* DefaultConfigFileName = ".verihogg-lint";
 
 struct Rule {
-  std::string_view name;
+  const std::string_view name;
   bool enabled = true;
-  std::function<void(const SL::FileContent*, SL::ErrorContainer*,
-                     SL::SymbolTable*)>
+  const std::function<void(const SL::FileContent*, SL::ErrorContainer*,
+                           SL::SymbolTable*)>
       check;
 };
 
 struct GlobalRule {
-  std::string_view name;
+  const std::string_view name;
   bool enabled = true;
-  std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)> check;
+  const std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)>
+      check;
 };
 
-static const std::array kAllRules = std::to_array<Rule>({
-    {.name = "RepetitionInSequence",
-     .enabled = true,
-     .check = CheckRepetitionInSequence},
-    {.name = "PrototypeReturnDataType",
-     .enabled = true,
-     .check = CheckPrototypeReturnDataType},
-    {.name = "ParameterDynamicArray",
-     .enabled = true,
-     .check = CheckParameterDynamicArray},
-    {.name = "ImplicitDataTypeInDeclaration",
-     .enabled = true,
-     .check = CheckImplicitDataTypeInDeclaration},
-    {.name = "HierarchicalInterfaceIdentifier",
-     .enabled = true,
-     .check = CheckHierarchicalInterfaceIdentifier},
-    {.name = "DpiDeclarationString",
-     .enabled = true,
-     .check = CheckDpiDeclarationString},
-    {.name = "ClassVariableLifetime",
-     .enabled = true,
-     .check = CheckClassVariableLifetime},
-    {.name = "CoverpointExpressionType",
-     .enabled = true,
-     .check = CheckCoverpointExpressionType},
-    {.name = "CovergroupExpression",
-     .enabled = true,
-     .check = CheckCovergroupExpression},
-    {.name = "ConcatenationMultiplier",
-     .enabled = true,
-     .check = CheckConcatenationMultiplier},
-    {.name = "ParameterOverride",
-     .enabled = true,
-     .check = CheckParameterOverride},
-    {.name = "MultipleDotStarConnections",
-     .enabled = true,
-     .check = CheckMultipleDotStarConnections},
-    {.name = "SelectInEventControl",
-     .enabled = true,
-     .check = CheckSelectInEventControl},
-    {.name = "EmptyAssignmentPattern",
-     .enabled = true,
-     .check = CheckEmptyAssignmentPattern},
-    {.name = "MissingForLoopInitialization",
-     .enabled = true,
-     .check = CheckMissingForLoopInitialization},
-    {.name = "MissingForLoopCondition",
-     .enabled = true,
-     .check = CheckMissingForLoopCondition},
-    {.name = "MissingForLoopStep",
-     .enabled = true,
-     .check = CheckMissingForLoopStep},
-    {.name = "ForeachLoopCondition",
-     .enabled = true,
-     .check = CheckForeachLoopCondition},
-    {.name = "SelectInWeight", .enabled = true, .check = CheckSelectInWeight},
-    {.name = "AssignmentPattern",
-     .enabled = true,
-     .check = CheckAssignmentPattern},
-    {.name = "AssignmentPatternContext",
-     .enabled = true,
-     .check = CheckAssignmentPatternContext},
-    {.name = "ScalarAssignmentPattern",
-     .enabled = true,
-     .check = CheckScalarAssignmentPattern},
-    {.name = "TargetUnpackedArrayConcatenation",
-     .enabled = true,
-     .check = CheckTargetUnpackedArrayConcatenation},
-    {.name = "InsideOperator", .enabled = true, .check = CheckInsideOperator},
-    {.name = "InsideOperatorRange",
-     .enabled = true,
-     .check = CheckInsideOperatorRange},
-    {.name = "TypeCasting", .enabled = true, .check = CheckTypeCasting},
-    {.name = "TimeValue", .enabled = true, .check = CheckTimeValue},
-    {.name = "MultipleBins", .enabled = true, .check = CheckMultipleBins},
-    {.name = "AssertionstatementAttributeInstance",
-     .enabled = true,
-     .check = CheckAssertionStatementAttributeInstance},
-    {.name = "SystemFunctionArguments",
-     .enabled = true,
-     .check = CheckSystemFunctionArguments},
-    {.name = "WildcardOperator",
-     .enabled = true,
-     .check = CheckWildcardOperators},
-    {.name = "ExponentFormatTimeValue",
-     .enabled = true,
-     .check = CheckExponentFormatTimeValue},
-    {.name = "ExtendClass", .enabled = true, .check = CheckExtendClass},
-    {.name = "DuplicateConstructor",
-     .enabled = true,
-     .check = CheckDuplicateConstructor},
-    {.name = "DuplicateClass", .enabled = true, .check = CheckDuplicateClass},
-    {.name = "ExternConstraintUndeclared",
-     .enabled = true,
-     .check = CheckExternConstraintUndeclared},
-    {.name = "ExternFunctionUndeclared",
-     .enabled = true,
-     .check = CheckExternFunctionUndeclared},
-    {.name = "ExternTaskUndeclared",
-     .enabled = true,
-     .check = CheckExternTaskUndeclared},
-    {.name = "ExtendInterfaceClass",
-     .enabled = true,
-     .check = CheckExtendInterfaceClass},
-    {.name = "ImplementClass", .enabled = true, .check = CheckImplementClass},
-    {.name = "ImplementInterfaceClass",
-     .enabled = true,
-     .check = CheckImplementInterfaceClass},
-    {.name = "CircularInheritance",
-     .enabled = true,
-     .check = CheckCircularInheritance},
+static std::array kAllRules = std::to_array<Rule>({
+    // clang-format off
+    {.name = "RepetitionInSequence", .check = CheckRepetitionInSequence},
+    {.name = "PrototypeReturnDataType", .check = CheckPrototypeReturnDataType},
+    {.name = "ParameterDynamicArray", .check = CheckParameterDynamicArray},
+    {.name = "ImplicitDataTypeInDeclaration", .check = CheckImplicitDataTypeInDeclaration},
+    {.name = "HierarchicalInterfaceIdentifier", .check = CheckHierarchicalInterfaceIdentifier},
+    {.name = "DpiDeclarationString", .check = CheckDpiDeclarationString},
+    {.name = "ClassVariableLifetime", .check = CheckClassVariableLifetime},
+    {.name = "CoverpointExpressionType", .check = CheckCoverpointExpressionType},
+    {.name = "CovergroupExpression", .check = CheckCovergroupExpression},
+    {.name = "ConcatenationMultiplier", .check = CheckConcatenationMultiplier},
+    {.name = "ParameterOverride", .check = CheckParameterOverride},
+    {.name = "MultipleDotStarConnections", .check = CheckMultipleDotStarConnections},
+    {.name = "SelectInEventControl", .check = CheckSelectInEventControl},
+    {.name = "EmptyAssignmentPattern", .check = CheckEmptyAssignmentPattern},
+    {.name = "MissingForLoopInitialization", .check = CheckMissingForLoopInitialization},
+    {.name = "MissingForLoopCondition", .check = CheckMissingForLoopCondition},
+    {.name = "MissingForLoopStep", .check = CheckMissingForLoopStep},
+    {.name = "ForeachLoopCondition", .check = CheckForeachLoopCondition},
+    {.name = "SelectInWeight", .check = CheckSelectInWeight},
+    {.name = "AssignmentPattern", .check = CheckAssignmentPattern},
+    {.name = "AssignmentPatternContext", .check = CheckAssignmentPatternContext},
+    {.name = "ScalarAssignmentPattern", .check = CheckScalarAssignmentPattern},
+    {.name = "TargetUnpackedArrayConcatenation", .check = CheckTargetUnpackedArrayConcatenation},
+    {.name = "InsideOperator", .check = CheckInsideOperator},
+    {.name = "InsideOperatorRange", .check = CheckInsideOperatorRange},
+    {.name = "TypeCasting", .check = CheckTypeCasting},
+    {.name = "TimeValue", .check = CheckTimeValue},
+    {.name = "MultipleBins", .check = CheckMultipleBins},
+    {.name = "AssertionstatementAttributeInstance", .check = CheckAssertionStatementAttributeInstance},
+    {.name = "SystemFunctionArguments", .check = CheckSystemFunctionArguments},
+    {.name = "WildcardOperator", .check = CheckWildcardOperators},
+    {.name = "ExponentFormatTimeValue", .check = CheckExponentFormatTimeValue},
+    {.name = "ExtendClass", .check = CheckExtendClass},
+    {.name = "DuplicateConstructor", .check = CheckDuplicateConstructor},
+    {.name = "DuplicateClass", .check = CheckDuplicateClass},
+    {.name = "ExternConstraintUndeclared", .check = CheckExternConstraintUndeclared},
+    {.name = "ExternFunctionUndeclared", .check = CheckExternFunctionUndeclared},
+    {.name = "ExternTaskUndeclared", .check = CheckExternTaskUndeclared},
+    {.name = "ExtendInterfaceClass", .check = CheckExtendInterfaceClass},
+    {.name = "ImplementClass", .check = CheckImplementClass},
+    {.name = "ImplementInterfaceClass", .check = CheckImplementInterfaceClass},
+    {.name = "CircularInheritance", .check = CheckCircularInheritance},
+    // clang-format on
 });
 
-static const std::array kGlobalRules = std::to_array<GlobalRule>({
-    {.name = "NofParameterOverrides",
-     .enabled = true,
-     .check = CheckNofParameterOverrides},
-    {.name = "MissingFunctionImplementation",
-     .enabled = true,
-     .check = CheckMissingFunctionImplementation},
-    {.name = "FuctionImplementationScope",
-     .enabled = true,
-     .check = CheckFuncImplScope},
+static std::array kGlobalRules = std::to_array<GlobalRule>({
+    // clang-format off
+    {.name = "NofParameterOverrides", .check = CheckNofParameterOverrides},
+    {.name = "MissingFunctionImplementation", .check = CheckMissingFunctionImplementation},
+    {.name = "FuctionImplementationScope", .check = CheckFuncImplScope},
+    // clang-format on
 });
 
 namespace {
@@ -207,6 +141,53 @@ void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
     rule.check(fileContent, errors, symbols);
   }
 }
+
+auto GetYamlConfig() -> YAML::Node {
+  const std::filesystem::path configPath = DefaultConfigFileName;
+  std::filesystem::path currentDir = std::filesystem::current_path();
+
+  while (!std::filesystem::exists(currentDir / configPath)) {
+    if (currentDir.parent_path() == currentDir) {
+      std::cerr << "No config file" << "\n";
+      return YAML::Node{};
+    }
+    currentDir = currentDir.parent_path();
+  }
+
+  return YAML::LoadFile(currentDir / configPath);
+}
+
+template <typename RuleType>
+void FilterSpecificRule(RuleType& rule, const YAML::Node& tree) {
+  const std::string ruleName(rule.name);
+  const YAML::Node node = tree[ruleName];
+  if (node) {
+    const auto value = node.as<std::string>();
+
+    if (value == "yes" || value == "true") {
+      rule.enabled = true;
+    } else if (value == "false" || value == "no") {
+      rule.enabled = false;
+    } else {
+      throw std::invalid_argument(std::string("Expected boolean, got: ") +
+                                  std::string(value.begin(), value.end()));
+    }
+  }
+}
+
+void FilterRules() {
+  const auto yaml = GetYamlConfig();
+  if (yaml.IsNull()) {
+    return;
+  }
+
+  for (auto& rule : kAllRules) {
+    FilterSpecificRule(rule, yaml);
+  }
+  for (auto& rule : kGlobalRules) {
+    FilterSpecificRule(rule, yaml);
+  }
+}
 }  // namespace
 
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
@@ -214,6 +195,8 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
   if (design == nullptr) {
     return;
   }
+
+  FilterRules();
 
   for (auto& [name, fileContent] : design->getAllFileContents()) {
     if (fileContent == nullptr) {
