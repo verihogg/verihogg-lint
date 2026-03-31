@@ -25,6 +25,7 @@
 #include "rules/dpi_decl_string.h"
 #include "rules/duplicate_class.h"
 #include "rules/duplicate_constructor.h"
+#include "rules/duplicate_enum_literal.h"
 #include "rules/duplicate_event.h"
 #include "rules/empty_assignment_pattern.h"
 #include "rules/event_control_expression.h"
@@ -323,6 +324,10 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "ILLEGAL_EVENT",
      .description = "The following events must be of a singular data type:#",
      .check = CheckEventSingular},
+    {.idName = "DUPLICATE_ENUM_LITERAL",
+     .description =
+         "Duplicate enumeration literal #, already declared at line # file #",
+     .check = CheckDuplicateEnumLiteral},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();

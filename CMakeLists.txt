@@ -214,6 +214,7 @@ set(LINTER_SRC
     linter/src/rules/undeclared_configuration.cpp
     linter/src/rules/duplicate_event.cpp
     linter/src/rules/event_singular.cpp
+    linter/src/rules/duplicate_enum_literal.cpp
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})
