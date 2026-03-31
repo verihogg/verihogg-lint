@@ -26,6 +26,7 @@
 #include "rules/duplicate_class.h"
 #include "rules/duplicate_constructor.h"
 #include "rules/duplicate_cover_cross.h"
+#include "rules/duplicate_covergroup.h"
 #include "rules/duplicate_enum_literal.h"
 #include "rules/duplicate_event.h"
 #include "rules/empty_assignment_pattern.h"
@@ -333,6 +334,9 @@ const auto globalRules = std::to_array<GlobalRule>({
      .description =
          "Duplicate cover cross #, already declared at line # file #",
      .check = CheckDuplicateCoverCross},
+    {.idName = "DUPLICATE_COVERGROUP",
+     .description = "Duplicate covergroup #, already declared at line # file #",
+     .check = CheckDuplicateCovergroup},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
