@@ -81,6 +81,7 @@ enum LintIdEnum : uint16_t {
   LINT_DUPLICATE_ENUM_LITERAL,
   LINT_DUPLICATE_COVER_CROSS,
   LINT_DUPLICATE_COVERGROUP,
+  LINT_DUPLICATE_COVERPOINT,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -292,6 +293,8 @@ inline constexpr std::array kLintRules = {
                  .text = "Duplicate cross label: %s"},
     LintRuleInfo{.type = LINT_DUPLICATE_COVERGROUP,
                  .text = "Duplicate covergroup name: %s"},
+    LintRuleInfo{.type = LINT_DUPLICATE_COVERPOINT,
+                 .text = "Duplicate coverpoint label: %s"},
 };
 
 inline void RegisterLintRules() {
