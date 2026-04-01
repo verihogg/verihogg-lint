@@ -5,12 +5,15 @@
 #include <iostream>
 #include <span>
 
-namespace cli {
+namespace {
 
 struct RuleInfo {
   const char* id;
   const char* description;
 };
+}  // namespace
+
+namespace cli {
 
 static constexpr std::array<RuleInfo, 40> kRules = {{
     {.id = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",

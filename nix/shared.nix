@@ -11,6 +11,6 @@
   ];
 
   shellOnlyPackages = with pkgs; [
-    llvmPackages_19.clang-tools
+    llvmPackages_21.clang-tools
   ];
 }

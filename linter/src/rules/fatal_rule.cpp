@@ -154,7 +154,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     return;
   }
 
-  UHDM::any* firstArg = (*args)[0];
+  const UHDM::any* firstArg = (*args)[0];
   if (firstArg == nullptr) {
     return;
   }

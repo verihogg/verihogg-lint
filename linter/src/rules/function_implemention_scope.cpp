@@ -12,7 +12,6 @@
 #include <optional>
 #include <string_view>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 #include "main/lint_rules.h"
