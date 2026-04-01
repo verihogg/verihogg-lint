@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <vector>
 
 namespace cli {
@@ -15,7 +16,7 @@ struct Options {
   std::vector<const char*> surelog_args;
 };
 
-auto ParseArgs(int argc, const char** argv) -> Options;
+auto ParseArgs(std::span<const char*> args) -> Options;
 
 void PrintHelp(const char* programName);
 void PrintVersion();

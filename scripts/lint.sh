@@ -18,4 +18,4 @@ fi
 find linter/src \
   -type f \
   -name '*.cpp' \
-  -print0 | xargs -0 -n 1 "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" --quiet
+  -print0 | xargs -P$(nproc) -0 -n 1 "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" --quiet

@@ -3,6 +3,7 @@
 #include <array>
 #include <cstring>
 #include <iostream>
+#include <span>
 
 namespace cli {
 
@@ -108,14 +109,12 @@ static constexpr std::array<RuleInfo, 40> kRules = {{
 static constexpr int kRuleCount =
     static_cast<int>(sizeof(kRules) / sizeof(kRules[0]));
 
-auto ParseArgs(int argc, const char** argv) -> Options {
+auto ParseArgs(std::span<const char*> args) -> Options {
   Options opts;
 
-  opts.surelog_args.push_back(argv[0]);
+  opts.surelog_args.push_back(args[0]);
 
-  for (int i = 1; i < argc; ++i) {
-    const char* arg = argv[i];
-
+  for (const auto arg : args.subspan(1)) {
     if (std::strcmp(arg, "--help") == 0 || std::strcmp(arg, "-h") == 0) {
       opts.show_help = true;
     } else if (std::strcmp(arg, "--version") == 0) {

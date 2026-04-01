@@ -1,17 +1,9 @@
-# readability-make-member-function-const is great, but it also suggests that
-#    in cases where we return a non-const pointer.
-#    So good for a regular cleanup-sweep but not as default.
-# Some of the rules below that are disabled should be re-considered once we
-# have a somewhat clean baseline (runtime-int, readability-casting,
-# narrowing conversion come to mind)
-# In particular the disabled clang-analyzer-* messages should all be
-# enabled as they uncover real bugs, but once we have the other noise reduced.
-# performance-inefficient-string-concatenation is good, but until we use
-# absl in this project with absl::StrCat(), the alternatives are not improving
-# readability.
 Checks: >
   bugprone-*,
+  cert-*,
   clang-analyzer-*,
+  concurrency-*,
+  cppcoreguidelines-*,
   google-*,
   hicpp-*,
   llvm-include-order,

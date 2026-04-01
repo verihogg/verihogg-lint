@@ -3,10 +3,13 @@
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
 
 #include <array>
+#include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <iostream>
 #include <memory>
+#include <span>
 #include <vector>
 
 #include "main/cli.h"
@@ -17,14 +20,16 @@
 namespace SL = SURELOG;
 
 auto main(int argc, const char** argv) -> int {
-  const cli::Options kOpts = cli::ParseArgs(argc, argv);
+  assert(argc >= 0);
+  const auto args = std::span{argv, static_cast<size_t>(argc)};
+  const cli::Options kOpts = cli::ParseArgs(args);
 
   if (kOpts.show_version) {
     cli::PrintVersion();
     return 0;
   }
   if (kOpts.show_help) {
-    cli::PrintHelp(argv[0]);
+    cli::PrintHelp(args[0]);
     return 0;
   }
   if (kOpts.show_rules) {
@@ -51,7 +56,7 @@ auto main(int argc, const char** argv) -> int {
   clp->setFilterWarning();
 
   if (kOpts.show_surelog_help) {
-    std::array<const char*, 2> helpArgv = {argv[0], "--help"};
+    std::array<const char*, 2> helpArgv = {args[0], "--help"};
     clp->parseCommandLine(static_cast<int>(helpArgv.size()), helpArgv.data());
     return 0;
   }
@@ -69,13 +74,13 @@ auto main(int argc, const char** argv) -> int {
   }
 
   if (!kSuccess) {
-    std::cerr << "Try '" << argv[0] << " --help' for usage.\n";
+    std::cerr << "Try '" << args[0] << " --help' for usage.\n";
     return 1;
   }
 
   if (clp->getSourceFiles().empty()) {
-    std::cerr << argv[0] << ": no input files\n"
-              << "Try '" << argv[0] << " --help' for usage.\n";
+    std::cerr << args[0] << ": no input files\n"
+              << "Try '" << args[0] << " --help' for usage.\n";
     return 1;
   }
 
