@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Push Docker Image
 
 on:
   workflow_run:
@@ -17,8 +17,8 @@ permissions:
   packages: write
 
 jobs:
-  build-and-push:
-    runs-on: ubuntu-latest
+  docker-push:
+    runs-on: ubuntu-24.04
     if: >-
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.event == 'push' &&
@@ -40,7 +40,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Tag and push image
         run: |

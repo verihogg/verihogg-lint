@@ -9,8 +9,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  docker-build:
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
