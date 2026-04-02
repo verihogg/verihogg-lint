@@ -9,6 +9,8 @@
 #include <cassert>
 #include <string>
 
+#include <initializer_list>
+
 namespace SL = SURELOG;
 
 auto FindEnclosingModule(const SL::FileContent* fileContent, SL::NodeId node)
@@ -54,3 +56,10 @@ auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
 
 auto GetSuperclassString(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string;
+
+using NodePrunePredicate = bool (*)(const SL::FileContent*, SL::NodeId,
+                                    SL::VObjectType);
+
+auto SubtreeContainsAnyType(const SL::FileContent* fileContent, SL::NodeId root,
+                            std::initializer_list<SL::VObjectType> targetTypes,
+                            NodePrunePredicate shouldPrune = nullptr) -> bool;

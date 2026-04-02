@@ -32,7 +32,6 @@ auto IsIntegralType(SL::VObjectType type) -> bool {
       SL::VObjectType::paEnum_base_type,
   };
   return std::ranges::find(kIntegralTypes, type) != kIntegralTypes.end();
-  return std::ranges::find(kIntegralTypes, type) != kIntegralTypes.end();
 };
 
 auto ResolveVarName(const SL::FileContent* fileContent, SL::NodeId exprNode)

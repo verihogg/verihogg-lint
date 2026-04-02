@@ -9,6 +9,7 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <cstdint>
+#include <exception>
 #include <string_view>
 
 namespace SL = SURELOG;
@@ -19,14 +20,18 @@ auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node) {
   }
   try {
     return fileContent->Column(node);
-  } catch (...) {
+  } catch (const std::exception&) {
     return uint16_t{0};
   }
 }
 
 auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
                  const std::string_view& symbolName, SL::SymbolTable* symbols) {
-  if (fileContent == nullptr || !node || symbols == nullptr) {
+  if (symbols == nullptr) {
+    return SL::Location{SL::PathId{}, 0, 0, SL::SymbolId{}};
+  }
+
+  if (fileContent == nullptr || !node) {
     return SL::Location{SL::PathId{}, 0, 0,
                         symbols->registerSymbol(symbolName)};
   }

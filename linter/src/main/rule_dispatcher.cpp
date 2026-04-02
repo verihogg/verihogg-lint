@@ -245,9 +245,10 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     }
 
     RunAllRules(fileContent, errors, symbols, kAllRules);
-    FatalListener listener(errors, symbols);
-    listener.Listen(uhdmDesign);
   }
+
+  FatalListener listener(errors, symbols);
+  listener.Listen(uhdmDesign);
 
   for (const auto& rule : kGlobalRules) {
     if (!rule.enabled) {

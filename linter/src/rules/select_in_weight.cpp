@@ -6,54 +6,27 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <algorithm>
-#include <array>
-#include <stack>
-
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
 namespace SL = SURELOG;
 
-static constexpr std::array kSelectTypes = {
-    SL::VObjectType::paSelect,
-    SL::VObjectType::paConstant_select,
-};
-
 namespace {
+auto ShouldPruneRsCodeBlock(const SL::FileContent* fileContent, SL::NodeId node,
+                            SL::VObjectType type) -> bool {
+  (void)fileContent;
+  (void)node;
+  return type == SL::VObjectType::paRs_code_block;
+}
+
 auto ContainsSelectInExpr(const SL::FileContent* fileContent, SL::NodeId node)
     -> bool {
-  if (!node) {
-    return false;
-  }
-
-  std::stack<SL::NodeId> worklist;
-  worklist.push(node);
-
-  while (!worklist.empty()) {
-    SL::NodeId const kNode = worklist.top();
-    worklist.pop();
-
-    SL::VObjectType const kType = fileContent->Type(kNode);
-
-    if (kType == SL::VObjectType::paRs_code_block) {
-      continue;
-    }
-
-    if (std::ranges::any_of(kSelectTypes, [kType](SL::VObjectType selectType) {
-          return selectType == kType;
-        })) {
-      return true;
-    }
-
-    for (SL::NodeId child = fileContent->Child(kNode); child;
-         child = fileContent->Sibling(child)) {
-      worklist.push(child);
-    }
-  }
-
-  return false;
+  return SubtreeContainsAnyType(
+      fileContent, node,
+      {SL::VObjectType::paSelect, SL::VObjectType::paConstant_select},
+      ShouldPruneRsCodeBlock);
 }
 }  // namespace
 void CheckSelectInWeight(const SL::FileContent* fileContent,

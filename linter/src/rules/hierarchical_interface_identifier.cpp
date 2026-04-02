@@ -32,6 +32,13 @@ auto JoinNames(const SL::FileContent* fileContent,
   }
   return res;
 }
+
+auto IsHierarchicalExpression(const SL::FileContent* fileContent,
+                              SL::NodeId expr) -> bool {
+  auto ids = fileContent->sl_collect_all(expr, SL::VObjectType::slStringConst);
+  return ids.size() > 1;
+}
+
 }  // namespace
 
 void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
@@ -49,12 +56,26 @@ void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
            kRoot, SL::VObjectType::paInterface_identifier)) {
     auto parts =
         fileContent->sl_collect_all(kIid, SL::VObjectType::slStringConst);
-    if (parts.size() <= 1) {
-      continue;
+    if (parts.size() > 1) {
+      ReportError(fileContent, kIid, JoinNames(fileContent, parts),
+                  verihogg_lint::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
+                  symbols);
     }
+  }
 
-    ReportError(fileContent, kIid, JoinNames(fileContent, parts),
-                verihogg_lint::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
-                symbols);
+  for (SL::NodeId const kNpc : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paNamed_port_connection)) {
+    auto exprs =
+        fileContent->sl_collect_all(kNpc, SL::VObjectType::paExpression);
+    for (SL::NodeId const expr : exprs) {
+      if (IsHierarchicalExpression(fileContent, expr)) {
+        ReportError(
+            fileContent, expr,
+            JoinNames(fileContent, fileContent->sl_collect_all(
+                                       expr, SL::VObjectType::slStringConst)),
+            verihogg_lint::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
+            symbols);
+      }
+    }
   }
 }

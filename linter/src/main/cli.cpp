@@ -107,11 +107,11 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "MISSING_TASK_IMPLEMENTATION",
      .description = "extern task is not implemented"},
     {.id = "TASK_IMPLEMENTATION_SCOPE",
-     .description = "extern function implemented outside of its class scope"},
+     .description = "extern task implemented outside of its class scope"},
     {.id = "CONSTRAINT_IMPLEMENTATION_SCOPE",
      .description = "extern constraint implemented outside of its class scope"},
     {.id = "FUNCTION_IMPLEMENTATION_SCOPE",
-     .description = "extern task implemented outside of its class scope"},
+     .description = "extern function implemented outside of its class scope"},
 
     {.id = "EXTEND_CLASS", .description = "extending non existing class"},
     {.id = "DUPLICATE_CONSTRUCTOR",

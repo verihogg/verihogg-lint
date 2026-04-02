@@ -28,13 +28,13 @@ using LineCache = std::vector<std::string>;
 namespace {
 auto GetLines(SL::PathId fileId) -> const LineCache& {
   static std::unordered_map<uint32_t, LineCache> sFileCache;
-  const auto kEy = static_cast<uint32_t>(fileId);
-  auto cacheIt = sFileCache.find(kEy);
+  const auto kKey = static_cast<uint32_t>(fileId);
+  auto cacheIt = sFileCache.find(kKey);
   if (cacheIt != sFileCache.end()) {
     return cacheIt->second;
   }
 
-  LineCache& lines = sFileCache[kEy];
+  LineCache& lines = sFileCache[kKey];
 
   SL::FileSystem* fileSystem = SL::FileSystem::getInstance();
   if (fileSystem == nullptr) {
@@ -108,9 +108,7 @@ void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
   const SL::VObjectType kNumType = fileContent->Type(kNumNode);
   if (kNumType != SL::VObjectType::slIntConst &&
       kNumType != SL::VObjectType::slRealConst) {
-    {
-      return;
-    }
+    return;
   }
 
   SL::NodeId const kTimeUnitNode = fileContent->Sibling(kNumNode);

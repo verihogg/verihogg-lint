@@ -68,11 +68,11 @@ auto BuildModuleParamMap(const SL::FileContent* fileContent)
     if (!kHeader) {
       continue;
     }
-    SL::NodeId const kEyword = fileContent->Child(kHeader);
-    if (!kEyword) {
+    SL::NodeId const kKeyword = fileContent->Child(kHeader);
+    if (!kKeyword) {
       continue;
     }
-    SL::NodeId const kNameNode = fileContent->Sibling(kEyword);
+    SL::NodeId const kNameNode = fileContent->Sibling(kKeyword);
     if (!kNameNode ||
         fileContent->Type(kNameNode) != SL::VObjectType::slStringConst) {
       continue;

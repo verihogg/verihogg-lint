@@ -18,7 +18,7 @@ namespace SL = SURELOG;
 
 static constexpr std::array kContextTable = {
     std::pair{SL::VObjectType::paUnpacked_dimension, "array dimension"},
-    std::pair{SL::VObjectType::paConstant_param_expression, "parametr value"},
+    std::pair{SL::VObjectType::paConstant_param_expression, "parameter value"},
     std::pair{SL::VObjectType::paIf_generate_construct,
               "generate if condition"},
 };
@@ -36,7 +36,7 @@ auto GetConstantContextName(const SL::FileContent* fileContent,
       return iter->second;
     }
   }
-  return "constatnt expression";
+  return "constant expression";
 }
 }  // namespace
 

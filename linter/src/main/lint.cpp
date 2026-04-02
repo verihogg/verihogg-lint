@@ -1,6 +1,7 @@
 #include <Surelog/API/Surelog.h>
 #include <Surelog/CommandLine/CommandLineParser.h>
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
+#include <uhdm/vpi_user.h>
 
 #include <array>
 #include <cassert>
@@ -15,7 +16,7 @@
 #include "main/cli.h"
 #include "main/lint_rules.h"
 #include "main/rule_dispatcher.h"
-#include "uhdm/vpi_user.h"
+#include <uhdm/vpi_user.h>
 #include "utils/init.h"
 
 namespace SL = SURELOG;
@@ -119,5 +120,5 @@ auto main(int argc, const char** argv) -> int {
     shutdown_compiler(compiler);
   }
 
-  return 0;
+  return (kErrorCount == 0) ? 0 : 1;
 }

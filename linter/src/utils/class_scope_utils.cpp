@@ -5,8 +5,12 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <array>
+#include <optional>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
+
+#include "utils/ast_utils.h"
 
 namespace SL = SURELOG;
 
@@ -60,11 +64,11 @@ auto GetScopeContainerName(const SL::FileContent* fileContent,
     if (!kHeader) {
       return "";
     }
-    SL::NodeId const kEyword = fileContent->Child(kHeader);
-    if (!kEyword) {
+    SL::NodeId const kKeyword = fileContent->Child(kHeader);
+    if (!kKeyword) {
       return "";
     }
-    SL::NodeId const kNameNode = fileContent->Sibling(kEyword);
+    SL::NodeId const kNameNode = fileContent->Sibling(kKeyword);
     if (!kNameNode ||
         fileContent->Type(kNameNode) != SL::VObjectType::slStringConst) {
       return "";
@@ -110,6 +114,86 @@ auto BuildClassScopeMap(const SL::FileContent* fileContent)
   }
 
   return result;
+}
+
+auto CollectClassDeclInfos(const SL::FileContent* fileContent)
+    -> std::vector<ClassDeclInfo> {
+  std::vector<ClassDeclInfo> result;
+
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  if (!kRoot) {
+    return result;
+  }
+
+  for (SL::NodeId const kClassDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paClass_declaration)) {
+    SL::NodeId const kClassKw = fileContent->Child(kClassDecl);
+    if (!kClassKw || fileContent->Type(kClassKw) != SL::VObjectType::paCLASS) {
+      continue;
+    }
+    SL::NodeId const kClassNameNode = fileContent->Sibling(kClassKw);
+    if (!kClassNameNode ||
+        fileContent->Type(kClassNameNode) != SL::VObjectType::slStringConst) {
+      continue;
+    }
+
+    SL::NodeId const kScopeContainer =
+        FindScopeContainer(fileContent, kClassDecl);
+    if (!kScopeContainer) {
+      continue;
+    }
+
+    result.push_back(ClassDeclInfo{
+        .className = fileContent->SymName(kClassNameNode),
+        .scopeInfo =
+            ClassScopeInfo{
+                .scopeType = fileContent->Type(kScopeContainer),
+                .scopeName =
+                    GetScopeContainerName(fileContent, kScopeContainer),
+            },
+    });
+  }
+
+  return result;
+}
+
+auto ExtractClassScopedMember(const SL::FileContent* fileContent,
+                              SL::NodeId node)
+    -> std::optional<ClassScopedMemberInfo> {
+  SL::NodeId const kClassScope =
+      FindChildOfType(fileContent, node, SL::VObjectType::paClass_scope);
+  if (!kClassScope) {
+    return std::nullopt;
+  }
+
+  SL::NodeId const kClassType = fileContent->Child(kClassScope);
+  if (!kClassType ||
+      fileContent->Type(kClassType) != SL::VObjectType::paClass_type) {
+    return std::nullopt;
+  }
+
+  SL::NodeId classNameNode = SL::InvalidNodeId;
+  for (SL::NodeId cur = fileContent->Child(kClassType); cur;
+       cur = fileContent->Sibling(cur)) {
+    if (fileContent->Type(cur) == SL::VObjectType::slStringConst) {
+      classNameNode = cur;
+    }
+  }
+  if (!classNameNode) {
+    return std::nullopt;
+  }
+
+  SL::NodeId const kMemberNameNode = fileContent->Sibling(kClassScope);
+  if (!kMemberNameNode ||
+      fileContent->Type(kMemberNameNode) != SL::VObjectType::slStringConst) {
+    return std::nullopt;
+  }
+
+  return ClassScopedMemberInfo{
+      .className = fileContent->SymName(classNameNode),
+      .memberName = fileContent->SymName(kMemberNameNode),
+      .classScopeNode = kClassScope,
+  };
 }
 
 auto ScopesMatch(const ClassScopeInfo& implScope,

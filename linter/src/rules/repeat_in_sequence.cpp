@@ -26,25 +26,33 @@ void CheckRepetitionInSequence(const SL::FileContent* fileContent,
     return;
   }
 
-  for (SL::NodeId const kSeqDeclId : fileContent->sl_collect_all(
-           kRoot, SL::VObjectType::paSequence_declaration)) {
-    std::string_view const kSeqName = ExtractName(fileContent, kSeqDeclId);
+  for (SL::NodeId const kSeqExprId :
+       fileContent->sl_collect_all(kRoot, SL::VObjectType::paSequence_expr)) {
+    const bool hasGoto =
+        !fileContent
+             ->sl_collect_all(kSeqExprId, SL::VObjectType::paGoto_repetition)
+             .empty();
 
-    for (SL::NodeId const kSeqExprId : fileContent->sl_collect_all(
-             kSeqDeclId, SL::VObjectType::paSequence_expr)) {
-      if (fileContent
-              ->sl_collect_all(kSeqExprId, SL::VObjectType::paGoto_repetition)
-              .empty()) {
-        continue;
-      }
-      if (fileContent
-              ->sl_collect_all(kSeqExprId,
-                               SL::VObjectType::paNon_consecutive_repetition)
-              .empty()) {
-        continue;
+    const bool hasNonConsecutive =
+        !fileContent
+             ->sl_collect_all(kSeqExprId,
+                              SL::VObjectType::paNon_consecutive_repetition)
+             .empty();
+
+    if (hasGoto || hasNonConsecutive) {
+      std::string_view name = "<unknown>";
+
+      SL::NodeId parent = kSeqExprId;
+      while (parent) {
+        if (fileContent->Type(parent) ==
+            SL::VObjectType::paProperty_declaration) {
+          name = ExtractName(fileContent, parent);
+          break;
+        }
+        parent = fileContent->Parent(parent);
       }
 
-      ReportError(fileContent, kSeqExprId, kSeqName,
+      ReportError(fileContent, kSeqExprId, name,
                   verihogg_lint::LINT_REPETITION_IN_SEQUENCE, errors, symbols);
     }
   }

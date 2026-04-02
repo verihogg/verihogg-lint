@@ -30,6 +30,7 @@ find_library(SURELOG_LIBRARY
 set(UHDM_ROOT "" CACHE PATH "Path to UHDM installation prefix")
 set(ANTLR4_ROOT "" CACHE PATH "Path to ANTLR4 C++ runtime prefix")
 set(ZLIB_ROOT "" CACHE PATH "Path to zlib installation prefix")
+set(GTEST_ROOT "" CACHE PATH "Path to GTest installation prefix")
 
 find_path(UHDM_INCLUDE_DIR
   NAMES uhdm/SymbolId.h
@@ -224,14 +225,12 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PUBLIC verihoggLintLib)
 
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /bigobj)
+    target_compile_options(verihoggLintLib PRIVATE /W4 /bigobj)
 else()
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(verihoggLintLib PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
 # Install rule
 include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-

@@ -14,7 +14,9 @@
 #include <unordered_set>
 #include <vector>
 
-#include "Surelog/Library/Library.h"
+#include <Surelog/Library/Library.h>
+#include <initializer_list>
+#include <stack>
 
 namespace SL = SURELOG;
 
@@ -252,4 +254,36 @@ auto GetSuperclassString(const SL::FileContent* fileContent, SL::NodeId node)
     return "";
   }
   return GetStringConst(fileContent, kClassType);
+}
+auto SubtreeContainsAnyType(const SL::FileContent* fileContent, SL::NodeId root,
+                            std::initializer_list<SL::VObjectType> targetTypes,
+                            NodePrunePredicate shouldPrune) -> bool {
+  if (fileContent == nullptr || !root) {
+    return false;
+  }
+
+  std::stack<SL::NodeId> worklist;
+  worklist.push(root);
+
+  while (!worklist.empty()) {
+    SL::NodeId const current = worklist.top();
+    worklist.pop();
+
+    SL::VObjectType const type = fileContent->Type(current);
+
+    if (shouldPrune != nullptr && shouldPrune(fileContent, current, type)) {
+      continue;
+    }
+
+    if (std::ranges::find(targetTypes, type) != targetTypes.end()) {
+      return true;
+    }
+
+    for (SL::NodeId child = fileContent->Child(current); child;
+         child = fileContent->Sibling(child)) {
+      worklist.push(child);
+    }
+  }
+
+  return false;
 }

@@ -11,9 +11,11 @@
 #include <uhdm/vpi_user.h>
 
 #include <cstddef>
+#include <exception>
 #include <functional>
 #include <optional>
 #include <set>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -31,7 +33,9 @@ auto ParseVpiIntValue(const std::string& raw) -> std::optional<int> {
   }
   try {
     return std::stoi(numStr);
-  } catch (...) {
+  } catch (const std::invalid_argument&) {
+    return std::nullopt;
+  } catch (const std::out_of_range&) {
     return std::nullopt;
   }
 }
@@ -101,7 +105,9 @@ void ValidateMessage(const UHDM::VectorOfany* args,
     report("$fatal missing message");
     return;
   }
-  if (dynamic_cast<UHDM::constant*>(args->at(1)) == nullptr) {
+  const auto* messageConst = dynamic_cast<UHDM::constant*>(args->at(1));
+  if (messageConst == nullptr ||
+      messageConst->VpiConstType() != vpiStringConst) {
     report("$fatal message is not string constant");
   }
 }
@@ -134,7 +140,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     line = vpi_get(vpiLineNo, handle);
     try {
       column = vpi_get(vpiColumnNo, handle);
-    } catch (...) {
+    } catch (const std::exception&) {
       column = 0;
     }
   }

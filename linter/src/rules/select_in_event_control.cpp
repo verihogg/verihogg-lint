@@ -8,9 +8,9 @@
 
 #include <algorithm>
 #include <array>
-#include <stack>
 
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -21,11 +21,6 @@ static constexpr std::array kEdgeTypes = {
     SL::VObjectType::paEdge_Negedge,
 };
 
-static constexpr std::array kSelectTypes = {
-    SL::VObjectType::paSelect,
-    SL::VObjectType::paConstant_select,
-};
-
 namespace {
 auto EventExprHasEdge(const SL::FileContent* fileContent,
                       SL::NodeId eventExprId) -> bool {
@@ -34,39 +29,18 @@ auto EventExprHasEdge(const SL::FileContent* fileContent,
   });
 }
 
+auto ShouldPruneEdgeEventExpr(const SL::FileContent* fileContent,
+                              SL::NodeId node, SL::VObjectType type) -> bool {
+  return type == SL::VObjectType::paEvent_expression &&
+         EventExprHasEdge(fileContent, node);
+}
+
 auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
                                SL::NodeId node) -> bool {
-  if (!node) {
-    return false;
-  }
-
-  std::stack<SL::NodeId> stack;
-  stack.push(node);
-
-  while (!stack.empty()) {
-    SL::NodeId const kNode = stack.top();
-    stack.pop();
-
-    SL::VObjectType const kType = fileContent->Type(kNode);
-
-    if (kType == SL::VObjectType::paEvent_expression &&
-        EventExprHasEdge(fileContent, kNode)) {
-      continue;
-    }
-
-    if (std::ranges::any_of(kSelectTypes, [kType](SL::VObjectType selectType) {
-          return selectType == kType;
-        })) {
-      return true;
-    }
-
-    for (SL::NodeId child = fileContent->Child(kNode); child;
-         child = fileContent->Sibling(child)) {
-      stack.push(child);
-    }
-  }
-
-  return false;
+  return SubtreeContainsAnyType(
+      fileContent, node,
+      {SL::VObjectType::paSelect, SL::VObjectType::paConstant_select},
+      ShouldPruneEdgeEventExpr);
 }
 }  // namespace
 

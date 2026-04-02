@@ -17,6 +17,7 @@
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
+#include "utils/class_scope_utils.h"
 #include "utils/design_utils.h"
 #include "utils/location_utils.h"
 
@@ -178,38 +179,12 @@ auto CollectExternMethods(const SL::FileContent* fileContent)
 
 auto ExtractImplementationKey(const SL::FileContent* fileContent,
                               SL::NodeId bodyDecl) -> std::string {
-  SL::NodeId const kClassScope =
-      FindChildOfType(fileContent, bodyDecl, SL::VObjectType::paClass_scope);
-
-  if (!kClassScope) {
+  auto const kMemberInfo =
+      ClassScopeUtils::ExtractClassScopedMember(fileContent, bodyDecl);
+  if (!kMemberInfo.has_value()) {
     return {};
   }
-
-  SL::NodeId const kClassType = fileContent->Child(kClassScope);
-  if (!kClassType ||
-      fileContent->Type(kClassType) != SL::VObjectType::paClass_type) {
-    return {};
-  }
-  SL::NodeId classNameNode = SL::InvalidNodeId;
-  for (SL::NodeId cur = fileContent->Child(kClassType); cur;
-       cur = fileContent->Sibling(cur)) {
-    if (fileContent->Type(cur) == SL::VObjectType::slStringConst) {
-      classNameNode = cur;
-    }
-  }
-  if (!classNameNode) {
-    return {};
-  }
-  std::string_view const kClassName = fileContent->SymName(classNameNode);
-
-  SL::NodeId const kMethodNameNode = fileContent->Sibling(kClassScope);
-  if (!kMethodNameNode ||
-      fileContent->Type(kMethodNameNode) != SL::VObjectType::slStringConst) {
-    return {};
-  }
-  std::string_view const kMethodName = fileContent->SymName(kMethodNameNode);
-
-  return MakeKey(kClassName, kMethodName);
+  return MakeKey(kMemberInfo->className, kMemberInfo->memberName);
 }
 
 auto CollectImplementedMethods(const SL::FileContent* fileContent)
@@ -279,9 +254,9 @@ void CheckMissingFunctionImplementation(SL::Design* design,
   }
 
   for (const auto& externInfo : allExternMethods) {
-    std::string const kEy =
+    std::string const kKey =
         MakeKey(externInfo.className, externInfo.methodName);
-    if (implementedMethods.contains(kEy)) {
+    if (implementedMethods.contains(kKey)) {
       continue;
     }
 
