@@ -4,11 +4,14 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <uhdm/vpi_user.h>
-#include <yaml-cpp/yaml.h>
+#include <yaml-cpp/node/node.h>
+#include <yaml-cpp/node/parse.h>
 
 #include <array>
 #include <filesystem>
 #include <functional>
+#include <iostream>
+#include <string>
 #include <string_view>
 
 #include "rules/assertion_statement_atribute_instance.h"
@@ -75,8 +78,8 @@ struct GlobalRule {
   const std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)>
       check;
 };
-
-static std::array kAllRules = std::to_array<Rule>({
+namespace {
+std::array kAllRules = std::to_array<Rule>({
     // clang-format off
     {.name = "RepetitionInSequence", .check = CheckRepetitionInSequence},
     {.name = "PrototypeReturnDataType", .check = CheckPrototypeReturnDataType},
@@ -123,7 +126,7 @@ static std::array kAllRules = std::to_array<Rule>({
     // clang-format on
 });
 
-static std::array kGlobalRules = std::to_array<GlobalRule>({
+std::array kGlobalRules = std::to_array<GlobalRule>({
     // clang-format off
     {.name = "NofParameterOverrides", .check = CheckNofParameterOverrides},
     {.name = "MissingFunctionImplementation", .check = CheckMissingFunctionImplementation},
@@ -131,7 +134,6 @@ static std::array kGlobalRules = std::to_array<GlobalRule>({
     // clang-format on
 });
 
-namespace {
 void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
                  SL::SymbolTable* symbols) {
   for (const auto& rule : kAllRules) {
@@ -159,8 +161,7 @@ auto GetYamlConfig() -> YAML::Node {
 
 template <typename RuleType>
 void FilterSpecificRule(RuleType& rule, const YAML::Node& tree) {
-  const std::string ruleName(rule.name);
-  const YAML::Node node = tree[ruleName];
+  const YAML::Node node = tree[rule.name];
   if (node) {
     const auto value = node.as<std::string>();
 
@@ -169,8 +170,8 @@ void FilterSpecificRule(RuleType& rule, const YAML::Node& tree) {
     } else if (value == "false" || value == "no") {
       rule.enabled = false;
     } else {
-      throw std::invalid_argument(std::string("Expected boolean, got: ") +
-                                  std::string(value.begin(), value.end()));
+      std::cerr << "Expected boolean, got: "
+                << std::string(value.begin(), value.end()) << "\n";
     }
   }
 }
