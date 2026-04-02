@@ -26,6 +26,10 @@ struct ModuleVarTraits {
   std::unordered_set<std::string_view> arrayVars;
 };
 
+auto IsKnownVariableName(std::string_view varName) -> bool {
+  return !varName.empty() && varName != "<unknown>" && varName != "<indexed>";
+}
+
 auto CollectStructTypeNames(const SL::FileContent* fileContent,
                             SL::NodeId moduleRoot)
     -> std::unordered_set<std::string_view> {
@@ -130,6 +134,27 @@ auto CollectStructVarsFromNetDecls(
 auto CollectArrayVars(const SL::FileContent* fileContent, SL::NodeId moduleRoot)
     -> std::unordered_set<std::string_view> {
   std::unordered_set<std::string_view> result;
+
+  auto varDecls = fileContent->sl_collect_all(
+      moduleRoot, SL::VObjectType::paVariable_declaration);
+
+  for (SL::NodeId const varDecl : varDecls) {
+    if (varDecl == SL::InvalidNodeId) {
+      continue;
+    }
+
+    std::string_view const varName = ExtractVariableName(fileContent, varDecl);
+    if (!IsKnownVariableName(varName)) {
+      continue;
+    }
+
+    if (!fileContent
+             ->sl_collect_all(varDecl, SL::VObjectType::paUnpacked_dimension)
+             .empty()) {
+      result.insert(varName);
+    }
+  }
+
   auto vdas = fileContent->sl_collect_all(
       moduleRoot, SL::VObjectType::paVariable_decl_assignment);
   for (SL::NodeId const kVda : vdas) {
@@ -185,9 +210,6 @@ auto BuildModuleVarTraits(const SL::FileContent* fileContent,
   return traits;
 }
 
-auto IsKnownVariableName(std::string_view varName) -> bool {
-  return !varName.empty() && varName != "<unknown>" && varName != "<indexed>";
-}
 }  // namespace
 
 void CheckAssignmentPattern(const SL::FileContent* fileContent,

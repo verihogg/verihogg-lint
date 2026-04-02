@@ -65,6 +65,15 @@ namespace fs = std::filesystem;
 
 namespace {
 
+void LogErrorsIfAny(const fs::path& file_path,
+                    SL::ErrorContainer* errors) {
+  const auto& vec = errors->getErrors();
+  if (!vec.empty()) {
+    std::cerr << "[ERRORS] File: " << file_path << std::endl;
+    errors->printMessages();
+  }
+}
+
 const fs::path kBasePath = fs::path(VERIHOGG_TEST_NON_STANDARD_ROOT);
 
 using CheckFunc = void (*)(const SL::FileContent*, SL::ErrorContainer*,
@@ -222,8 +231,15 @@ void testCheckWithNoErrorsExpected(
         GetFileContentFromPath(file_path, errors.get(), symbols.get());
     check_func(fC, errors.get(), symbols.get());
 
-    errors->printMessages();
-    ASSERT_EQ(errors->getErrors().size(), 0u);
+    const auto& errorVector = errors->getErrors();
+
+    if (!errorVector.empty()) {
+      std::cerr << "[UNEXPECTED ERROR] File: " << file_path << std::endl;
+      errors->printMessages();
+    }
+
+    ASSERT_EQ(errorVector.size(), 0u)
+      << "Unexpected errors in file: " << file_path;
   }
 }
 
@@ -245,20 +261,39 @@ void testCheckWithErrorsExpected(
         GetFileContentFromPath(file_path, errors.get(), symbols.get());
     check_func(fC, errors.get(), symbols.get());
 
-    errors->printMessages();
-
     const auto& errorVector = errors->getErrors();
-    ASSERT_NE(errorVector.size(), 0u);
 
-    bool hasError = false;
-    for (const auto& error : errorVector) {
-      const auto type = error.getType();
-      if (ignoreList.count(type) > 0) continue;
-      hasError = true;
-      ASSERT_EQ(type, errorIdExpected);
+    if (errorVector.empty()) {
+      std::cerr << "[MISSING ERROR] File: " << file_path << std::endl;
+    } else {
+      LogErrorsIfAny(file_path, errors.get());
     }
 
-    ASSERT_TRUE(hasError);
+    ASSERT_FALSE(errorVector.empty())
+        << "Expected error not found in file: " << file_path;
+
+    bool hasExpectedError = false;
+
+    for (const auto& error : errorVector) {
+      const auto type = error.getType();
+
+      if (ignoreList.count(type) > 0) continue;
+
+      if (type != errorIdExpected) {
+        std::cerr << "[WRONG ERROR TYPE] File: " << file_path
+                  << " Got: " << static_cast<int>(type)
+                  << " Expected: " << static_cast<int>(errorIdExpected)
+                  << std::endl;
+      }
+
+      ASSERT_EQ(type, errorIdExpected)
+          << "Wrong error type in file: " << file_path;
+
+      hasExpectedError = true;
+    }
+
+    ASSERT_TRUE(hasExpectedError)
+        << "Expected error type not found in file: " << file_path;
   }
 }
 
@@ -277,8 +312,17 @@ void testCheckWithNoErrorsExpectedGlobal(
     SL::Design* design = GetDesignFromPath(file_path, errors.get(), symbols.get());
     check_func(design, errors.get(), symbols.get());
 
-    errors->printMessages();
-    ASSERT_EQ(errors->getErrors().size(), 0u);
+    check_func(design, errors.get(), symbols.get());
+
+    const auto& errorVector = errors->getErrors();
+
+    if (!errorVector.empty()) {
+      std::cerr << "[UNEXPECTED ERROR][GLOBAL] File: " << file_path << std::endl;
+      errors->printMessages();
+    }
+
+    ASSERT_EQ(errorVector.size(), 0u)
+         << "Unexpected errors in file: " << file_path;
   }
 }
 
@@ -299,20 +343,39 @@ void testCheckWithErrorsExpectedGlobal(
     SL::Design* design = GetDesignFromPath(file_path, errors.get(), symbols.get());
     check_func(design, errors.get(), symbols.get());
 
-    errors->printMessages();
-
     const auto& errorVector = errors->getErrors();
-    ASSERT_NE(errorVector.size(), 0u);
 
-    bool hasError = false;
-    for (const auto& error : errorVector) {
-      const auto type = error.getType();
-      if (ignoreList.count(type) > 0) continue;
-      hasError = true;
-      ASSERT_EQ(type, errorIdExpected);
+    if (errorVector.empty()) {
+      std::cerr << "[MISSING ERROR][GLOBAL] File: " << file_path << std::endl;
+    } else {
+      LogErrorsIfAny(file_path, errors.get());
     }
 
-    ASSERT_TRUE(hasError);
+    ASSERT_FALSE(errorVector.empty())
+        << "Expected error not found in file: " << file_path;
+
+    bool hasExpectedError = false;
+
+    for (const auto& error : errorVector) {
+      const auto type = error.getType();
+
+      if (ignoreList.count(type) > 0) continue;
+
+      if (type != errorIdExpected) {
+        std::cerr << "[WRONG ERROR TYPE][GLOBAL] File: " << file_path
+                  << " Got: " << static_cast<int>(type)
+                  << " Expected: " << static_cast<int>(errorIdExpected)
+                  << std::endl;
+      }
+
+      ASSERT_EQ(type, errorIdExpected)
+          << "Wrong error type in file: " << file_path;
+
+      hasExpectedError = true;
+    }
+
+    ASSERT_TRUE(hasExpectedError)
+        << "Expected error type not found in file: " << file_path;
   }
 }
 

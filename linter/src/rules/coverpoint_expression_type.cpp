@@ -106,7 +106,7 @@ auto TypeFromPortDecl(const SL::FileContent* fileContent,
             : SL::InvalidNodeId;
     SL::NodeId const kBase = (kDataType != SL::InvalidNodeId)
                                  ? fileContent->Child(kDataType)
-                                 : SL::InvalidNodeId;
+                                 : kDataType;
     if (kBase != SL::InvalidNodeId) {
       return fileContent->Type(kBase);
     }
@@ -141,6 +141,8 @@ auto TypeFromTfPortItem(const SL::FileContent* fileContent,
     SL::NodeId const kBase = fileContent->Child(kDataType);
     if (kBase != SL::InvalidNodeId) {
       return fileContent->Type(kBase);
+    } else {
+      return fileContent->Type(kDataType);
     }
   }
   return SL::VObjectType::slNoType;
