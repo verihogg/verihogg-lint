@@ -10,6 +10,5 @@ module dot_star_valid;
   logic       clk, rst_n;
   logic [7:0] dout;
 
-  // Single .* — allowed
   child u_child (.*, .dout(dout));
 endmodule

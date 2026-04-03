@@ -8,6 +8,7 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include <cstdint>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -25,13 +26,29 @@ namespace SL = SURELOG;
 
 namespace {
 
-auto MakeKey(std::string_view className, std::string_view methodName)
-    -> std::string {
+enum class MethodKind : std::uint8_t {
+  kFunction,
+  kTask,
+};
+
+auto KindTag(MethodKind kind) -> std::string_view {
+  switch (kind) {
+    case MethodKind::kFunction:
+      return "#function";
+    case MethodKind::kTask:
+      return "#task";
+  }
+  return "#unknown";
+}
+
+auto MakeKey(std::string_view className, std::string_view methodName,
+             MethodKind kind) -> std::string {
   std::string key;
-  key.reserve(className.size() + 2 + methodName.size());
+  key.reserve(className.size() + 2 + methodName.size() + KindTag(kind).size());
   key.append(className);
   key.append("::");
   key.append(methodName);
+  key.append(KindTag(kind));
   return key;
 }
 
@@ -73,7 +90,7 @@ struct ExternMethodInfo {
   std::string_view methodName;
   SL::NodeId reportNode;
   const SL::FileContent* fileContent;
-  bool isTask;
+  MethodKind kind;
 };
 
 auto GetClassNameFromClassDeclaration(const SL::FileContent* fileContent,
@@ -121,8 +138,12 @@ auto TryCollectExternMethodInfo(const SL::FileContent* fileContent,
   }
 
   SL::VObjectType const kProtoType = fileContent->Type(kProto);
-  if (kProtoType != SL::VObjectType::paFunction_prototype &&
-      kProtoType != SL::VObjectType::paTask_prototype) {
+  MethodKind kind{};
+  if (kProtoType == SL::VObjectType::paFunction_prototype) {
+    kind = MethodKind::kFunction;
+  } else if (kProtoType == SL::VObjectType::paTask_prototype) {
+    kind = MethodKind::kTask;
+  } else {
     return std::nullopt;
   }
 
@@ -137,7 +158,7 @@ auto TryCollectExternMethodInfo(const SL::FileContent* fileContent,
       .methodName = kMethodName,
       .reportNode = kMethodProtoContainer,
       .fileContent = fileContent,
-      .isTask = (kProtoType == SL::VObjectType::paTask_prototype),
+      .kind = kind,
   };
 }
 
@@ -178,13 +199,15 @@ auto CollectExternMethods(const SL::FileContent* fileContent)
 }
 
 auto ExtractImplementationKey(const SL::FileContent* fileContent,
-                              SL::NodeId bodyDecl) -> std::string {
+                              SL::NodeId bodyDecl, MethodKind kind)
+    -> std::string {
   auto const kMemberInfo =
       ClassScopeUtils::ExtractClassScopedMember(fileContent, bodyDecl);
   if (!kMemberInfo.has_value()) {
     return {};
   }
-  return MakeKey(kMemberInfo->className, kMemberInfo->memberName);
+
+  return MakeKey(kMemberInfo->className, kMemberInfo->memberName, kind);
 }
 
 auto CollectImplementedMethods(const SL::FileContent* fileContent)
@@ -203,7 +226,9 @@ auto CollectImplementedMethods(const SL::FileContent* fileContent)
                           SL::VObjectType::paFunction_body_declaration) {
       continue;
     }
-    std::string key = ExtractImplementationKey(fileContent, kBodyDecl);
+
+    std::string key =
+        ExtractImplementationKey(fileContent, kBodyDecl, MethodKind::kFunction);
     if (!key.empty()) {
       result.insert(std::move(key));
     }
@@ -216,7 +241,9 @@ auto CollectImplementedMethods(const SL::FileContent* fileContent)
                           SL::VObjectType::paTask_body_declaration) {
       continue;
     }
-    std::string key = ExtractImplementationKey(fileContent, kBodyDecl);
+
+    std::string key =
+        ExtractImplementationKey(fileContent, kBodyDecl, MethodKind::kTask);
     if (!key.empty()) {
       result.insert(std::move(key));
     }
@@ -255,14 +282,15 @@ void CheckMissingFunctionImplementation(SL::Design* design,
 
   for (const auto& externInfo : allExternMethods) {
     std::string const kKey =
-        MakeKey(externInfo.className, externInfo.methodName);
+        MakeKey(externInfo.className, externInfo.methodName, externInfo.kind);
     if (implementedMethods.contains(kKey)) {
       continue;
     }
 
     SL::ErrorDefinition::ErrorType const kErrorType =
-        externInfo.isTask ? verihogg_lint::LINT_MISSING_TASK_IMPLEMENTATION
-                          : verihogg_lint::LINT_MISSING_FUNCTION_IMPLEMENTATION;
+        externInfo.kind == MethodKind::kTask
+            ? verihogg_lint::LINT_MISSING_TASK_IMPLEMENTATION
+            : verihogg_lint::LINT_MISSING_FUNCTION_IMPLEMENTATION;
 
     ReportError(externInfo.fileContent, externInfo.reportNode,
                 externInfo.methodName, kErrorType, errors, symbols);

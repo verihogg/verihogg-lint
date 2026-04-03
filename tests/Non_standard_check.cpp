@@ -523,6 +523,10 @@ const std::vector<RuleSpecGlobal> kGlobalRuleSpecs = {
      CheckMissingFunctionImplementation, {}},
     {"FunctionImplementationScope", verihogg_lint::LINT_FUNC_IMPL_SCOPE,
      CheckFuncImplScope, {}},
+    {"TaskImplementationScope", verihogg_lint::LINT_TASK_IMPL_SCOPE,
+     CheckFuncImplScope, {}},
+    {"ConstraintImplementationScope", verihogg_lint::LINT_CONSTRAINT_IMPL_SCOPE,
+     CheckFuncImplScope, {}},
 };
 
 INSTANTIATE_TEST_SUITE_P(AllRuleTests, RuleTestFixture,

@@ -1,4 +1,9 @@
 ARG BASE_IMAGE=scratch
 FROM ${BASE_IMAGE}
 
-COPY tests/container/fixtures/ /verihogg-test-fixtures/
+COPY tests/NonStandardChecks /verihogg-test-fixtures/
+COPY tests/ClassChecks /verihogg-test-fixtures/
+
+COPY tests/container/run_tests.sh /usr/local/bin/run_tests.sh
+
+RUN chmod +x /usr/local/bin/run_tests.sh

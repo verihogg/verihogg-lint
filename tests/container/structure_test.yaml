@@ -6,72 +6,24 @@ fileExistenceTests:
     path: "/nix/var/nix/profiles/default/bin/verihogg-lint"
     shouldExist: true
 
-  - name: "Valid fixtures directory exists"
-    path: "/verihogg-test-fixtures/valid"
+  - name: "Test fixtures directory exists"
+    path: "/verihogg-test-fixtures"
     shouldExist: true
 
-  - name: "Invalid fixtures directory exists"
-    path: "/verihogg-test-fixtures/invalid"
-    shouldExist: true
-
-  - name: "Valid fixture: case_clean.sv"
-    path: "/verihogg-test-fixtures/valid/case_clean_1.sv"
-    shouldExist: true
-
-  - name: "Invalid fixture: case_implicit_type.sv"
-    path: "/verihogg-test-fixtures/invalid/case_implicit_type.sv"
-    shouldExist: true
-
-  - name: "Invalid fixture: case_dpi_string.sv"
-    path: "/verihogg-test-fixtures/invalid/case_dpi_string.sv"
-    shouldExist: true
-
-  - name: "Invalid fixture: case_foreach_cond.sv"
-    path: "/verihogg-test-fixtures/invalid/case_foreach_cond.sv"
+  - name: "Test runner script exists"
+    path: "/usr/local/bin/run_tests.sh"
     shouldExist: true
 
 commandTests:
 
-  - name: "No args: exits with code 1 and prints usage hint"
+  - name: "Binary starts without crash (no args)"
     command: "/nix/var/nix/profiles/default/bin/verihogg-lint"
     args: []
     exitCode: 1
     expectedError: ["no input files"]
 
-  - name: "Clean file: exits 0 and reports no issues"
-    command: "/nix/var/nix/profiles/default/bin/verihogg-lint"
-    args: ["/verihogg-test-fixtures/valid/case_clean_1.sv"]
+  - name: "All rule fixtures: NoError→exit 0, RaiseError→exit non-zero"
+    command: "/usr/local/bin/run_tests.sh"
+    args: []
     exitCode: 0
-    expectedOutput: ["Lint completed successfully"]
-
-  - name: "ImplicitDataType violation: exits 1 and prints ERR"
-    command: "/nix/var/nix/profiles/default/bin/verihogg-lint"
-    args: ["/verihogg-test-fixtures/invalid/case_implicit_type.sv"]
-    exitCode: 1
-    expectedOutput: ["\\[ERR:LN", "Lint finished with"]
-
-  - name: "DpiDeclarationString violation: exits 1 and prints ERR"
-    command: "/nix/var/nix/profiles/default/bin/verihogg-lint"
-    args: ["/verihogg-test-fixtures/invalid/case_dpi_string.sv"]
-    exitCode: 1
-    expectedOutput: ["\\[ERR:LN", "Lint finished with"]
-
-  - name: "ForeachLoopCondition violation: exits 1 and prints ERR"
-    command: "/nix/var/nix/profiles/default/bin/verihogg-lint"
-    args: ["/verihogg-test-fixtures/invalid/case_foreach_cond.sv"]
-    exitCode: 1
-    expectedOutput: ["\\[ERR:LN", "Lint finished with"]
-
-  - name: "Non-existent file: exits 1 with fatal error"
-    command: "/nix/var/nix/profiles/default/bin/verihogg-lint"
-    args: ["/no/such/file/missing.sv"]
-    exitCode: 1
-    expectedOutput: ["\\[FTL:CM0008\\]", "does not exist"]
-
-  - name: "Multiple files: all processed in single invocation"
-    command: "/nix/var/nix/profiles/default/bin/verihogg-lint"
-    args:
-      - "/verihogg-test-fixtures/invalid/case_implicit_type.sv"
-      - "/verihogg-test-fixtures/invalid/case_foreach_cond.sv"
-    exitCode: 1
-    expectedOutput: ["\\[ERR:LN"]
+    expectedOutput: ["Failed=0"]

@@ -7,7 +7,6 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
-#include <array>
 #include <stack>
 #include <string_view>
 
@@ -16,17 +15,23 @@
 
 namespace SL = SURELOG;
 
-static constexpr std::array kValueTypes = {
-    SL::VObjectType::slIntConst,
-    SL::VObjectType::slStringConst,
-};
-
 namespace {
 auto ValueHasWildcard(std::string_view val) -> bool {
   static constexpr std::string_view kWildcardChars = "xXzZ?";
   return std::ranges::any_of(val, [](char chr) -> bool {
     return kWildcardChars.find(chr) != std::string_view::npos;
   });
+}
+
+auto IsWildcardNumberType(SL::VObjectType type) -> bool {
+  switch (type) {
+    case SL::VObjectType::paNumber_1Tickbx:
+    case SL::VObjectType::paNumber_1Tickb0:
+    case SL::VObjectType::paNumber_1TickbX:
+      return true;
+    default:
+      return false;
+  }
 }
 
 auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
@@ -44,26 +49,18 @@ auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
 
     SL::VObjectType const kType = fileContent->Type(kCurrent);
 
-    if (kType == SL::VObjectType::paNumber_1Tickbx) {
+    if (IsWildcardNumberType(kType)) {
       return kCurrent;
     }
 
-    if (std::ranges::any_of(kValueTypes, [kType](SL::VObjectType tpe) -> bool {
-          return tpe == kType;
-        })) {
-      if (ValueHasWildcard(fileContent->SymName(kCurrent))) {
-        return kCurrent;
-      }
+    std::string_view const val = fileContent->SymName(kCurrent);
+    if (!val.empty() && ValueHasWildcard(val)) {
+      return kCurrent;
     }
 
-    std::stack<SL::NodeId> children;
     for (SL::NodeId child = fileContent->Child(kCurrent); child;
          child = fileContent->Sibling(child)) {
-      children.push(child);
-    }
-    while (!children.empty()) {
-      stack.push(children.top());
-      children.pop();
+      stack.push(child);
     }
   }
 
@@ -91,7 +88,8 @@ auto FindWildcardInTransList(const SL::FileContent* fileContent,
 
       SL::NodeId const kWildcardNode =
           FindWildcardInTransRangeList(fileContent, transRange);
-      if (kWildcardNode) {
+
+      if (kWildcardNode != SL::InvalidNodeId) {
         return kWildcardNode;
       }
     }
