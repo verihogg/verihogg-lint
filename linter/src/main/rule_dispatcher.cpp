@@ -85,8 +85,10 @@ struct GlobalRule {
 };
 namespace {
 
-static std::array<Rule, 42> kAllRules = std::to_array<Rule>({
-    // clang-format off
+constexpr int AllRulesSize = 42;
+auto GetRules() -> std::array<Rule, AllRulesSize> {
+  const static std::array<Rule, AllRulesSize> arr = std::to_array<Rule>({
+      // clang-format off
     {.name = "RepetitionInSequence", .check = CheckRepetitionInSequence},
     {.name = "PrototypeReturnDataType", .check = CheckPrototypeReturnDataType},
     {.name = "ParameterDynamicArray", .check = CheckParameterDynamicArray},
@@ -129,19 +131,26 @@ static std::array<Rule, 42> kAllRules = std::to_array<Rule>({
     {.name = "ImplementClass", .check = CheckImplementClass},
     {.name = "ImplementInterfaceClass", .check = CheckImplementInterfaceClass},
     {.name = "CircularInheritance", .check = CheckCircularInheritance},
-    // clang-format on
-});
-
-static std::array<GlobalRule, 3> kGlobalRules = std::to_array<GlobalRule>({
-    // clang-format off
+      // clang-format on
+  });
+  return arr;
+}
+constexpr int AllGlobalRulesSize = 3;
+auto GetGlobalRules() -> std::array<GlobalRule, AllGlobalRulesSize> {
+  const static std::array<GlobalRule, AllGlobalRulesSize> arr =
+      std::to_array<GlobalRule>({
+          // clang-format off
     {.name = "NofParameterOverrides", .check = CheckNofParameterOverrides},
     {.name = "MissingFunctionImplementation", .check = CheckMissingFunctionImplementation},
     {.name = "FuctionImplementationScope", .check = CheckFuncImplScope},
-    // clang-format on
-});
+          // clang-format on
+      });
+  return arr;
+}
 
 void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
-                 SL::SymbolTable* symbols) {
+                 SL::SymbolTable* symbols,
+                 const std::array<Rule, AllRulesSize>& kAllRules) {
   for (const auto& rule : kAllRules) {
     if (!rule.enabled) {
       continue;
@@ -150,9 +159,14 @@ void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
   }
 }
 
-auto GetYamlConfig(std::filesystem::path& configFile) -> YAML::Node {
-  if (!configFile.empty()) {
-    return YAML::LoadFile(configFile);
+auto GetYamlConfig(const std::filesystem::path& configFile) -> YAML::Node {
+  if (!configFile.empty() && std::filesystem::exists(configFile)) {
+    try {
+      return YAML::LoadFile(configFile);
+    } catch (const std::exception& e) {
+      std::cerr << "Bad config file" << "\n";
+      return YAML::Node{};
+    }
   }
 
   const std::filesystem::path configPath = DefaultConfigFileName;
@@ -166,7 +180,12 @@ auto GetYamlConfig(std::filesystem::path& configFile) -> YAML::Node {
     currentDir = currentDir.parent_path();
   }
 
-  return YAML::LoadFile(currentDir / configPath);
+  try {
+    return YAML::LoadFile(currentDir / configPath);
+  } catch (const std::exception& e) {
+    std::cerr << "Bad config file" << "\n";
+    return YAML::Node{};
+  }
 }
 
 template <typename RuleType>
@@ -186,7 +205,9 @@ void FilterSpecificRule(RuleType& rule, const YAML::Node& tree) {
   }
 }
 
-void FilterRules(std::filesystem::path& configFile) {
+void FilterRules(const std::filesystem::path& configFile,
+                 std::array<Rule, AllRulesSize>& kAllRules,
+                 std::array<GlobalRule, AllGlobalRulesSize>& kGlobalRules) {
   const auto yaml = GetYamlConfig(configFile);
   if (yaml.IsNull()) {
     return;
@@ -202,6 +223,8 @@ void FilterRules(std::filesystem::path& configFile) {
 }  // namespace
 
 void DumpConfig() {
+  auto kAllRules = GetRules();
+  auto kGlobalRules = GetGlobalRules();
   for (auto& rule : kAllRules) {
     std::cout << rule.name << ": true\n";
   }
@@ -212,19 +235,21 @@ void DumpConfig() {
 
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols,
-                         std::filesystem::path configFile) {
+                         const std::filesystem::path& configFile) {
+  auto kAllRules = GetRules();
+  auto kGlobalRules = GetGlobalRules();
   if (design == nullptr) {
     return;
   }
 
-  FilterRules(configFile);
+  FilterRules(configFile, kAllRules, kGlobalRules);
 
   for (auto& [name, fileContent] : design->getAllFileContents()) {
     if (fileContent == nullptr) {
       continue;
     }
 
-    RunAllRules(fileContent, errors, symbols);
+    RunAllRules(fileContent, errors, symbols, kAllRules);
     FatalListener listener(errors, symbols);
     listener.Listen(uhdmDesign);
   }

@@ -141,49 +141,40 @@ static constexpr int kRuleCount =
 auto ParseArgs(std::span<const char*> args) -> Options {
   Options opts;
 
-<<<<<<< variant A
   opts.surelog_args.push_back(args[0]);
->>>>>>> variant B
-  opts.surelog_args.push_back(argv[0]);
 
-  const std::filesystem::path configPath = DefaultConfigFileName;
-  const std::filesystem::path currentDir = std::filesystem::current_path();
-  opts.config_file = currentDir / configPath;
+  const std::filesystem::path configFileName = DefaultConfigFileName;
+  opts.config_file = std::filesystem::current_path() / configFileName;
 
-  for (int i = 1; i < argc; ++i) {
-    const char* arg = argv[i];
-======= end
-
-    for (const auto arg : args.subspan(1)) {
-      if (std::strcmp(arg, "--dump-config") == 0) {
-        opts.dump_config = true;
-        return opts;
-      } else if (std::strcmp(arg, "--help") == 0 ||
-                 std::strcmp(arg, "-h") == 0) {
-        opts.show_help = true;
-      } else if (std::strcmp(arg, "--version") == 0) {
-        opts.show_version = true;
-      } else if (std::strcmp(arg, "--list-rules") == 0) {
-        opts.show_rules = true;
-      } else if (std::strcmp(arg, "--surelog-help") == 0) {
-        opts.show_surelog_help = true;
-      } else if (std::strncmp(arg, "--config-file", CONFIG_FILE_ARG_LEN) == 0) {
-        const std::string strArg{arg};
-        const std::string config_file =
-            strArg.substr(CONFIG_FILE_ARG_LEN + 1, strArg.size());
-        opts.config_file = std::filesystem::path{config_file};
-      } else {
-        opts.surelog_args.push_back(arg);
-      }
+  for (const auto arg : args.subspan(1)) {
+    if (std::strcmp(arg, "--dump-config") == 0) {
+      opts.dump_config = true;
+      return opts;
+    } else if (std::strcmp(arg, "--help") == 0 || std::strcmp(arg, "-h") == 0) {
+      opts.show_help = true;
+    } else if (std::strcmp(arg, "--version") == 0) {
+      opts.show_version = true;
+    } else if (std::strcmp(arg, "--list-rules") == 0) {
+      opts.show_rules = true;
+    } else if (std::strcmp(arg, "--surelog-help") == 0) {
+      opts.show_surelog_help = true;
+    } else if (std::strncmp(arg, "--config-file", CONFIG_FILE_ARG_LEN) == 0) {
+      const std::string strArg{arg};
+      const std::string config_file =
+          strArg.substr(CONFIG_FILE_ARG_LEN + 1, strArg.size());
+      opts.config_file = std::filesystem::path{config_file};
+    } else {
+      opts.surelog_args.push_back(arg);
     }
-
-    return opts;
   }
 
-  void PrintVersion() { std::cout << "verihogg-lint " << kVersion << "\n"; }
+  return opts;
+}
 
-  void PrintHelp(const char* programName) {
-    // clang-format off
+void PrintVersion() { std::cout << "verihogg-lint " << kVersion << "\n"; }
+
+void PrintHelp(const char* programName) {
+  // clang-format off
   std::cout
     << "Usage: " << programName << " [OPTIONS] <file.sv> [<file.sv>...]\n"
     << "       " << programName << " [OPTIONS] -f <filelist>\n"
@@ -219,16 +210,16 @@ auto ParseArgs(std::span<const char*> args) -> Options {
     << "\n"
     << "All other flags are forwarded to Surelog (parser/elaboration).\n"
     << "Run '" << programName << " --surelog-help' for the full list.\n";
-    // clang-format on
-  }
+  // clang-format on
+}
 
-  void PrintRules() {
-    std::cout << "Available lint rules (" << kRuleCount << "):\n";
+void PrintRules() {
+  std::cout << "Available lint rules (" << kRuleCount << "):\n";
 
-    for (const auto& rule : kRules) {
-      std::cout << "\n  " << rule.id << "\n"
-                << "      " << rule.description << "\n";
-    }
+  for (const auto& rule : kRules) {
+    std::cout << "\n  " << rule.id << "\n"
+              << "      " << rule.description << "\n";
   }
+}
 
 }  // namespace cli
