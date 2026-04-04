@@ -14,6 +14,7 @@
 
 #include <array>
 #include <filesystem>
+#include <fstream>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -197,6 +198,15 @@ void FilterRules() {
   }
 }
 }  // namespace
+
+void DumpConfig() {
+  for (auto& rule : kAllRules) {
+    std::cout << rule.name << ": true\n";
+  }
+  for (auto& rule : kGlobalRules) {
+    std::cout << rule.name << ": true\n";
+  }
+}
 
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols) {

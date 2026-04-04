@@ -25,6 +25,11 @@ auto main(int argc, const char** argv) -> int {
   const auto args = std::span{argv, static_cast<size_t>(argc)};
   const cli::Options kOpts = cli::ParseArgs(args);
 
+  if (kOpts.dump_config) {
+    DumpConfig();
+    return 0;
+  }
+
   if (kOpts.show_version) {
     cli::PrintVersion();
     return 0;

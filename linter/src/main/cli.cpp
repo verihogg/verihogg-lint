@@ -138,7 +138,10 @@ auto ParseArgs(std::span<const char*> args) -> Options {
   opts.surelog_args.push_back(args[0]);
 
   for (const auto arg : args.subspan(1)) {
-    if (std::strcmp(arg, "--help") == 0 || std::strcmp(arg, "-h") == 0) {
+    if (std::strcmp(arg, "--dump-config") == 0) {
+      opts.dump_config = true;
+      return opts;
+    } else if (std::strcmp(arg, "--help") == 0 || std::strcmp(arg, "-h") == 0) {
       opts.show_help = true;
     } else if (std::strcmp(arg, "--version") == 0) {
       opts.show_version = true;

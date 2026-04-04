@@ -13,3 +13,5 @@ void RunAllRules(SURELOG::ErrorContainer* errors,
 void RunAllRulesOnDesign(SURELOG::Design* design, const vpiHandle& uhdmDesign,
                          SURELOG::ErrorContainer* errors,
                          SURELOG::SymbolTable* symbols);
+
+void DumpConfig();
