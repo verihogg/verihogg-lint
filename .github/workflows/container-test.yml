@@ -1,0 +1,57 @@
+name: Container Tests
+
+on:
+  workflow_run:
+    workflows:
+      - Docker Build
+    types:
+      - completed
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  container-test:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Download Docker image artifact from Docker Build
+        uses: actions/download-artifact@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: docker-image-${{ github.event.workflow_run.head_sha }}
+          path: /tmp
+
+      - name: Load Docker image
+        run: docker load --input /tmp/verihogg-lint-image.tar
+
+      - name: Build ephemeral test image
+        run: |
+          docker build \
+            --file tests/container/Dockerfile.test \
+            --build-arg BASE_IMAGE="local/verihogg-lint:${{ github.event.workflow_run.head_sha }}" \
+            --tag verihogg-lint:test \
+            .
+
+      - name: Run all fixture tests
+        run: docker run --rm verihogg-lint:test /usr/local/bin/run_tests.sh
+
+      - name: Save Build run ID and SHA for publish workflow
+        run: |
+          echo "run_id=${{ github.event.workflow_run.id }}" > /tmp/build_meta.txt
+          echo "head_sha=${{ github.event.workflow_run.head_sha }}" >> /tmp/build_meta.txt
+
+      - name: Upload build meta artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-meta
+          path: /tmp/build_meta.txt
+          retention-days: 1

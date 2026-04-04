@@ -22,6 +22,7 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v7
         with:
+          context: .
           push: false
           tags: local/verihogg-lint:${{ github.sha }}
           outputs: type=docker,dest=/tmp/verihogg-lint-image.tar
