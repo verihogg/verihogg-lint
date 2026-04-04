@@ -4,8 +4,13 @@
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <uhdm/vpi_user.h>
+#include <yaml-cpp/node/convert.h>      // NOLINT(misc-include-cleaner)
+#include <yaml-cpp/node/detail/impl.h>  // NOLINT(misc-include-cleaner)
+#include <yaml-cpp/node/emit.h>
 #include <yaml-cpp/node/node.h>
 #include <yaml-cpp/node/parse.h>
+#include <yaml-cpp/null.h>
+#include <yaml-cpp/parser.h>
 
 #include <array>
 #include <filesystem>
@@ -60,6 +65,8 @@
 #include "rules/time_value.h"
 #include "rules/type_casting.h"
 #include "rules/wildcard_operator.h"
+#include "yaml-cpp/node/node.h"
+#include "yaml-cpp/null.h"
 
 namespace SL = SURELOG;
 constexpr const char* DefaultConfigFileName = ".verihogg-lint";
