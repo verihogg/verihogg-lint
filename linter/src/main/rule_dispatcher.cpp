@@ -14,7 +14,6 @@
 
 #include <array>
 #include <filesystem>
-#include <fstream>
 #include <functional>
 #include <iostream>
 #include <string>
@@ -70,24 +69,23 @@
 #include "yaml-cpp/null.h"
 
 namespace SL = SURELOG;
-constexpr const char* DefaultConfigFileName = ".verihogg-lint";
 
 struct Rule {
-  const std::string_view name;
+  std::string_view name;
   bool enabled = true;
-  const std::function<void(const SL::FileContent*, SL::ErrorContainer*,
-                           SL::SymbolTable*)>
+  std::function<void(const SL::FileContent*, SL::ErrorContainer*,
+                     SL::SymbolTable*)>
       check;
 };
 
 struct GlobalRule {
-  const std::string_view name;
+  std::string_view name;
   bool enabled = true;
-  const std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)>
-      check;
+  std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)> check;
 };
 namespace {
-std::array kAllRules = std::to_array<Rule>({
+
+static std::array<Rule, 42> kAllRules = std::to_array<Rule>({
     // clang-format off
     {.name = "RepetitionInSequence", .check = CheckRepetitionInSequence},
     {.name = "PrototypeReturnDataType", .check = CheckPrototypeReturnDataType},
@@ -134,7 +132,7 @@ std::array kAllRules = std::to_array<Rule>({
     // clang-format on
 });
 
-std::array kGlobalRules = std::to_array<GlobalRule>({
+static std::array<GlobalRule, 3> kGlobalRules = std::to_array<GlobalRule>({
     // clang-format off
     {.name = "NofParameterOverrides", .check = CheckNofParameterOverrides},
     {.name = "MissingFunctionImplementation", .check = CheckMissingFunctionImplementation},
@@ -152,7 +150,11 @@ void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
   }
 }
 
-auto GetYamlConfig() -> YAML::Node {
+auto GetYamlConfig(std::filesystem::path& configFile) -> YAML::Node {
+  if (!configFile.empty()) {
+    return YAML::LoadFile(configFile);
+  }
+
   const std::filesystem::path configPath = DefaultConfigFileName;
   std::filesystem::path currentDir = std::filesystem::current_path();
 
@@ -184,8 +186,8 @@ void FilterSpecificRule(RuleType& rule, const YAML::Node& tree) {
   }
 }
 
-void FilterRules() {
-  const auto yaml = GetYamlConfig();
+void FilterRules(std::filesystem::path& configFile) {
+  const auto yaml = GetYamlConfig(configFile);
   if (yaml.IsNull()) {
     return;
   }
@@ -209,12 +211,13 @@ void DumpConfig() {
 }
 
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
-                         SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+                         SL::ErrorContainer* errors, SL::SymbolTable* symbols,
+                         std::filesystem::path configFile) {
   if (design == nullptr) {
     return;
   }
 
-  FilterRules();
+  FilterRules(configFile);
 
   for (auto& [name, fileContent] : design->getAllFileContents()) {
     if (fileContent == nullptr) {
