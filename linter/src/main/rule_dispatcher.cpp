@@ -13,6 +13,7 @@
 #include <yaml-cpp/parser.h>
 
 #include <array>
+#include <exception>
 #include <filesystem>
 #include <functional>
 #include <iostream>
