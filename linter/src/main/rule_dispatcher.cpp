@@ -51,6 +51,7 @@
 #include "rules/missing_for_loop_initialization.h"
 #include "rules/missing_for_loop_step.h"
 #include "rules/missing_function_implementation.h"
+#include "rules/modport_import_export_port.h"
 #include "rules/multiple_bins.h"
 #include "rules/multiple_dot_star_connection.h"
 #include "rules/nof_parameter_override.h"
@@ -120,6 +121,7 @@ const auto allRules = std::to_array<Rule>({
     {.name = "SystemFunctionArguments", .check = CheckSystemFunctionArguments},
     {.name = "WildcardOperator", .check = CheckWildcardOperators},
     {.name = "ExponentFormatTimeValue", .check = CheckExponentFormatTimeValue},
+    {.name = "ModportImportExportProt", .check = CheckModportImportExportPort},
     {.name = "ExtendClass", .check = CheckExtendClass},
     {.name = "DuplicateConstructor", .check = CheckDuplicateConstructor},
     {.name = "DuplicateClass", .check = CheckDuplicateClass},

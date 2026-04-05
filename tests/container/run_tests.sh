@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 set -u
 
 BINARY="/nix/var/nix/profiles/default/bin/verihogg-lint"
@@ -15,8 +15,6 @@ fi
 
 for rule_dir in "$FIXTURES_DIR"/*/; do
     rule_name=$(basename "$rule_dir")
-
-    [ "$rule_name" = "container" ] && continue
 
     no_error_dir="$rule_dir/NoError"
     if [ -d "$no_error_dir" ]; then

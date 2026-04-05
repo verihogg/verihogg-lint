@@ -16,7 +16,6 @@
 #include "main/cli.h"
 #include "main/lint_rules.h"
 #include "main/rule_dispatcher.h"
-#include <uhdm/vpi_user.h>
 #include "utils/init.h"
 
 namespace SL = SURELOG;

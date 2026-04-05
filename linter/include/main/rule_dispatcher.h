@@ -4,10 +4,9 @@
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
+#include <uhdm/vpi_user.h>
 
 #include <filesystem>
-
-#include <uhdm/vpi_user.h>
 
 constexpr const char* DefaultConfigFileName = ".verihogg-lint";
 

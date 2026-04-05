@@ -3,20 +3,19 @@
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
+#include <Surelog/Library/Library.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
 #include <cstddef>
 #include <gsl/span>
+#include <initializer_list>
 #include <sstream>
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-
-#include <Surelog/Library/Library.h>
-#include <initializer_list>
-#include <stack>
 
 namespace SL = SURELOG;
 

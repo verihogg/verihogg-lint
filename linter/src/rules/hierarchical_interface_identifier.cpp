@@ -114,7 +114,7 @@ void CheckHierarchicalInterfaceIdentifier(const SL::FileContent* fileContent,
            kRoot, SL::VObjectType::paInterface_identifier)) {
     auto parts =
         fileContent->sl_collect_all(kIid, SL::VObjectType::slStringConst);
-    if (parts.size() > 1) {
+    if (parts.size() > 2) {
       ReportError(fileContent, kIid, JoinNames(fileContent, parts),
                   verihogg_lint::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
                   symbols);

@@ -179,6 +179,7 @@ set(LINTER_SRC
     linter/src/rules/nof_parameter_override.cpp
     linter/src/rules/missing_function_implementation.cpp
     linter/src/rules/function_implemention_scope.cpp
+    linter/src/rules/modport_import_export_port.cpp
     linter/src/rules/extend_class.cpp
     linter/src/rules/duplicate_constructor.cpp
     linter/src/rules/duplicate_class.cpp

@@ -70,6 +70,8 @@ inline constexpr ED::ErrorType LINT_EXTEND_INTERFACE_CLASS = LintId(780);
 inline constexpr ED::ErrorType LINT_IMPLEMENT_CLASS = LintId(781);
 inline constexpr ED::ErrorType LINT_IMPLEMENT_INTERFACE_CLASS = LintId(782);
 inline constexpr ED::ErrorType LINT_CIRCULAR_INHERITANCE = LintId(783);
+
+inline constexpr ED::ErrorType LINT_MODPORT_IMPORT_EXPORT_PORT = LintId(784);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -212,6 +214,9 @@ inline constexpr std::array kLintRules = {
                  .text = "Implementing non existing interface class %s"},
     LintRuleInfo{.type = LINT_CIRCULAR_INHERITANCE,
                  .text = "Class %s extends itself"},
+    LintRuleInfo{
+        .type = LINT_MODPORT_IMPORT_EXPORT_PORT,
+        .text = "еxpected method name instead of interface signal name: %s"},
 };
 
 inline void RegisterLintRules() {

@@ -156,6 +156,9 @@ The project is intended for static code analysis and checking compliance with co
 
 - `CONSTRAINT_IMPLEMENTATION_SCOPE`  
   extern conxtraint implemented outside of its class scope
+
+- `MODPORT_IMPORT_EXPORT_PORT`  
+  еxpected method name instead of interface signal name
 ---
 
 ## Project structure

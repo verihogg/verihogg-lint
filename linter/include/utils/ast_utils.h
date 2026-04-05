@@ -7,9 +7,8 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 
 #include <cassert>
-#include <string>
-
 #include <initializer_list>
+#include <string>
 
 namespace SL = SURELOG;
 

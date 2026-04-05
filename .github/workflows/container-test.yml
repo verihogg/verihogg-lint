@@ -44,14 +44,9 @@ jobs:
       - name: Run all fixture tests
         run: docker run --rm verihogg-lint:test /usr/local/bin/run_tests.sh
 
-      - name: Save Build run ID and SHA for publish workflow
-        run: |
-          echo "run_id=${{ github.event.workflow_run.id }}" > /tmp/build_meta.txt
-          echo "head_sha=${{ github.event.workflow_run.head_sha }}" >> /tmp/build_meta.txt
-
-      - name: Upload build meta artifact
+      - name: Re-upload Docker image artifact
         uses: actions/upload-artifact@v7
         with:
-          name: build-meta
-          path: /tmp/build_meta.txt
+          name: docker-image-${{ github.event.workflow_run.head_sha }}
+          path: /tmp/verihogg-lint-image.tar
           retention-days: 1

@@ -25,35 +25,18 @@ jobs:
       github.event.workflow_run.head_branch == 'master'
 
     steps:
-      - name: Download build meta artifact from Container Tests
+      - name: Download Docker image artifact from Container Test workflow
         uses: dawidd6/action-download-artifact@v18
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          name: build-meta
-          path: /tmp/build-meta
           run_id: ${{ github.event.workflow_run.id }}
-
-      - name: Read build run ID and SHA
-        id: build-meta
-        run: |
-          BUILD_RUN_ID=$(grep '^run_id=' /tmp/build-meta/build_meta.txt | cut -d= -f2)
-          HEAD_SHA=$(grep '^head_sha=' /tmp/build-meta/build_meta.txt | cut -d= -f2)
-          echo "id=${BUILD_RUN_ID}" >> "$GITHUB_OUTPUT"
-          echo "sha=${HEAD_SHA}" >> "$GITHUB_OUTPUT"
-
-      - name: Download Docker image artifact from Docker Build
-        uses: actions/download-artifact@v8
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id: ${{ steps.build-meta.outputs.id }}
-          name: docker-image-${{ steps.build-meta.outputs.sha }}
+          name: docker-image-${{ github.event.workflow_run.head_sha }}
           path: /tmp
 
       - name: Load Docker image
         run: docker load --input /tmp/verihogg-lint-image.tar
 
-      - name: Login to GHCR
-        uses: docker/login-action@v4
+      - uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -61,9 +44,9 @@ jobs:
 
       - name: Tag and push image
         run: |
-          SOURCE_IMAGE="local/verihogg-lint:${{ steps.build-meta.outputs.sha }}"
+          SOURCE_IMAGE="local/verihogg-lint:${{ github.event.workflow_run.head_sha }}"
           TARGET_IMAGE_LATEST="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-          TARGET_IMAGE_SHA="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ steps.build-meta.outputs.sha }}"
+          TARGET_IMAGE_SHA="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ github.event.workflow_run.head_sha }}"
 
           docker tag "$SOURCE_IMAGE" "$TARGET_IMAGE_LATEST"
           docker tag "$SOURCE_IMAGE" "$TARGET_IMAGE_SHA"
