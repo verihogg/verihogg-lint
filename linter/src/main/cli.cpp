@@ -3,8 +3,8 @@
 #include <array>
 #include <cstring>
 #include <filesystem>
+#include <gsl/span>
 #include <iostream>
-#include <span>
 #include <string>
 
 #include "main/rule_dispatcher.h"
@@ -135,10 +135,9 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "CIRCULAR_INHERITANCE", .description = "class extends itself"},
 });
 
-static constexpr int kRuleCount =
-    static_cast<int>(sizeof(kRules) / sizeof(kRules[0]));
+static constexpr auto kRuleCount = kRules.size();
 
-auto ParseArgs(std::span<const char*> args) -> Options {
+auto ParseArgs(gsl::span<const char*> args) -> Options {
   Options opts;
 
   opts.surelog_args.push_back(args[0]);

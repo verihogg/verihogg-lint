@@ -71,6 +71,7 @@
 
 namespace SL = SURELOG;
 
+namespace {
 struct Rule {
   std::string_view name;
   bool enabled = true;
@@ -84,12 +85,9 @@ struct GlobalRule {
   bool enabled = true;
   std::function<void(SL::Design*, SL::ErrorContainer*, SL::SymbolTable*)> check;
 };
-namespace {
 
-constexpr int AllRulesSize = 42;
-auto GetRules() -> std::array<Rule, AllRulesSize> {
-  const static std::array<Rule, AllRulesSize> arr = std::to_array<Rule>({
-      // clang-format off
+const auto allRules = std::to_array<Rule>({
+    // clang-format off
     {.name = "RepetitionInSequence", .check = CheckRepetitionInSequence},
     {.name = "PrototypeReturnDataType", .check = CheckPrototypeReturnDataType},
     {.name = "ParameterDynamicArray", .check = CheckParameterDynamicArray},
@@ -132,22 +130,20 @@ auto GetRules() -> std::array<Rule, AllRulesSize> {
     {.name = "ImplementClass", .check = CheckImplementClass},
     {.name = "ImplementInterfaceClass", .check = CheckImplementInterfaceClass},
     {.name = "CircularInheritance", .check = CheckCircularInheritance},
-      // clang-format on
-  });
-  return arr;
-}
-constexpr int AllGlobalRulesSize = 3;
-auto GetGlobalRules() -> std::array<GlobalRule, AllGlobalRulesSize> {
-  const static std::array<GlobalRule, AllGlobalRulesSize> arr =
-      std::to_array<GlobalRule>({
-          // clang-format off
+    // clang-format on
+});
+
+constexpr size_t AllRulesSize = allRules.size();
+
+const auto globalRules = std::to_array<GlobalRule>({
+    // clang-format off
     {.name = "NofParameterOverrides", .check = CheckNofParameterOverrides},
     {.name = "MissingFunctionImplementation", .check = CheckMissingFunctionImplementation},
     {.name = "FuctionImplementationScope", .check = CheckFuncImplScope},
-          // clang-format on
-      });
-  return arr;
-}
+    // clang-format on
+});
+
+constexpr size_t AllGlobalRulesSize = globalRules.size();
 
 void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
                  SL::SymbolTable* symbols,
@@ -224,12 +220,10 @@ void FilterRules(const std::filesystem::path& configFile,
 }  // namespace
 
 void DumpConfig() {
-  auto kAllRules = GetRules();
-  auto kGlobalRules = GetGlobalRules();
-  for (auto& rule : kAllRules) {
+  for (auto& rule : allRules) {
     std::cout << rule.name << ": true\n";
   }
-  for (auto& rule : kGlobalRules) {
+  for (auto& rule : globalRules) {
     std::cout << rule.name << ": true\n";
   }
 }
@@ -237,8 +231,8 @@ void DumpConfig() {
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols,
                          const std::filesystem::path& configFile) {
-  auto kAllRules = GetRules();
-  auto kGlobalRules = GetGlobalRules();
+  auto kAllRules = allRules;
+  auto kGlobalRules = globalRules;
   if (design == nullptr) {
     return;
   }

@@ -7,9 +7,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <gsl/span>
 #include <iostream>
 #include <memory>
-#include <span>
 #include <vector>
 
 #include "main/cli.h"
@@ -22,7 +22,7 @@ namespace SL = SURELOG;
 
 auto main(int argc, const char** argv) -> int {
   assert(argc >= 0);
-  const auto args = std::span{argv, static_cast<size_t>(argc)};
+  const auto args = gsl::span{argv, static_cast<size_t>(argc)};
   const cli::Options kOpts = cli::ParseArgs(args);
 
   if (kOpts.dump_config) {

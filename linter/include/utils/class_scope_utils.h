@@ -10,7 +10,7 @@
 namespace ClassScopeUtils {
 
 struct ClassScopeInfo {
-  SURELOG::VObjectType scopeType{};
+  SURELOG::VObjectType scopeType{SURELOG::VObjectType::sl_INVALID_};
   std::string_view scopeName;
 };
 

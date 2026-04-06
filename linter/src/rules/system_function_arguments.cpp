@@ -108,7 +108,7 @@ auto ExtractFromSystemTask(const SL::FileContent* fileContent,
   }
 
   std::string_view const kRawName = fileContent->SymName(kNameNode);
-  std::string const kFuncName = (!kRawName.empty() && kRawName[0] == '$')
+  std::string const kFuncName = (!kRawName.empty() && kRawName.at(0) == '$')
                                     ? std::string(kRawName.substr(1))
                                     : std::string(kRawName);
 

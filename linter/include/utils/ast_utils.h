@@ -28,6 +28,7 @@ auto FindSiblingOfType(const SL::FileContent* fileContent, SL::NodeId start,
 
 auto FindChildOfType(const SL::FileContent* fileContent, SL::NodeId node,
                      SL::VObjectType type) -> SL::NodeId;
+
 auto GetStringConst(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string;
 
@@ -41,11 +42,6 @@ auto GetFullName(const SL::FileContent* fileContent, SL::NodeId node)
 
 auto GetClassIds(const SL::FileContent* fileContent)
     -> std::unordered_map<std::string, SL::NodeId>;
-
-auto RemoveFilePrefix(std::string str) -> std::string;
-
-auto GetClassScope(const SL::FileContent* fileContent, SL::NodeId funcBodyNode)
-    -> std::vector<std::string>;
 
 auto GetInterfaceClassSet(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string>;

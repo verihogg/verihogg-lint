@@ -1,7 +1,7 @@
 #pragma once
 
 #include <filesystem>
-#include <span>
+#include <gsl/span>
 #include <vector>
 
 namespace cli {
@@ -19,7 +19,7 @@ struct Options {
   std::vector<const char*> surelog_args;
 };
 
-auto ParseArgs(std::span<const char*> args) -> Options;
+auto ParseArgs(gsl::span<const char*> args) -> Options;
 
 void PrintHelp(const char* programName);
 void PrintVersion();

@@ -54,7 +54,7 @@ auto getFileContentFromPath(const fs::path& path, SL::ErrorContainer* errors,
   try {
     const auto compiler = start_compiler(clp.get());
     const auto vec = get_design(compiler)->getAllFileContents();
-    return vec[0].second;
+    return vec.at(0).second;
   } catch (const std::exception& e) {
     std::cerr << "Compiler error: " << e.what() << '\n';
     return nullptr;

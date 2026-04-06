@@ -58,7 +58,7 @@ auto ResolveOperationValue(const UHDM::operation* opNode)
   if (!kIsSignOp || operands == nullptr || operands->empty()) {
     return std::nullopt;
   }
-  const auto* constNode = dynamic_cast<const UHDM::constant*>((*operands)[0]);
+  const auto* constNode = dynamic_cast<const UHDM::constant*>(operands->at(0));
   if (constNode == nullptr) {
     return std::nullopt;
   }
@@ -101,7 +101,7 @@ void ValidateMessage(const UHDM::VectorOfany* args,
     report("$fatal missing message");
     return;
   }
-  if (dynamic_cast<UHDM::constant*>((*args)[1]) == nullptr) {
+  if (dynamic_cast<UHDM::constant*>(args->at(1)) == nullptr) {
     report("$fatal message is not string constant");
   }
 }
@@ -154,7 +154,7 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     return;
   }
 
-  const UHDM::any* firstArg = (*args)[0];
+  const UHDM::any* firstArg = args->at(0);
   if (firstArg == nullptr) {
     return;
   }

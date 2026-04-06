@@ -68,7 +68,7 @@ auto GetTokenText(SL::PathId fileId, uint32_t line, uint32_t colStart,
     return {};
   }
 
-  const std::string& srcLine = lines[line - 1];
+  const std::string& srcLine = lines.at(line - 1);
 
   const auto kStart = static_cast<size_t>(colStart - 1);
   const auto kEnd = static_cast<size_t>(colEnd - 1);

@@ -16,7 +16,7 @@ Checks: >
   readability-*,
 
 WarningsAsErrors: '*'
-
+HeaderFilterRegex: '.*'
 
 CheckOptions:
   - key: performance-unnecessary-value-param.AllowedTypes
@@ -49,3 +49,7 @@ CheckOptions:
 
   - key: modernize-use-trailing-return-type.TransformLambdas
     value: none
+  - key: cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.ExcludeClasses
+    value: ::std::map;::std::unordered_map;::std::flat_map;::gsl::span;::YAML::Node
+  - key: cppcoreguidelines-pro-bounds-avoid-unchecked-container-access.FixMode
+    value: at

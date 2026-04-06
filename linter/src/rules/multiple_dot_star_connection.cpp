@@ -15,12 +15,12 @@
 
 namespace SL = SURELOG;
 
+namespace {
 struct DotStarResult {
   SL::NodeId secondDotStarNode;
   SL::NodeId instanceNameNode;
 };
 
-namespace {
 auto HasDotStarChild(const SL::FileContent* fileContent, SL::NodeId node)
     -> bool {
   return !fileContent->sl_collect_all(node, SL::VObjectType::paDOTSTAR).empty();

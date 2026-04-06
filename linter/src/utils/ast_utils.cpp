@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <gsl/span>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -158,7 +159,7 @@ auto GetPrefix(const SL::FileContent* fileContent, SL::NodeId node)
     if (i > 0) {
       result += "::";
     }
-    result += contexts[i];
+    result += contexts.at(i);
   }
 
   if (contexts.size() > 0) {
@@ -193,35 +194,6 @@ auto GetClassIds(const SL::FileContent* fileContent)
     classes[kClassName] = classId;
   }
   return classes;
-}
-
-auto RemoveFilePrefix(std::string str) -> std::string {
-  size_t ind = 0;
-  while (str[ind++] != '@') {
-  }
-  return std::string(str).substr(ind, str.size());
-}
-
-auto GetClassScope(const SL::FileContent* fileContent, SL::NodeId funcBodyNode)
-    -> std::vector<std::string> {
-  std::vector<std::string> scopes;
-  const SL::NodeId kClassScopeId =
-      fileContent->sl_collect(funcBodyNode, SL::VObjectType::paClass_scope);
-  const SL::NodeId kClassTypeId =
-      fileContent->sl_get(kClassScopeId, SL::VObjectType::paClass_type);
-
-  if (!kClassTypeId) {
-    return scopes;
-  }
-  const std::vector<SL::NodeId> kIds =
-      fileContent->sl_collect_all(funcBodyNode, SL::VObjectType::slStringConst);
-
-  for (const auto& kId : kIds) {
-    const std::string kStr{fileContent->SymName(kId)};
-    scopes.push_back(kStr);
-  }
-
-  return scopes;
 }
 
 auto GetInterfaceClassSet(const SL::FileContent* fileContent)
@@ -262,11 +234,10 @@ auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
   const std::vector<SL::NodeId> kStrIds =
       fileContent->sl_collect_all(kTempId, SL::VObjectType::slStringConst);
 
-  const std::string firstString{fileContent->SymName(kStrIds[0])};
+  const std::string firstString{fileContent->SymName(kStrIds.at(0))};
   sstream << firstString;
 
-  for (size_t i = 1; i < kStrIds.size(); i++) {
-    const SL::NodeId kStringId = kStrIds[i];
+  for (auto kStringId : gsl::span{kStrIds}.subspan(1)) {
     const std::string scopeName{fileContent->SymName(kStringId)};
     sstream << "::" << scopeName;
   }
