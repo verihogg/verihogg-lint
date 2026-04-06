@@ -21,8 +21,8 @@ class Location {
  public:
   Location(SURELOG::PathId fid, uint32_t l) : fileId(fid), line(l) {}
 
-  SURELOG::PathId getFileId() const { return fileId; }
-  uint32_t getLine() const { return line; }
+  [[nodiscard]] auto getFileId() const -> SURELOG::PathId { return fileId; }
+  [[nodiscard]] auto getLine() const -> uint32_t { return line; }
 
  private:
   SURELOG::PathId fileId;
@@ -34,8 +34,10 @@ class ScopeId {
   ScopeId(SURELOG::PathId fid, SURELOG::NodeId node)
       : fileId(fid), scopeNode(node) {}
 
-  SURELOG::PathId getFileId() const { return fileId; }
-  SURELOG::NodeId getScopeNode() const { return scopeNode; }
+  [[nodiscard]] auto getFileId() const -> SURELOG::PathId { return fileId; }
+  [[nodiscard]] auto getScopeNode() const -> SURELOG::NodeId {
+    return scopeNode;
+  }
 
   auto operator==(const ScopeId& other) const -> bool {
     return fileId == other.fileId && scopeNode == other.scopeNode;

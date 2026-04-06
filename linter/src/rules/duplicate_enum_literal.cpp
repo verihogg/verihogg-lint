@@ -21,8 +21,8 @@ class EnumLocation {
   EnumLocation() = default;
   EnumLocation(SURELOG::PathId fid, unsigned l) : fileId(fid), line(l) {}
 
-  SURELOG::PathId getFileId() const { return fileId; }
-  unsigned getLine() const { return line; }
+  [[nodiscard]] auto getFileId() const -> SURELOG::PathId { return fileId; }
+  [[nodiscard]] auto getLine() const -> unsigned { return line; }
 
  private:
   SURELOG::PathId fileId{};
