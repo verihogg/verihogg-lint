@@ -35,7 +35,7 @@ auto getCoverpointLabel(const SURELOG::FileContent* fc, SURELOG::NodeId cpNode)
     child = fc->Sibling(child);
   }
   return "";
-}
+}  // namespace
 
 auto findCovergroupParent(const SURELOG::FileContent* fc, SURELOG::NodeId node)
     -> SURELOG::NodeId {
@@ -50,7 +50,7 @@ auto findCovergroupParent(const SURELOG::FileContent* fc, SURELOG::NodeId node)
   return SURELOG::InvalidNodeId;
 }
 
-}  
+}  // namespace
 
 void CheckDuplicateCoverpoint(SURELOG::Design* design,
                               SURELOG::ErrorContainer* errors,

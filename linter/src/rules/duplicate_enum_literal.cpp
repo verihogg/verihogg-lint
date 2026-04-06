@@ -7,7 +7,6 @@
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <cstdint>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -17,12 +16,17 @@
 #include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
-struct EnumLocation {
-  SURELOG::PathId fileId{};
-  unsigned line{};
-
+class EnumLocation {
+ public:
   EnumLocation() = default;
   EnumLocation(SURELOG::PathId fid, unsigned l) : fileId(fid), line(l) {}
+
+  SURELOG::PathId getFileId() const { return fileId; }
+  unsigned getLine() const { return line; }
+
+ private:
+  SURELOG::PathId fileId{};
+  unsigned line{};
 };
 
 void CheckDuplicateEnumLiteral(SURELOG::Design* design,
@@ -43,7 +47,7 @@ void CheckDuplicateEnumLiteral(SURELOG::Design* design,
     }
 
     const std::vector<SURELOG::NodeId> dataTypeNodes =
-        fileContent->sl_collect_all(root, {SURELOG::VObjectType::paData_type},
+        fileContent->sl_collect_all(root, SURELOG::VObjectType::paData_type,
                                     false);
 
     for (const SURELOG::NodeId dataTypeNode : dataTypeNodes) {
@@ -78,16 +82,16 @@ void CheckDuplicateEnumLiteral(SURELOG::Design* design,
             const std::string literalName =
                 std::string(fileContent->SymName(stringConst));
             const unsigned line = fileContent->Line(child);
-            const EnumLocation currentLoc{fileContent->getFileId(child), line};
+            const EnumLocation currentLoc(fileContent->getFileId(child), line);
 
             const auto it = enumLiterals.find(literalName);
             if (it != enumLiterals.end()) {
               const EnumLocation& first = it->second;
               const std::string_view firstPath =
-                  SURELOG::FileSystem::getInstance()->toPath(first.fileId);
+                  SURELOG::FileSystem::getInstance()->toPath(first.getFileId());
               std::ostringstream context;
               context << "'" << literalName << "' already declared at "
-                      << firstPath << ":" << first.line;
+                      << firstPath << ":" << first.getLine();
 
               ReportError(fileContent, child, context.str(),
                           verihogg_lint::LINT_DUPLICATE_ENUM_LITERAL, errors,
