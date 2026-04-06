@@ -1,11 +1,16 @@
 #include "rules/duplicate_enum_literal.h"
 
 #include <Surelog/Common/FileSystem.h>
+#include <Surelog/Common/NodeId.h>
 #include <Surelog/Common/PathId.h>
+#include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include <cstdint>
 #include <sstream>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -13,25 +18,35 @@
 #include "utils/location_utils.h"
 
 struct EnumLocation {
-  SURELOG::PathId fileId;
-  unsigned line;
+  SURELOG::PathId fileId{};
+  unsigned line{};
+
+  EnumLocation() = default;
+  EnumLocation(SURELOG::PathId fid, unsigned l) : fileId(fid), line(l) {}
 };
 
 void CheckDuplicateEnumLiteral(SURELOG::Design* design,
                                SURELOG::ErrorContainer* errors,
                                SURELOG::SymbolTable* symbols) {
-  if (!design || !errors || !symbols) return;
+  if (!design || !errors || !symbols) {
+    return;
+  }
 
   for (const auto& [fileId, fileContent] : design->getAllFileContents()) {
-    if (!fileContent) continue;
+    if (!fileContent) {
+      continue;
+    }
 
-    SURELOG::NodeId const root = fileContent->getRootNode();
-    if (root == SURELOG::InvalidNodeId) continue;
+    const SURELOG::NodeId root = fileContent->getRootNode();
+    if (root == SURELOG::InvalidNodeId) {
+      continue;
+    }
 
-    std::vector<SURELOG::NodeId> dataTypeNodes = fileContent->sl_collect_all(
-        root, {SURELOG::VObjectType::paData_type}, false);
+    const std::vector<SURELOG::NodeId> dataTypeNodes =
+        fileContent->sl_collect_all(root, {SURELOG::VObjectType::paData_type},
+                                    false);
 
-    for (SURELOG::NodeId dataTypeNode : dataTypeNodes) {
+    for (const SURELOG::NodeId dataTypeNode : dataTypeNodes) {
       bool hasEnumDecl = false;
       SURELOG::NodeId child = fileContent->Child(dataTypeNode);
       while (child != SURELOG::InvalidNodeId) {
@@ -42,7 +57,9 @@ void CheckDuplicateEnumLiteral(SURELOG::Design* design,
         }
         child = fileContent->Sibling(child);
       }
-      if (!hasEnumDecl) continue;
+      if (!hasEnumDecl) {
+        continue;
+      }
 
       std::unordered_map<std::string, EnumLocation> enumLiterals;
 
@@ -58,15 +75,15 @@ void CheckDuplicateEnumLiteral(SURELOG::Design* design,
           }
 
           if (stringConst != SURELOG::InvalidNodeId) {
-            std::string literalName =
+            const std::string literalName =
                 std::string(fileContent->SymName(stringConst));
-            unsigned line = fileContent->Line(child);
-            EnumLocation currentLoc{fileContent->getFileId(child), line};
+            const unsigned line = fileContent->Line(child);
+            const EnumLocation currentLoc{fileContent->getFileId(child), line};
 
-            auto it = enumLiterals.find(literalName);
+            const auto it = enumLiterals.find(literalName);
             if (it != enumLiterals.end()) {
               const EnumLocation& first = it->second;
-              std::string_view firstPath =
+              const std::string_view firstPath =
                   SURELOG::FileSystem::getInstance()->toPath(first.fileId);
               std::ostringstream context;
               context << "'" << literalName << "' already declared at "
