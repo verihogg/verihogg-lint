@@ -1,16 +1,21 @@
+#include <Surelog/API/Surelog.h>
+#include <Surelog/CommandLine/CommandLineParser.h>
+#include <Surelog/Design/Design.h>
+#include <Surelog/Design/FileContent.h>
+#include <Surelog/ErrorReporting/ErrorContainer.h>
+#include <Surelog/ErrorReporting/ErrorDefinition.h>
+#include <Surelog/SourceCompile/SymbolTable.h>
 #include <gtest/gtest.h>
 
+#include <array>
+#include <exception>
 #include <filesystem>
 #include <functional>
 #include <iostream>
 #include <memory>
+#include <string>
+#include <vector>
 
-#include "Surelog/API/Surelog.h"
-#include "Surelog/CommandLine/CommandLineParser.h"
-#include "Surelog/Design/Design.h"
-#include "Surelog/Design/FileContent.h"
-#include "Surelog/ErrorReporting/ErrorContainer.h"
-#include "Surelog/SourceCompile/SymbolTable.h"
 #include "main/lint_rules.h"
 #include "rules/circular_inheritance.h"
 #include "rules/duplicate_class.h"
@@ -60,10 +65,7 @@ void testCheckWithNoErrorsExpected(
     const fs::path& tests_path,
     const std::function<void(const SL::FileContent*, SL::ErrorContainer*,
                              SL::SymbolTable*)>& check_func) {
-  std::vector<fs::path> paths(fs::directory_iterator{tests_path},
-                              fs::directory_iterator{});
-
-  for (auto& file_path : paths) {
+  for (auto& file_path : fs::directory_iterator{tests_path}) {
     std::cout << "TESTING FILE:" << file_path << "\n";
     auto symbols = std::make_unique<SURELOG::SymbolTable>();
     auto errors = std::make_unique<SURELOG::ErrorContainer>(symbols.get());
@@ -82,10 +84,7 @@ void testCheckWithErrorsExpected(
     const std::unordered_set<SURELOG::ErrorDefinition::ErrorType>& ignoreList,
     const std::function<void(const SL::FileContent*, SL::ErrorContainer*,
                              SL::SymbolTable*)>& check_func) {
-  std::vector<fs::path> paths(fs::directory_iterator{tests_path},
-                              fs::directory_iterator{});
-
-  for (auto& file_path : paths) {
+  for (auto& file_path : fs::directory_iterator{tests_path}) {
     std::cout << "TESTING FILE:" << file_path << "\n";
     auto symbols = std::make_unique<SURELOG::SymbolTable>();
     auto errors = std::make_unique<SURELOG::ErrorContainer>(symbols.get());
@@ -99,7 +98,7 @@ void testCheckWithErrorsExpected(
     ASSERT_NE(errorVector.size(), 0);
     bool hasError = false;
     for (auto& error : errorVector) {
-      SURELOG::ErrorDefinition::ErrorType type = error.getType();
+      const SURELOG::ErrorDefinition::ErrorType type = error.getType();
       if (ignoreList.count(type) > 0) {
         continue;
       }
@@ -119,7 +118,7 @@ TEST(ExtendClassTest, NoError) {
 TEST(ExtendClassTest, RaiseError) {
   const fs::path tests_path{BasePath() / "ExtendClass" / "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::COMP_UNDEFINED_BASE_CLASS};
 
   testCheckWithErrorsExpected(tests_path, verihogg_lint::LINT_EXTEND_CLASS,
@@ -135,7 +134,7 @@ TEST(DuplicateClassTest, NoError) {
 TEST(DuplicateClassTest, RaiseError) {
   const fs::path tests_path{BasePath() / "DuplicateClass" / "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
   testCheckWithErrorsExpected(tests_path, verihogg_lint::LINT_DUPLICATE_CLASS,
                               ignoreList, CheckDuplicateClass);
@@ -150,7 +149,7 @@ TEST(DuplicateConstructorTest, NoError) {
 TEST(DuplicateConstructorTest, RaiseError) {
   const fs::path tests_path{BasePath() / "DuplicateConstructor" / "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
   testCheckWithErrorsExpected(tests_path,
                               verihogg_lint::LINT_DUPLICATE_CONSTRUCTOR,
@@ -168,7 +167,7 @@ TEST(ExternConstraintUndeclaredTest, RaiseError) {
   const fs::path tests_path{BasePath() / "ExternConstraintUndeclared" /
                             "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
   testCheckWithErrorsExpected(tests_path,
@@ -187,7 +186,7 @@ TEST(ExternFunctionUndeclaredTest, RaiseError) {
   const fs::path tests_path{BasePath() / "ExternFunctionUndeclared" /
                             "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
   testCheckWithErrorsExpected(tests_path,
@@ -204,7 +203,7 @@ TEST(ExternTaskUndeclaredTest, NoError) {
 TEST(ExternTaskUndeclaredTest, RaiseError) {
   const fs::path tests_path{BasePath() / "ExternTaskUndeclared" / "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
   testCheckWithErrorsExpected(tests_path,
@@ -221,7 +220,7 @@ TEST(ExtendInterfaceClassTest, NoError) {
 TEST(ExtendInterfaceClassTest, RaiseError) {
   const fs::path tests_path{BasePath() / "ExtendInterfaceClass" / "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::COMP_UNDEFINED_BASE_CLASS,
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
@@ -239,7 +238,7 @@ TEST(ImplementClassTest, NoError) {
 TEST(ImplementClassTest, RaiseError) {
   const fs::path tests_path{BasePath() / "ImplementClass" / "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       verihogg_lint::LINT_EXTERN_FUNCTION_UNDECLARED};
 
   testCheckWithErrorsExpected(tests_path, verihogg_lint::LINT_IMPLEMENT_CLASS,
@@ -256,7 +255,7 @@ TEST(ImplementInterfaceClassTest, RaiseError) {
   const fs::path tests_path{BasePath() / "ImplementInterfaceClass" /
                             "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
   testCheckWithErrorsExpected(tests_path,
                               verihogg_lint::LINT_IMPLEMENT_INTERFACE_CLASS,
@@ -272,7 +271,7 @@ TEST(ImplementCircularInheritanceTest, NoError) {
 TEST(ImplementCircularInheritanceTest, RaiseError) {
   const fs::path tests_path{BasePath() / "CircularInheritance" / "RaiseError"};
 
-  std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
   testCheckWithErrorsExpected(tests_path,
                               verihogg_lint::LINT_CIRCULAR_INHERITANCE,
