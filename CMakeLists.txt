@@ -192,6 +192,11 @@ set(LINTER_SRC
 
 add_library(verihoggLintLib ${LINTER_SRC})
 target_link_libraries(verihoggLintLib PUBLIC ${YAMLCPP_LIBRARY})
+target_link_libraries(verihoggLintLib PUBLIC ${SURELOG_LIBRARY})
+target_link_libraries(verihoggLintLib PUBLIC ${UHDM_LIBRARY})
+target_link_libraries(verihoggLintLib PUBLIC ${CAPNP_LIBRARY})
+target_link_libraries(verihoggLintLib PUBLIC ${ANTLR_LIBRARY})
+target_link_libraries(verihoggLintLib PUBLIC ${ZLIB_LIBRARY})
 target_include_directories(verihoggLintLib PUBLIC linter/include)
 
 foreach(f ${LINTER_SRC})
@@ -217,11 +222,6 @@ target_include_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC verihoggLintLib)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${SURELOG_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${UHDM_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${CAPNP_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${ANTLR_LIBRARY})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${ZLIB_LIBRARY})
 
 if(MSVC)
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /bigobj)
