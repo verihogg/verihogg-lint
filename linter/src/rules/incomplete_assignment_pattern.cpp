@@ -148,8 +148,8 @@ auto ResolveStructNode(const SL::FileContent* fileContent,
   return SL::InvalidNodeId;
 }
 
-auto HasNonMemberKey(const SL::FileContent* fileContent,
-                     SL::NodeId patNode) -> bool {
+auto HasNonMemberKey(const SL::FileContent* fileContent, SL::NodeId patNode)
+    -> bool {
   for (const auto& kKey : fileContent->sl_collect_all(
            patNode, SL::VObjectType::paStructure_pattern_key)) {
     SL::NodeId const kChild = fileContent->Child(kKey);

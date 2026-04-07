@@ -58,8 +58,8 @@ auto ParseRangeWidth(const SL::FileContent* fc, SL::NodeId dimNode) -> int32_t {
   return static_cast<int32_t>(hi - lo + 1);
 }
 
-auto CountStructMembers(const SL::FileContent* fc,
-                        SL::NodeId structNode) -> int32_t {
+auto CountStructMembers(const SL::FileContent* fc, SL::NodeId structNode)
+    -> int32_t {
   SL::NodeId const kDataType = fc->Parent(structNode);
   if (!kDataType) return -1;
 
