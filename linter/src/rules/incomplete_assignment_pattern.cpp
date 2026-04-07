@@ -61,8 +61,9 @@ auto FindStructByTypeName(const SL::FileContent* fileContent, SL::NodeId root,
 }
 
 auto ResolveStructNode(const SL::FileContent* fileContent,
-                       SL::NodeId moduleRoot, SL::NodeId fileRoot,
-                       std::string_view varName) -> SL::NodeId {
+                       SL::NodeId moduleRoot, std::string_view varName)
+    -> SL::NodeId {
+  const SL::NodeId fileRoot = fileContent->getRootNode();
   for (const auto& kNetDecl : fileContent->sl_collect_all(
            moduleRoot, SL::VObjectType::paNet_declaration)) {
     bool nameMatch = false;
@@ -95,7 +96,7 @@ auto ResolveStructNode(const SL::FileContent* fileContent,
            moduleRoot, SL::VObjectType::paData_declaration)) {
     auto structs =
         fileContent->sl_collect_all(kVarDecl, SL::VObjectType::paStruct_union);
-    bool isInlineStruct = !structs.empty();
+    const bool isInlineStruct = !structs.empty();
 
     bool nameMatch = false;
     for (const auto& kAssign : fileContent->sl_collect_all(
@@ -110,10 +111,10 @@ auto ResolveStructNode(const SL::FileContent* fileContent,
     if (!nameMatch) {
       for (const auto& kAssign : fileContent->sl_collect_all(
                kVarDecl, SL::VObjectType::paVariable_decl_assignment)) {
-        SL::NodeId p = fileContent->Parent(kAssign);
+        const SL::NodeId p = fileContent->Parent(kAssign);
         if (p && fileContent->Type(p) ==
                      SL::VObjectType::paList_of_variable_decl_assignments) {
-          SL::NodeId pp = fileContent->Parent(p);
+          const SL::NodeId pp = fileContent->Parent(p);
           if (pp &&
               fileContent->Type(pp) == SL::VObjectType::paStruct_union_member) {
           }
@@ -214,7 +215,7 @@ void CheckIncompleteAssignmentPattern(const SL::FileContent* fileContent,
     }
 
     SL::NodeId const kStructNode =
-        ResolveStructNode(fileContent, kModuleRoot, kRoot, kVarName);
+        ResolveStructNode(fileContent, kModuleRoot, kVarName);
     if (!kStructNode) {
       continue;
     }
@@ -227,7 +228,7 @@ void CheckIncompleteAssignmentPattern(const SL::FileContent* fileContent,
     auto provided = CollectPatternKeys(fileContent, kPat);
 
     std::string missing;
-    for (std::string_view m : members) {
+    for (const std::string_view m : members) {
       if (!provided.contains(m)) {
         if (!missing.empty()) {
           missing += ", ";
@@ -240,7 +241,7 @@ void CheckIncompleteAssignmentPattern(const SL::FileContent* fileContent,
       continue;
     }
 
-    std::string sym =
+    const std::string sym =
         std::string(kVarName) + " is missing member(s): " + missing;
     ReportError(fileContent, kPat, sym,
                 verihogg_lint::LINT_INCOMPLETE_ASSIGNMENT_PATTERN, errors,
