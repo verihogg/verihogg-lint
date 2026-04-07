@@ -28,22 +28,22 @@ namespace SL = SURELOG;
 
 namespace fs = std::filesystem;
 
-const fs::path kBasePath =
-    fs::current_path() / ".." / ".." / "tests" / "ClassChecks";
-
 namespace {
 
-SL::FileContent* getFileContentFromPath(fs::path path,
-                                        SL::ErrorContainer* errors,
-                                        SL::SymbolTable* symbols) {
+auto BasePath() -> fs::path {
+  return fs::current_path() / ".." / ".." / "tests" / "ClassChecks";
+}
+
+auto getFileContentFromPath(const fs::path& path, SL::ErrorContainer* errors,
+                            SL::SymbolTable* symbols) -> SL::FileContent* {
   const auto clp = std::make_unique<SURELOG::CommandLineParser>(errors, symbols,
                                                                 false, false);
   InitCommandLineParser(clp.get());
 
   const std::string path_str = path.string();
-  const char* argv[2] = {"", path_str.c_str()};
-  if (!clp->parseCommandLine(2, argv)) {
-    std::cerr << "Can't parse command line" << std::endl;
+  std::array<const char*, 2> argv = {"", path_str.c_str()};
+  if (!clp->parseCommandLine(2, argv.data())) {
+    std::cerr << "Can't parse command line" << "\n";
   }
 
   try {
@@ -57,15 +57,14 @@ SL::FileContent* getFileContentFromPath(fs::path path,
 }
 
 void testCheckWithNoErrorsExpected(
-    const fs::path tests_path,
-    std::function<void(const SL::FileContent*, SL::ErrorContainer*,
-                       SL::SymbolTable*)>
-        check_func) {
+    const fs::path& tests_path,
+    const std::function<void(const SL::FileContent*, SL::ErrorContainer*,
+                             SL::SymbolTable*)>& check_func) {
   std::vector<fs::path> paths(fs::directory_iterator{tests_path},
                               fs::directory_iterator{});
 
   for (auto& file_path : paths) {
-    std::cout << "TESTING FILE:" << file_path << std::endl;
+    std::cout << "TESTING FILE:" << file_path << "\n";
     auto symbols = std::make_unique<SURELOG::SymbolTable>();
     auto errors = std::make_unique<SURELOG::ErrorContainer>(symbols.get());
 
@@ -78,12 +77,11 @@ void testCheckWithNoErrorsExpected(
 }
 
 void testCheckWithErrorsExpected(
-    const fs::path tests_path,
+    const fs::path& tests_path,
     SURELOG::ErrorDefinition::ErrorType errorIdExpected,
-    std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList,
-    std::function<void(const SL::FileContent*, SL::ErrorContainer*,
-                       SL::SymbolTable*)>
-        check_func) {
+    const std::unordered_set<SURELOG::ErrorDefinition::ErrorType>& ignoreList,
+    const std::function<void(const SL::FileContent*, SL::ErrorContainer*,
+                             SL::SymbolTable*)>& check_func) {
   std::vector<fs::path> paths(fs::directory_iterator{tests_path},
                               fs::directory_iterator{});
 
@@ -102,7 +100,9 @@ void testCheckWithErrorsExpected(
     bool hasError = false;
     for (auto& error : errorVector) {
       SURELOG::ErrorDefinition::ErrorType type = error.getType();
-      if (ignoreList.count(type) > 0) continue;
+      if (ignoreList.count(type) > 0) {
+        continue;
+      }
       hasError = true;
       ASSERT_EQ(type, errorIdExpected);
     }
@@ -111,13 +111,13 @@ void testCheckWithErrorsExpected(
 }
 
 TEST(ExtendClassTest, NoError) {
-  const fs::path tests_path{kBasePath / "ExtendClass" / "NoError"};
+  const fs::path tests_path{BasePath() / "ExtendClass" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckExtendClass);
 }
 
 TEST(ExtendClassTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "ExtendClass" / "RaiseError"};
+  const fs::path tests_path{BasePath() / "ExtendClass" / "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::COMP_UNDEFINED_BASE_CLASS};
@@ -127,13 +127,13 @@ TEST(ExtendClassTest, RaiseError) {
 }
 
 TEST(DuplicateClassTest, NoError) {
-  const fs::path tests_path{kBasePath / "DuplicateClass" / "NoError"};
+  const fs::path tests_path{BasePath() / "DuplicateClass" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckDuplicateClass);
 }
 
 TEST(DuplicateClassTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "DuplicateClass" / "RaiseError"};
+  const fs::path tests_path{BasePath() / "DuplicateClass" / "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
@@ -142,13 +142,13 @@ TEST(DuplicateClassTest, RaiseError) {
 }
 
 TEST(DuplicateConstructorTest, NoError) {
-  const fs::path tests_path{kBasePath / "DuplicateConstructor" / "NoError"};
+  const fs::path tests_path{BasePath() / "DuplicateConstructor" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckDuplicateConstructor);
 }
 
 TEST(DuplicateConstructorTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "DuplicateConstructor" / "RaiseError"};
+  const fs::path tests_path{BasePath() / "DuplicateConstructor" / "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
@@ -158,14 +158,14 @@ TEST(DuplicateConstructorTest, RaiseError) {
 }
 
 TEST(ExternConstraintUndeclaredTest, NoError) {
-  const fs::path tests_path{kBasePath / "ExternConstraintUndeclared" /
+  const fs::path tests_path{BasePath() / "ExternConstraintUndeclared" /
                             "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckExternConstraintUndeclared);
 }
 
 TEST(ExternConstraintUndeclaredTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "ExternConstraintUndeclared" /
+  const fs::path tests_path{BasePath() / "ExternConstraintUndeclared" /
                             "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
@@ -177,13 +177,14 @@ TEST(ExternConstraintUndeclaredTest, RaiseError) {
 }
 
 TEST(ExternFunctionUndeclaredTest, NoError) {
-  const fs::path tests_path{kBasePath / "ExternFunctionUndeclared" / "NoError"};
+  const fs::path tests_path{BasePath() / "ExternFunctionUndeclared" /
+                            "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckExternFunctionUndeclared);
 }
 
 TEST(ExternFunctionUndeclaredTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "ExternFunctionUndeclared" /
+  const fs::path tests_path{BasePath() / "ExternFunctionUndeclared" /
                             "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
@@ -195,13 +196,13 @@ TEST(ExternFunctionUndeclaredTest, RaiseError) {
 }
 
 TEST(ExternTaskUndeclaredTest, NoError) {
-  const fs::path tests_path{kBasePath / "ExternTaskUndeclared" / "NoError"};
+  const fs::path tests_path{BasePath() / "ExternTaskUndeclared" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckExternTaskUndeclared);
 }
 
 TEST(ExternTaskUndeclaredTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "ExternTaskUndeclared" / "RaiseError"};
+  const fs::path tests_path{BasePath() / "ExternTaskUndeclared" / "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
@@ -212,13 +213,13 @@ TEST(ExternTaskUndeclaredTest, RaiseError) {
 }
 
 TEST(ExtendInterfaceClassTest, NoError) {
-  const fs::path tests_path{kBasePath / "ExtendInterfaceClass" / "NoError"};
+  const fs::path tests_path{BasePath() / "ExtendInterfaceClass" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckExtendInterfaceClass);
 }
 
 TEST(ExtendInterfaceClassTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "ExtendInterfaceClass" / "RaiseError"};
+  const fs::path tests_path{BasePath() / "ExtendInterfaceClass" / "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::COMP_UNDEFINED_BASE_CLASS,
@@ -230,13 +231,13 @@ TEST(ExtendInterfaceClassTest, RaiseError) {
 }
 
 TEST(ImplementClassTest, NoError) {
-  const fs::path tests_path{kBasePath / "ImplementClass" / "NoError"};
+  const fs::path tests_path{BasePath() / "ImplementClass" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckImplementClass);
 }
 
 TEST(ImplementClassTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "ImplementClass" / "RaiseError"};
+  const fs::path tests_path{BasePath() / "ImplementClass" / "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       verihogg_lint::LINT_EXTERN_FUNCTION_UNDECLARED};
@@ -246,13 +247,13 @@ TEST(ImplementClassTest, RaiseError) {
 }
 
 TEST(ImplementInterfaceClassTest, NoError) {
-  const fs::path tests_path{kBasePath / "ImplementInterfaceClass" / "NoError"};
+  const fs::path tests_path{BasePath() / "ImplementInterfaceClass" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckImplementInterfaceClass);
 }
 
 TEST(ImplementInterfaceClassTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "ImplementInterfaceClass" /
+  const fs::path tests_path{BasePath() / "ImplementInterfaceClass" /
                             "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
@@ -263,13 +264,13 @@ TEST(ImplementInterfaceClassTest, RaiseError) {
 }
 
 TEST(ImplementCircularInheritanceTest, NoError) {
-  const fs::path tests_path{kBasePath / "CircularInheritance" / "NoError"};
+  const fs::path tests_path{BasePath() / "CircularInheritance" / "NoError"};
 
   testCheckWithNoErrorsExpected(tests_path, CheckCircularInheritance);
 }
 
 TEST(ImplementCircularInheritanceTest, RaiseError) {
-  const fs::path tests_path{kBasePath / "CircularInheritance" / "RaiseError"};
+  const fs::path tests_path{BasePath() / "CircularInheritance" / "RaiseError"};
 
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
@@ -279,7 +280,8 @@ TEST(ImplementCircularInheritanceTest, RaiseError) {
 }
 
 }  // namespace
-int main(int argc, char** argv) {
+
+auto main(int argc, char** argv) -> int {
   ::testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
 }
