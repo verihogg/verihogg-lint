@@ -12,7 +12,8 @@ pkgs.stdenv.mkDerivation {
 
   nativeBuildInputs = shared.nativeBuildInputs;
 
-  doCheck = false;
+  doCheck = true;
+  enableParallelChecking = false;
 
   buildInputs = shared.buildInputs;
 
