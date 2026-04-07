@@ -48,6 +48,7 @@
 #include "rules/implement_class.h"
 #include "rules/implement_interface_class.h"
 #include "rules/implicit_data_type.h"
+#include "rules/incomplete_assignment_pattern.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
 #include "rules/logical_negation.h"
@@ -118,6 +119,7 @@ const auto allRules = std::to_array<Rule>({
     {.name = "AssignmentPattern", .check = CheckAssignmentPattern},
     {.name = "AssignmentPatternContext", .check = CheckAssignmentPatternContext},
     {.name = "ScalarAssignmentPattern", .check = CheckScalarAssignmentPattern},
+    {.name = "IncompleteAssignmentPattern", .check = CheckIncompleteAssignmentPattern},
     {.name = "TargetUnpackedArrayConcatenation", .check = CheckTargetUnpackedArrayConcatenation},
     {.name = "InsideOperator", .check = CheckInsideOperator},
     {.name = "InsideOperatorRange", .check = CheckInsideOperatorRange},

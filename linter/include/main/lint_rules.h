@@ -82,6 +82,8 @@ inline constexpr ED::ErrorType LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE =
     LintId(789);
 inline constexpr ED::ErrorType LINT_VOID_CAST_OF_VOID_FUNCTION = LintId(790);
 inline constexpr ED::ErrorType LINT_LOGICAL_NEGATION = LintId(791);
+
+inline constexpr ED::ErrorType LINT_INCOMPLETE_ASSIGNMENT_PATTERN = LintId(784);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -251,6 +253,8 @@ inline constexpr std::array kLintRules = {
                  .text =
                      "Operand of type '%s' not allowed with logical negation "
                      "(use == null instead)"},
+    LintRuleInfo{.type = LINT_INCOMPLETE_ASSIGNMENT_PATTERN,
+                 .text = "Incomplete named assignment pattern: %s"},
 };
 
 inline void RegisterLintRules() {
