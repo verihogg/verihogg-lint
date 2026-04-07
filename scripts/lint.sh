@@ -15,7 +15,7 @@ if [[ ! -f "${BUILD_DIR}/compile_commands.json" ]]; then
   exit 1
 fi
 
-find linter/src \
+find linter/src tests \
   -type f \
   -name '*.cpp' \
   -print0 | xargs -P$(nproc) -0 -n 1 "${CLANG_TIDY_BIN}" -p "${BUILD_DIR}" --quiet

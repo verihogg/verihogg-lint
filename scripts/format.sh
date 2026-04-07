@@ -9,7 +9,7 @@ if ! command -v "${CLANG_FORMAT_BIN}" >/dev/null 2>&1; then
   exit 1
 fi
 
-find linter \
+find linter tests \
   -type f \
   \( -name '*.cpp' -o -name '*.h' \) \
   -print0 | xargs -0 "${CLANG_FORMAT_BIN}" -i
