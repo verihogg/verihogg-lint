@@ -23,6 +23,7 @@
 #include "rules/assertion_statement_atribute_instance.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
+#include "rules/assignment_pattern_values.h"
 #include "rules/circular_inheritance.h"
 #include "rules/class_variable_lifetime.h"
 #include "rules/concatenation_multiplier.h"
@@ -120,6 +121,7 @@ const auto allRules = std::to_array<Rule>({
     {.name = "AssignmentPatternContext", .check = CheckAssignmentPatternContext},
     {.name = "ScalarAssignmentPattern", .check = CheckScalarAssignmentPattern},
     {.name = "IncompleteAssignmentPattern", .check = CheckIncompleteAssignmentPattern},
+    {.name = "AssignmentPatternValues", .check = CheckAssignmentPatternValues},
     {.name = "TargetUnpackedArrayConcatenation", .check = CheckTargetUnpackedArrayConcatenation},
     {.name = "InsideOperator", .check = CheckInsideOperator},
     {.name = "InsideOperatorRange", .check = CheckInsideOperatorRange},

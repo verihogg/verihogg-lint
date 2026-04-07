@@ -198,6 +198,7 @@ set(LINTER_SRC
     linter/src/rules/implement_interface_class.cpp
     linter/src/rules/circular_inheritance.cpp
     linter/src/rules/incomplete_assignment_pattern.cpp
+    linter/src/rules/assignment_pattern_values.cpp
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})

@@ -84,6 +84,7 @@ inline constexpr ED::ErrorType LINT_VOID_CAST_OF_VOID_FUNCTION = LintId(790);
 inline constexpr ED::ErrorType LINT_LOGICAL_NEGATION = LintId(791);
 
 inline constexpr ED::ErrorType LINT_INCOMPLETE_ASSIGNMENT_PATTERN = LintId(784);
+inline constexpr ED::ErrorType LINT_ASSIGNMENT_PATTERN_VALUES = LintId(785);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -255,6 +256,7 @@ inline constexpr std::array kLintRules = {
                      "(use == null instead)"},
     LintRuleInfo{.type = LINT_INCOMPLETE_ASSIGNMENT_PATTERN,
                  .text = "Incomplete named assignment pattern: %s"},
+    LintRuleInfo{.type = LINT_ASSIGNMENT_PATTERN_VALUES, .text = "%s"},
 };
 
 inline void RegisterLintRules() {
