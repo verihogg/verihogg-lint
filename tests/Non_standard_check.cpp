@@ -30,6 +30,7 @@
 #include "rules/coverpoint_expression_type.h"
 #include "rules/dpi_decl_string.h"
 #include "rules/empty_assignment_pattern.h"
+#include "rules/event_control_expression.h"
 #include "rules/exponent_format_time_value.h"
 #include "rules/foreach_loop_condition.h"
 #include "rules/function_implemention_scope.h"
@@ -522,6 +523,10 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
       {"ModportImportExport",
        verihogg_lint::LINT_MODPORT_IMPORT_EXPORT_PORT,
        CheckModportImportExportPort,
+       {}},
+      {"EventControlExpression",
+       verihogg_lint::LINT_EVENT_CONTROL_EXPRESSION,
+       CheckEventControlExpression,
        {}},
   };
   return specs;

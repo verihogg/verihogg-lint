@@ -112,6 +112,11 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
      .description = "extern constraint implemented outside of its class scope"},
     {.id = "FUNCTION_IMPLEMENTATION_SCOPE",
      .description = "extern function implemented outside of its class scope"},
+    {.id = "MODPORT_IMPORT_EXPORT_PORT",
+     .description = "еxpected method name instead of interface signal name"},
+    {.id = "EVENT_CONTROL_EXPRESSION",
+     .description = "еxpected singular data type for event control expression "
+                    "instead of type"},
 
     {.id = "EXTEND_CLASS", .description = "extending non existing class"},
     {.id = "DUPLICATE_CONSTRUCTOR",

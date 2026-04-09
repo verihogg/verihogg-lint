@@ -32,6 +32,7 @@
 #include "rules/duplicate_class.h"
 #include "rules/duplicate_constructor.h"
 #include "rules/empty_assignment_pattern.h"
+#include "rules/event_control_expression.h"
 #include "rules/exponent_format_time_value.h"
 #include "rules/extend_class.h"
 #include "rules/extend_interface_class.h"
@@ -122,6 +123,7 @@ const auto allRules = std::to_array<Rule>({
     {.name = "WildcardOperator", .check = CheckWildcardOperators},
     {.name = "ExponentFormatTimeValue", .check = CheckExponentFormatTimeValue},
     {.name = "ModportImportExportProt", .check = CheckModportImportExportPort},
+    {.name = "EventControlExpression", .check = CheckEventControlExpression},
     {.name = "ExtendClass", .check = CheckExtendClass},
     {.name = "DuplicateConstructor", .check = CheckDuplicateConstructor},
     {.name = "DuplicateClass", .check = CheckDuplicateClass},

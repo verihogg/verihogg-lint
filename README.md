@@ -159,6 +159,9 @@ The project is intended for static code analysis and checking compliance with co
 
 - `MODPORT_IMPORT_EXPORT_PORT`  
   еxpected method name instead of interface signal name
+
+-`EVENT_CONTROL_EXPRESSION`  
+  еxpected singular data type for event control expression instead of type
 ---
 
 ## Project structure

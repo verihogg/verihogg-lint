@@ -286,3 +286,102 @@ auto SubtreeContainsAnyType(const SL::FileContent* fileContent, SL::NodeId root,
 
   return false;
 }
+
+auto FindVarOrNetDecl(const SL::FileContent* fc, SL::NodeId root,
+                      std::string_view name) -> SL::NodeId {
+  if (fc == nullptr || !root || name.empty()) {
+    return SL::InvalidNodeId;
+  }
+
+  for (SL::NodeId const decl :
+       fc->sl_collect_all(root, SL::VObjectType::paVariable_declaration)) {
+    for (SL::NodeId const assign : fc->sl_collect_all(
+             decl, SL::VObjectType::paVariable_decl_assignment)) {
+      SL::NodeId const nameNode = fc->Child(assign);
+      if (nameNode && fc->Type(nameNode) == SL::VObjectType::slStringConst &&
+          fc->SymName(nameNode) == name) {
+        return decl;
+      }
+    }
+  }
+  for (SL::NodeId const decl :
+       fc->sl_collect_all(root, SL::VObjectType::paNet_declaration)) {
+    for (SL::NodeId const assign :
+         fc->sl_collect_all(decl, SL::VObjectType::paNet_decl_assignment)) {
+      SL::NodeId const nameNode = fc->Child(assign);
+      if (nameNode && fc->Type(nameNode) == SL::VObjectType::slStringConst &&
+          fc->SymName(nameNode) == name) {
+        return decl;
+      }
+    }
+  }
+
+  return SL::InvalidNodeId;
+}
+
+auto GetDataType(const SL::FileContent* fc, SL::NodeId declNode) -> SL::NodeId {
+  if (fc == nullptr || !declNode) {
+    return SL::InvalidNodeId;
+  }
+
+  for (SL::NodeId cur = fc->Child(declNode); cur; cur = fc->Sibling(cur)) {
+    if (fc->Type(cur) == SL::VObjectType::paData_type) {
+      return cur;
+    }
+  }
+
+  return SL::InvalidNodeId;
+}
+
+auto GetTypedefName(const SL::FileContent* fc, SL::NodeId declNode)
+    -> std::string_view {
+  if (fc == nullptr || !declNode) {
+    return "";
+  }
+
+  if (fc->Type(declNode) == SL::VObjectType::paNet_declaration) {
+    SL::NodeId const first = fc->Child(declNode);
+    if (first && fc->Type(first) == SL::VObjectType::slStringConst) {
+      return fc->SymName(first);
+    }
+    return "";
+  }
+
+  SL::NodeId const dataType = GetDataType(fc, declNode);
+  if (!dataType) {
+    return "";
+  }
+
+  SL::NodeId const child = fc->Child(dataType);
+  if (child && fc->Type(child) == SL::VObjectType::slStringConst) {
+    return fc->SymName(child);
+  }
+
+  return "";
+}
+
+auto IsModuleOrInterfaceInstance(const SL::FileContent* fc, SL::NodeId root,
+                                 std::string_view varName) -> bool {
+  if (fc == nullptr || !root || varName.empty()) {
+    return false;
+  }
+
+  for (SL::NodeId const hierInst :
+       fc->sl_collect_all(root, SL::VObjectType::paHierarchical_instance)) {
+    SL::NodeId const nameOfInst = fc->Child(hierInst);
+    if (!nameOfInst) {
+      continue;
+    }
+
+    SL::NodeId const instName = fc->Child(nameOfInst);
+    if (!instName || fc->Type(instName) != SL::VObjectType::slStringConst) {
+      continue;
+    }
+
+    if (fc->SymName(instName) == varName) {
+      return true;
+    }
+  }
+
+  return false;
+}

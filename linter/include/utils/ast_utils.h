@@ -62,3 +62,14 @@ using NodePrunePredicate = bool (*)(const SL::FileContent*, SL::NodeId,
 auto SubtreeContainsAnyType(const SL::FileContent* fileContent, SL::NodeId root,
                             std::initializer_list<SL::VObjectType> targetTypes,
                             NodePrunePredicate shouldPrune = nullptr) -> bool;
+
+auto FindVarOrNetDecl(const SL::FileContent* fc, SL::NodeId root,
+                      std::string_view name) -> SL::NodeId;
+
+auto GetDataType(const SL::FileContent* fc, SL::NodeId declNode) -> SL::NodeId;
+
+auto GetTypedefName(const SL::FileContent* fc, SL::NodeId declNode)
+    -> std::string_view;
+
+auto IsModuleOrInterfaceInstance(const SL::FileContent* fc, SL::NodeId root,
+                                 std::string_view varName) -> bool;
