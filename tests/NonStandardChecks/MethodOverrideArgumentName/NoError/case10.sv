@@ -1,0 +1,12 @@
+class Base;
+  virtual function void configure(int addr, int data, bit wr_en);
+  endfunction
+
+  virtual function void send(int pkt_size = 64, bit verbose = 0);
+  endfunction
+endclass
+
+class ChildFixed extends Base;
+  virtual function void send(int pkt_size = 128, bit verbose = 1);
+  endfunction
+endclass

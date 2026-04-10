@@ -38,6 +38,7 @@
 #include "rules/implicit_data_type.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
+#include "rules/method_override_argument_name.h"
 #include "rules/missing_for_loop_condition.h"
 #include "rules/missing_for_loop_initialization.h"
 #include "rules/missing_for_loop_step.h"
@@ -553,6 +554,10 @@ auto GlobalRuleSpecs() -> const std::vector<RuleSpecGlobal>& {
       {"ConstraintImplementationScope",
        verihogg_lint::LINT_CONSTRAINT_IMPL_SCOPE,
        CheckFuncImplScope,
+       {}},
+      {"MethodOverrideArgumentName",
+       verihogg_lint::LINT_METHOD_OVERRIDE_ARGUMENT_NAME,
+       CheckMethodOverrideArgumentName,
        {}},
   };
   return specs;

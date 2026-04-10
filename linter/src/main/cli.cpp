@@ -117,6 +117,8 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "EVENT_CONTROL_EXPRESSION",
      .description = "еxpected singular data type for event control expression "
                     "instead of type"},
+    {.id = "METHOD_OVERRIDE_ARGUMENT_NAME",
+     .description = "argument name of method does not match of override"},
 
     {.id = "EXTEND_CLASS", .description = "extending non existing class"},
     {.id = "DUPLICATE_CONSTRUCTOR",

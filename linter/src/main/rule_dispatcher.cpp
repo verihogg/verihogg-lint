@@ -48,6 +48,7 @@
 #include "rules/implicit_data_type.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
+#include "rules/method_override_argument_name.h"
 #include "rules/missing_for_loop_condition.h"
 #include "rules/missing_for_loop_initialization.h"
 #include "rules/missing_for_loop_step.h"
@@ -144,6 +145,7 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.name = "NofParameterOverrides", .check = CheckNofParameterOverrides},
     {.name = "MissingFunctionImplementation", .check = CheckMissingFunctionImplementation},
     {.name = "FuctionImplementationScope", .check = CheckFuncImplScope},
+    {.name = "MethodOverrideArgumentName", .check = CheckMethodOverrideArgumentName},
     // clang-format on
 });
 

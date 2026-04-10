@@ -73,6 +73,7 @@ inline constexpr ED::ErrorType LINT_CIRCULAR_INHERITANCE = LintId(783);
 
 inline constexpr ED::ErrorType LINT_MODPORT_IMPORT_EXPORT_PORT = LintId(784);
 inline constexpr ED::ErrorType LINT_EVENT_CONTROL_EXPRESSION = LintId(785);
+inline constexpr ED::ErrorType LINT_METHOD_OVERRIDE_ARGUMENT_NAME = LintId(786);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -221,6 +222,9 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{.type = LINT_EVENT_CONTROL_EXPRESSION,
                  .text = "еxpected singular data type for event control "
                          "expression instead of: %s"},
+    LintRuleInfo{
+        .type = LINT_METHOD_OVERRIDE_ARGUMENT_NAME,
+        .text = "argument name of method does not match of override: %s"},
 };
 
 inline void RegisterLintRules() {
