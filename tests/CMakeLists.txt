@@ -36,3 +36,19 @@ target_compile_definitions(non_standard_checks_test PRIVATE
 )
 
 gtest_discover_tests(non_standard_checks_test)
+
+add_executable(assignment_pattern_checks_test $<TARGET_OBJECTS:verihoggLintLib> assignment_pattern_checks_test.cpp)
+
+target_link_libraries(assignment_pattern_checks_test PUBLIC verihoggLintLib)
+target_link_libraries(assignment_pattern_checks_test PUBLIC gtest gtest_main)
+target_link_libraries(assignment_pattern_checks_test PUBLIC ${GTEST_LIBRARY})
+
+target_include_directories(assignment_pattern_checks_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
+
+gtest_discover_tests(assignment_pattern_checks_test)
