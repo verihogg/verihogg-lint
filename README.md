@@ -165,6 +165,9 @@ The project is intended for static code analysis and checking compliance with co
 
 - `METHOD_OVERRIDE_ARGUMENT_NAME`  
   argument name of method does not match of override
+
+- `FUNCTION_IMPLEMENTATION_RETURN_TYPE`  
+  return type of function must be the same as prototype return type
 ---
 
 ## Project structure

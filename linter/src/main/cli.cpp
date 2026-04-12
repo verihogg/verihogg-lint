@@ -119,6 +119,9 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
                     "instead of type"},
     {.id = "METHOD_OVERRIDE_ARGUMENT_NAME",
      .description = "argument name of method does not match of override"},
+    {.id = "FUNCTION_IMPLEMENTATION_RETURN_TYPE",
+     .description =
+         "return type of function must be the same as prototype return type"},
 
     {.id = "EXTEND_CLASS", .description = "extending non existing class"},
     {.id = "DUPLICATE_CONSTRUCTOR",

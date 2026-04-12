@@ -74,6 +74,8 @@ inline constexpr ED::ErrorType LINT_CIRCULAR_INHERITANCE = LintId(783);
 inline constexpr ED::ErrorType LINT_MODPORT_IMPORT_EXPORT_PORT = LintId(784);
 inline constexpr ED::ErrorType LINT_EVENT_CONTROL_EXPRESSION = LintId(785);
 inline constexpr ED::ErrorType LINT_METHOD_OVERRIDE_ARGUMENT_NAME = LintId(786);
+inline constexpr ED::ErrorType LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE =
+    LintId(787);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -225,6 +227,9 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{
         .type = LINT_METHOD_OVERRIDE_ARGUMENT_NAME,
         .text = "argument name of method does not match of override: %s"},
+    LintRuleInfo{.type = LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE,
+                 .text = "return type of function must be the same as "
+                         "prototype return type: %s"},
 };
 
 inline void RegisterLintRules() {
