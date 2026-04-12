@@ -4,8 +4,10 @@
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include <string>
 #include <string_view>
 #include <unordered_set>
+#include <vector>
 
 namespace SL = SURELOG;
 
@@ -256,4 +258,21 @@ void CollectNames(const SL::FileContent* fileContent, SL::NodeId root,
       }
     }
   }
+}
+
+auto JoinNames(const SL::FileContent* fileContent,
+               const std::vector<SL::NodeId>& parts) -> std::string {
+  if (parts.empty()) {
+    return "<unknown>";
+  }
+  std::string res;
+  bool first = true;
+  for (SL::NodeId const kPart : parts) {
+    if (!first) {
+      res += '.';
+    }
+    res += std::string(fileContent->SymName(kPart));
+    first = false;
+  }
+  return res;
 }

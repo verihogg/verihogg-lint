@@ -5,6 +5,7 @@
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
+#include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <cassert>
 #include <initializer_list>
@@ -73,3 +74,15 @@ auto GetTypedefName(const SL::FileContent* fc, SL::NodeId declNode)
 
 auto IsModuleOrInterfaceInstance(const SL::FileContent* fc, SL::NodeId root,
                                  std::string_view varName) -> bool;
+
+auto Is1BitScalarKeyword(SL::VObjectType type) -> bool;
+
+auto IsIntegralType(SL::VObjectType type) -> bool;
+
+auto IsWildcardNumberType(SL::VObjectType type) -> bool;
+
+auto IsOperatorType(SL::VObjectType type) -> bool;
+
+auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
+                             SL::NodeId root)
+    -> std::unordered_set<std::string_view>;

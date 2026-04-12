@@ -7,12 +7,14 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
 #include <gsl/span>
 #include <initializer_list>
 #include <sstream>
 #include <stack>
 #include <string>
+#include <type_traits>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
@@ -384,4 +386,65 @@ auto IsModuleOrInterfaceInstance(const SL::FileContent* fc, SL::NodeId root,
   }
 
   return false;
+}
+
+auto Is1BitScalarKeyword(SL::VObjectType type) -> bool {
+  static constexpr std::array kScalarTypes = {
+      SL::VObjectType::paIntVec_TypeBit,
+      SL::VObjectType::paIntVec_TypeLogic,
+      SL::VObjectType::paIntVec_TypeReg,
+  };
+  return std::ranges::any_of(
+      kScalarTypes, [type](SL::VObjectType t) -> bool { return t == type; });
+}
+
+auto IsIntegralType(SL::VObjectType type) -> bool {
+  static constexpr std::array kIntegralTypes = {
+      SL::VObjectType::paIntVec_TypeBit,
+      SL::VObjectType::paIntVec_TypeLogic,
+      SL::VObjectType::paIntVec_TypeReg,
+      SL::VObjectType::paIntegerAtomType_Int,
+      SL::VObjectType::paIntegerAtomType_LongInt,
+      SL::VObjectType::paIntegerAtomType_Shortint,
+      SL::VObjectType::paIntegerAtomType_Byte,
+      SL::VObjectType::paIntegerAtomType_Integer,
+      SL::VObjectType::paIntegerAtomType_Time,
+      SL::VObjectType::paEnum_base_type,
+  };
+  return std::ranges::find(kIntegralTypes, type) != kIntegralTypes.end();
+}
+
+auto IsWildcardNumberType(SL::VObjectType type) -> bool {
+  switch (type) {
+    case SL::VObjectType::paNumber_1Tickbx:
+    case SL::VObjectType::paNumber_1Tickb0:
+    case SL::VObjectType::paNumber_1TickbX:
+      return true;
+    default:
+      return false;
+  }
+}
+
+auto IsOperatorType(SL::VObjectType type) -> bool {
+  using UnderlyingType = std::underlying_type_t<SL::VObjectType>;
+  const auto kVal = static_cast<UnderlyingType>(type);
+  return kVal >= static_cast<UnderlyingType>(SL::VObjectType::paUnary_Minus) &&
+         kVal <= static_cast<UnderlyingType>(SL::VObjectType::paUnary_Tilda);
+}
+
+auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
+                             SL::NodeId root)
+    -> std::unordered_set<std::string_view> {
+  std::unordered_set<std::string_view> userTypes;
+  for (SL::NodeId const kDeclNode :
+       fileContent->sl_collect_all(root, SL::VObjectType::paType_declaration)) {
+    for (SL::NodeId const kChild : fileContent->sl_collect_all(
+             kDeclNode, SL::VObjectType::slStringConst, false)) {
+      std::string_view const kTypeName = fileContent->SymName(kChild);
+      if (!kTypeName.empty()) {
+        userTypes.insert(kTypeName);
+      }
+    }
+  }
+  return userTypes;
 }

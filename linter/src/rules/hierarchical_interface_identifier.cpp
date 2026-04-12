@@ -8,32 +8,15 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <queue>
-#include <string>
 #include <vector>
 
 #include "main/lint_rules.h"
 #include "utils/location_utils.h"
+#include "utils/name_utils.h"
 
 namespace SL = SURELOG;
 
 namespace {
-auto JoinNames(const SL::FileContent* fileContent,
-               const std::vector<SL::NodeId>& parts) -> std::string {
-  if (parts.empty()) {
-    return "<unknown>";
-  }
-  std::string res;
-  bool first = true;
-  for (SL::NodeId const kPart : parts) {
-    if (!first) {
-      res += '.';
-    }
-    res += std::string(fileContent->SymName(kPart));
-    first = false;
-  }
-  return res;
-}
-
 auto IsHierarchicalExpression(const SL::FileContent* fileContent,
                               SL::NodeId expr) -> bool {
   auto ids = fileContent->sl_collect_all(expr, SL::VObjectType::slStringConst);

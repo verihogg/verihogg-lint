@@ -7,34 +7,13 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <string_view>
-#include <unordered_set>
 
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
 namespace SL = SURELOG;
-
-namespace {
-auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
-                             SL::NodeId root)
-    -> std::unordered_set<std::string_view> {
-  std::unordered_set<std::string_view> userTypes;
-
-  for (SL::NodeId const kDeclNode :
-       fileContent->sl_collect_all(root, SL::VObjectType::paType_declaration)) {
-    for (SL::NodeId const kChild : fileContent->sl_collect_all(
-             kDeclNode, SL::VObjectType::slStringConst, false)) {
-      std::string_view const kTypeName = fileContent->SymName(kChild);
-      if (!kTypeName.empty()) {
-        userTypes.insert(kTypeName);
-      }
-    }
-  }
-
-  return userTypes;
-}
-}  // namespace
 
 void CheckTypeCasting(const SL::FileContent* fileContent,
                       SL::ErrorContainer* errors, SL::SymbolTable* symbols) {

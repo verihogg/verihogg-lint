@@ -7,33 +7,16 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <algorithm>
-#include <array>
 #include <string_view>
 
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
 namespace SL = SURELOG;
 
 namespace {
-auto IsIntegralType(SL::VObjectType type) -> bool {
-  static constexpr std::array kIntegralTypes = {
-      SL::VObjectType::paIntVec_TypeBit,
-      SL::VObjectType::paIntVec_TypeLogic,
-      SL::VObjectType::paIntVec_TypeReg,
-      SL::VObjectType::paIntegerAtomType_Int,
-      SL::VObjectType::paIntegerAtomType_LongInt,
-      SL::VObjectType::paIntegerAtomType_Shortint,
-      SL::VObjectType::paIntegerAtomType_Byte,
-      SL::VObjectType::paIntegerAtomType_Integer,
-      SL::VObjectType::paIntegerAtomType_Time,
-      SL::VObjectType::paEnum_base_type,
-  };
-  return std::ranges::find(kIntegralTypes, type) != kIntegralTypes.end();
-};
-
 auto ResolveVarName(const SL::FileContent* fileContent, SL::NodeId exprNode)
     -> std::string_view {
   if (exprNode == SL::InvalidNodeId) {

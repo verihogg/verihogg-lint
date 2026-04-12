@@ -237,14 +237,10 @@ void CheckAssignmentPattern(const SL::FileContent* fileContent,
       continue;
     }
 
-    bool hasLabel = false;
-    for (SL::NodeId child = fileContent->Child(kConcat); child;
-         child = fileContent->Sibling(child)) {
-      if (fileContent->Type(child) == SL::VObjectType::paArray_member_label) {
-        hasLabel = true;
-        break;
-      }
-    }
+    bool const hasLabel =
+        FindChildOfType(fileContent, kConcat,
+                        SL::VObjectType::paArray_member_label) !=
+        SL::InvalidNodeId;
 
     std::string_view const kVarName =
         FindDirectRhsLhsName(fileContent, kConcat);

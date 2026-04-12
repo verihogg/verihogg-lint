@@ -4,8 +4,10 @@
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include <string>
 #include <string_view>
 #include <unordered_set>
+#include <vector>
 
 namespace SL = SURELOG;
 // Извлечь первое имя StringConst из поддерева узла.
@@ -34,3 +36,6 @@ auto FindDirectRhsLhsName(const SL::FileContent* fileContent,
 void CollectNames(const SL::FileContent* fileContent, SL::NodeId root,
                   SL::VObjectType parentType, SL::VObjectType assignType,
                   std::unordered_set<std::string_view>& out);
+
+auto JoinNames(const SL::FileContent* fileContent,
+               const std::vector<SL::NodeId>& parts) -> std::string;

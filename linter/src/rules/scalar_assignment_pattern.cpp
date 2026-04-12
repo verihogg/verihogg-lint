@@ -6,8 +6,6 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <algorithm>
-#include <array>
 #include <string_view>
 
 #include "main/lint_rules.h"
@@ -18,18 +16,6 @@
 namespace SL = SURELOG;
 
 namespace {
-auto Is1BitScalarKeyword(SL::VObjectType type) -> bool {
-  static constexpr std::array kScalarTypes = {
-      SL::VObjectType::paIntVec_TypeBit,
-      SL::VObjectType::paIntVec_TypeLogic,
-      SL::VObjectType::paIntVec_TypeReg,
-  };
-  return std::ranges::any_of(kScalarTypes,
-                             [type](SL::VObjectType vObjectType) -> bool {
-                               return vObjectType == type;
-                             });
-}
-
 auto IsScalarVariable(const SL::FileContent* fileContent, SL::NodeId root,
                       const std::string_view& varName, SL::NodeId patternNode)
     -> bool {

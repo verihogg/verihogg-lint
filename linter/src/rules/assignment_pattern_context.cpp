@@ -11,6 +11,7 @@
 #include <string_view>
 
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -78,18 +79,9 @@ auto FindDirectContext(const SL::FileContent* fileContent,
 
 auto NameFromFirstChild(const SL::FileContent* fileContent, SL::NodeId node,
                         SL::VObjectType targetType) -> std::string_view {
-  for (SL::NodeId ch = fileContent->Child(node); ch != SL::NodeId(0);
-       ch = fileContent->Sibling(ch)) {
-    if (fileContent->Type(ch) != targetType) {
-      continue;
-    }
-    std::string_view const kName = ExtractName(fileContent, ch, "");
-    if (!kName.empty()) {
-      return kName;
-    }
-    break;
-  }
-  return {};
+  SL::NodeId const kChild = FindChildOfType(fileContent, node, targetType);
+  return kChild != SL::InvalidNodeId ? ExtractName(fileContent, kChild, "")
+                                     : std::string_view{};
 }
 
 auto NameFromLvalue(const SL::FileContent* fileContent, SL::NodeId current)

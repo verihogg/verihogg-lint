@@ -6,34 +6,16 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <algorithm>
 #include <stack>
-#include <string_view>
 
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
 #include "utils/location_utils.h"
+#include "utils/string_utils.h"
 
 namespace SL = SURELOG;
 
 namespace {
-auto ValueHasWildcard(std::string_view val) -> bool {
-  static constexpr std::string_view kWildcardChars = "xXzZ?";
-  return std::ranges::any_of(val, [](char chr) -> bool {
-    return kWildcardChars.find(chr) != std::string_view::npos;
-  });
-}
-
-auto IsWildcardNumberType(SL::VObjectType type) -> bool {
-  switch (type) {
-    case SL::VObjectType::paNumber_1Tickbx:
-    case SL::VObjectType::paNumber_1Tickb0:
-    case SL::VObjectType::paNumber_1TickbX:
-      return true;
-    default:
-      return false;
-  }
-}
-
 auto FindWildcardInTransRangeList(const SL::FileContent* fileContent,
                                   SL::NodeId node) -> SL::NodeId {
   if (node == SL::InvalidNodeId) {

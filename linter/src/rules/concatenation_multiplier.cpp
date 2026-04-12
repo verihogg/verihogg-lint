@@ -11,11 +11,11 @@
 #include <array>
 #include <stack>
 #include <string_view>
-#include <type_traits>
 #include <unordered_set>
 #include <utility>
 
 #include "main/lint_rules.h"
+#include "utils/ast_utils.h"
 #include "utils/location_utils.h"
 #include "utils/name_utils.h"
 
@@ -77,13 +77,6 @@ auto CollectVariables(const SL::FileContent* fileContent)
     CollectNames(fileContent, kRoot, parentType, assignType, variables);
   }
   return variables;
-}
-
-auto IsOperatorType(SL::VObjectType childType) -> bool {
-  using UnderlyingType = std::underlying_type_t<SL::VObjectType>;
-  const auto kVal = static_cast<UnderlyingType>(childType);
-  return kVal >= static_cast<UnderlyingType>(SL::VObjectType::paUnary_Minus) &&
-         kVal <= static_cast<UnderlyingType>(SL::VObjectType::paUnary_Tilda);
 }
 
 void EnqueueChildren(const SL::FileContent* fileContent, SL::NodeId node,
