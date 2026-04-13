@@ -169,8 +169,12 @@ The project is intended for static code analysis and checking compliance with co
 - `FUNCTION_IMPLEMENTATION_RETURN_TYPE`  
   return type of function must be the same as prototype return type
 
-- `FUNCTION_IMPLEMENTATION_RETURN_TYPE`
+- `FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE`  
   Internal return type for the implementation of extern method requires scope resolution
+
+- `METHOD_IMPLEMENTATION_ARGUMENT_TYPE`  
+  Argument type of method must be the same as prototype argument type (non-standard use of type alias)
+
 ---
 
 ## Project structure

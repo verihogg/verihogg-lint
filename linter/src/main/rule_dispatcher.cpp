@@ -50,6 +50,7 @@
 #include "rules/implicit_data_type.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
+#include "rules/method_implementation_argument_type.h"
 #include "rules/method_override_argument_name.h"
 #include "rules/missing_for_loop_condition.h"
 #include "rules/missing_for_loop_initialization.h"
@@ -150,6 +151,7 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.name = "MethodOverrideArgumentName", .check = CheckMethodOverrideArgumentName},
     {.name = "FunctionImplementationReturnType", .check = CheckFunctionImplementationReturnType},
     {.name = "FunctionImplementationInternalReturnType", .check = CheckFunctionImplementationInternalReturnType},
+    {.name = "MethodImplementationArgumentType", .check = CheckMethodImplementationArgumentType},
     // clang-format on
 });
 

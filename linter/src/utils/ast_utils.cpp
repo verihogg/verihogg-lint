@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <gsl/span>
 #include <initializer_list>
+#include <optional>
 #include <sstream>
 #include <stack>
 #include <string>
@@ -447,4 +448,75 @@ auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
     }
   }
   return userTypes;
+}
+
+auto ExtractTypeInfoFromDataType(const SL::FileContent* fc, SL::NodeId dataType)
+    -> std::optional<SvTypeInfo> {
+  if (!dataType || fc->Type(dataType) != SL::VObjectType::paData_type) {
+    return std::nullopt;
+  }
+
+  SL::NodeId const kTypeChild = fc->Child(dataType);
+  if (!kTypeChild) {
+    return std::nullopt;
+  }
+
+  SL::VObjectType kNodeType = fc->Type(kTypeChild);
+  SL::NodeId kNameNode = kTypeChild;
+
+  if (kNodeType == SL::VObjectType::paClass_scope) {
+    SL::NodeId const kScopedName = fc->Sibling(kTypeChild);
+    if (kScopedName &&
+        fc->Type(kScopedName) == SL::VObjectType::slStringConst) {
+      kNodeType = SL::VObjectType::slStringConst;
+      kNameNode = kScopedName;
+    }
+  }
+
+  std::string_view name;
+  if (kNodeType == SL::VObjectType::slStringConst) {
+    name = fc->SymName(kNameNode);
+  }
+
+  return SvTypeInfo{.nodeType = kNodeType, .name = name};
+}
+
+auto SvTypeInfosMatch(const SvTypeInfo& a, const SvTypeInfo& b) -> bool {
+  if (a.nodeType != b.nodeType) {
+    return false;
+  }
+  if (a.nodeType == SL::VObjectType::slStringConst) {
+    return a.name == b.name;
+  }
+  return true;
+}
+
+auto ExtractArgTypesFromPortList(const SL::FileContent* fc, SL::NodeId portList)
+    -> std::vector<SvTypeInfo> {
+  std::vector<SvTypeInfo> result;
+  if (!portList) {
+    return result;
+  }
+
+  for (SL::NodeId item = fc->Child(portList); item; item = fc->Sibling(item)) {
+    if (fc->Type(item) != SL::VObjectType::paTf_port_item) {
+      continue;
+    }
+
+    SL::NodeId const kDtoi = fc->Child(item);
+    if (!kDtoi || fc->Type(kDtoi) != SL::VObjectType::paData_type_or_implicit) {
+      continue;
+    }
+
+    SL::NodeId const kDataType = fc->Child(kDtoi);
+    if (!kDataType || fc->Type(kDataType) != SL::VObjectType::paData_type) {
+      continue;
+    }
+
+    auto info = ExtractTypeInfoFromDataType(fc, kDataType);
+    if (info.has_value()) {
+      result.push_back(*info);
+    }
+  }
+  return result;
 }

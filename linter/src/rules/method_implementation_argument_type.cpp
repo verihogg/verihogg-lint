@@ -1,4 +1,4 @@
-#include "rules/function_implementation_return_type.h"
+#include "rules/method_implementation_argument_type.h"
 
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/Design.h>
@@ -8,6 +8,7 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
+#include <algorithm>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -24,32 +25,10 @@ namespace SL = SURELOG;
 
 namespace {
 
-auto ExtractReturnTypeInfo(const SL::FileContent* fc,
-                           SL::NodeId func_data_type_or_implicit)
-    -> std::optional<SvTypeInfo> {
-  if (!func_data_type_or_implicit) {
-    return std::nullopt;
-  }
-
-  SL::NodeId const kFuncDataType = fc->Child(func_data_type_or_implicit);
-  if (!kFuncDataType ||
-      fc->Type(kFuncDataType) != SL::VObjectType::paFunction_data_type) {
-    return std::nullopt;
-  }
-
-  SL::NodeId const kDataType = fc->Child(kFuncDataType);
-  if (!kDataType || fc->Type(kDataType) != SL::VObjectType::paData_type) {
-    return SvTypeInfo{.nodeType = SL::VObjectType::paFunction_data_type,
-                      .name = {}};
-  }
-
-  return ExtractTypeInfoFromDataType(fc, kDataType);
-}
-
 struct PrototypeInfo {
   std::string_view className;
   std::string_view funcName;
-  SvTypeInfo returnType;
+  std::vector<SvTypeInfo> argTypes;
   SL::NodeId reportNode;
   const SL::FileContent* fileContent;
 };
@@ -87,20 +66,13 @@ auto TryCollectPrototype(const SL::FileContent* fc, SL::NodeId classItem,
   }
 
   SL::NodeId const kFdtoi = fc->Child(kProto);
-  if (!kFdtoi ||
-      fc->Type(kFdtoi) != SL::VObjectType::paFunction_data_type_or_implicit) {
-    return std::nullopt;
-  }
-
-  std::optional<SvTypeInfo> const kRetType = ExtractReturnTypeInfo(fc, kFdtoi);
-  if (!kRetType.has_value()) {
-    return std::nullopt;
-  }
+  SL::NodeId const kPortList =
+      FindSiblingOfType(fc, kFdtoi, SL::VObjectType::paTf_port_list);
 
   return PrototypeInfo{
       .className = className,
       .funcName = kFuncName,
-      .returnType = *kRetType,
+      .argTypes = ExtractArgTypesFromPortList(fc, kPortList),
       .reportNode = kMethodProto,
       .fileContent = fc,
   };
@@ -137,7 +109,7 @@ auto CollectPrototypes(const SL::FileContent* fc)
 }
 
 struct ImplEntry {
-  SvTypeInfo returnType;
+  std::vector<SvTypeInfo> argTypes;
 };
 
 auto CollectImplementations(const SL::FileContent* fc)
@@ -169,16 +141,15 @@ auto CollectImplementations(const SL::FileContent* fc)
       continue;
     }
 
-    std::optional<SvTypeInfo> const kRetType =
-        ExtractReturnTypeInfo(fc, kFdtoi);
-    if (!kRetType.has_value()) {
-      continue;
-    }
+    SL::NodeId const kPortList =
+        FindSiblingOfType(fc, kFdtoi, SL::VObjectType::paTf_port_list);
 
     std::string const kKey = ClassScopeUtils::MakeClassMethodKey(
         kMemberInfo->className, kMemberInfo->memberName);
 
-    result.insert_or_assign(kKey, ImplEntry{.returnType = *kRetType});
+    result.insert_or_assign(
+        kKey,
+        ImplEntry{.argTypes = ExtractArgTypesFromPortList(fc, kPortList)});
   }
 
   return result;
@@ -186,7 +157,7 @@ auto CollectImplementations(const SL::FileContent* fc)
 
 }  // namespace
 
-void CheckFunctionImplementationReturnType(SL::Design* design,
+void CheckMethodImplementationArgumentType(SL::Design* design,
                                            SL::ErrorContainer* errors,
                                            SL::SymbolTable* symbols) {
   if (design == nullptr || errors == nullptr || symbols == nullptr) {
@@ -221,12 +192,17 @@ void CheckFunctionImplementationReturnType(SL::Design* design,
       continue;
     }
 
-    if (SvTypeInfosMatch(proto.returnType, kIt->second.returnType)) {
-      continue;
-    }
+    const auto& implArgTypes = kIt->second.argTypes;
+    const std::size_t kCompareCount =
+        std::min(proto.argTypes.size(), implArgTypes.size());
 
-    ReportError(proto.fileContent, proto.reportNode, proto.funcName,
-                verihogg_lint::LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE, errors,
-                symbols);
+    for (std::size_t i = 0; i < kCompareCount; ++i) {
+      if (!SvTypeInfosMatch(proto.argTypes.at(i), implArgTypes.at(i))) {
+        ReportError(proto.fileContent, proto.reportNode, proto.funcName,
+                    verihogg_lint::LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE,
+                    errors, symbols);
+        break;
+      }
+    }
   }
 }

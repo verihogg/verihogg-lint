@@ -9,7 +9,10 @@
 
 #include <cassert>
 #include <initializer_list>
+#include <optional>
 #include <string>
+#include <string_view>
+#include <vector>
 
 namespace SL = SURELOG;
 
@@ -86,3 +89,16 @@ auto IsOperatorType(SL::VObjectType type) -> bool;
 auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
                              SL::NodeId root)
     -> std::unordered_set<std::string_view>;
+
+struct SvTypeInfo {
+  SL::VObjectType nodeType = SL::VObjectType::sl_INVALID_;
+  std::string_view name;
+};
+
+auto ExtractTypeInfoFromDataType(const SL::FileContent* fc, SL::NodeId dataType)
+    -> std::optional<SvTypeInfo>;
+
+auto SvTypeInfosMatch(const SvTypeInfo& a, const SvTypeInfo& b) -> bool;
+
+auto ExtractArgTypesFromPortList(const SL::FileContent* fc, SL::NodeId portList)
+    -> std::vector<SvTypeInfo>;

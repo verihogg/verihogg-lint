@@ -125,6 +125,9 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE",
      .description = "Internal return type for the implementation of extern "
                     "method requires scope resolution"},
+    {.id = "METHOD_IMPLEMENTATION_ARGUMENT_TYPE",
+     .description = "Argument type of method must be the same as prototype "
+                    "argument type (non-standard use of type alias)"},
 
     {.id = "EXTEND_CLASS", .description = "extending non existing class"},
     {.id = "DUPLICATE_CONSTRUCTOR",

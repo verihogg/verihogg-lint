@@ -290,14 +290,14 @@ auto CheckClass(const ClassInfo& childClass, const GlobalMap& globalMap,
         std::min(baseArgs->size(), childMethod.args.size());
 
     for (std::size_t i = 0; i < kCompareCount; ++i) {
-      if ((*baseArgs)[i] == childMethod.args[i].name) {
+      if ((*baseArgs).at(i) == childMethod.args.at(i).name) {
         continue;
       }
 
-      ReportError(childMethod.args[i].fileContent,
-                  childMethod.args[i].reportNode, childMethod.args[i].name,
-                  verihogg_lint::LINT_METHOD_OVERRIDE_ARGUMENT_NAME, errors,
-                  symbols);
+      ReportError(
+          childMethod.args.at(i).fileContent, childMethod.args.at(i).reportNode,
+          childMethod.args.at(i).name,
+          verihogg_lint::LINT_METHOD_OVERRIDE_ARGUMENT_NAME, errors, symbols);
     }
   }
 }

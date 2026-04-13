@@ -6,6 +6,7 @@
 
 #include <array>
 #include <optional>
+#include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
@@ -205,6 +206,43 @@ auto ScopesMatch(const ClassScopeInfo& implScope,
     return true;
   }
   return implScope.scopeName == classScope.scopeName;
+}
+
+auto MakeClassMethodKey(std::string_view className, std::string_view funcName)
+    -> std::string {
+  std::string key;
+  key.reserve(className.size() + 2 + funcName.size());
+  key.append(className);
+  key.append("::");
+  key.append(funcName);
+  return key;
+}
+
+auto GetClassNameFromDecl(const SL::FileContent* fc, SL::NodeId classDecl)
+    -> std::string_view {
+  SL::NodeId const kClassKw = fc->Child(classDecl);
+  if (!kClassKw || fc->Type(kClassKw) != SL::VObjectType::paCLASS) {
+    return {};
+  }
+  SL::NodeId const kNameNode = fc->Sibling(kClassKw);
+  if (!kNameNode || fc->Type(kNameNode) != SL::VObjectType::slStringConst) {
+    return {};
+  }
+  return fc->SymName(kNameNode);
+}
+
+auto ExtractFuncNameFromPrototype(const SL::FileContent* fc,
+                                  SL::NodeId funcProto) -> std::string_view {
+  SL::NodeId const kFdtoi = fc->Child(funcProto);
+  if (!kFdtoi ||
+      fc->Type(kFdtoi) != SL::VObjectType::paFunction_data_type_or_implicit) {
+    return {};
+  }
+  SL::NodeId const kNameNode = fc->Sibling(kFdtoi);
+  if (!kNameNode || fc->Type(kNameNode) != SL::VObjectType::slStringConst) {
+    return {};
+  }
+  return fc->SymName(kNameNode);
 }
 
 }  // namespace ClassScopeUtils

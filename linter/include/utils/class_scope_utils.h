@@ -46,4 +46,14 @@ auto ExtractClassScopedMember(const SURELOG::FileContent* fileContent,
 auto ScopesMatch(const ClassScopeInfo& implScope,
                  const ClassScopeInfo& classScope) -> bool;
 
+auto MakeClassMethodKey(std::string_view className, std::string_view funcName)
+    -> std::string;
+
+auto GetClassNameFromDecl(const SURELOG::FileContent* fc,
+                          SURELOG::NodeId classDecl) -> std::string_view;
+
+auto ExtractFuncNameFromPrototype(const SURELOG::FileContent* fc,
+                                  SURELOG::NodeId funcProto)
+    -> std::string_view;
+
 }  // namespace ClassScopeUtils

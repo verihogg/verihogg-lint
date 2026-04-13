@@ -78,6 +78,8 @@ inline constexpr ED::ErrorType LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE =
     LintId(787);
 inline constexpr ED::ErrorType
     LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE = LintId(788);
+inline constexpr ED::ErrorType LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE =
+    LintId(789);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -236,6 +238,11 @@ inline constexpr std::array kLintRules = {
         .type = LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE,
         .text = "Internal return type for the implementation of extern method "
                 "requires scope resolution: %s"},
+    LintRuleInfo{
+        .type = LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE,
+        .text =
+            "Argument type of method must be the same as prototype argument "
+            "type (non-standard use of type alias): %s"},
 };
 
 inline void RegisterLintRules() {
