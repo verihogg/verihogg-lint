@@ -41,6 +41,7 @@
 #include "rules/extern_task_undeclared.h"
 #include "rules/fatal_rule.h"
 #include "rules/foreach_loop_condition.h"
+#include "rules/function_implementation_internal_return_type.h"
 #include "rules/function_implementation_return_type.h"
 #include "rules/function_implemention_scope.h"
 #include "rules/hierarchical_interface_identifier.h"
@@ -148,6 +149,7 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.name = "FuctionImplementationScope", .check = CheckFuncImplScope},
     {.name = "MethodOverrideArgumentName", .check = CheckMethodOverrideArgumentName},
     {.name = "FunctionImplementationReturnType", .check = CheckFunctionImplementationReturnType},
+    {.name = "FunctionImplementationInternalReturnType", .check = CheckFunctionImplementationInternalReturnType},
     // clang-format on
 });
 

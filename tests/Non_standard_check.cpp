@@ -33,6 +33,7 @@
 #include "rules/event_control_expression.h"
 #include "rules/exponent_format_time_value.h"
 #include "rules/foreach_loop_condition.h"
+#include "rules/function_implementation_internal_return_type.h"
 #include "rules/function_implementation_return_type.h"
 #include "rules/function_implemention_scope.h"
 #include "rules/hierarchical_interface_identifier.h"
@@ -563,6 +564,10 @@ auto GlobalRuleSpecs() -> const std::vector<RuleSpecGlobal>& {
       {"FunctionImplementationReturnType",
        verihogg_lint::LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE,
        CheckFunctionImplementationReturnType,
+       {}},
+      {"FunctionImplementationInternalReturnType",
+       verihogg_lint::LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE,
+       CheckFunctionImplementationInternalReturnType,
        {}},
   };
   return specs;

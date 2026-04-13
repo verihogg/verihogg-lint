@@ -76,6 +76,8 @@ inline constexpr ED::ErrorType LINT_EVENT_CONTROL_EXPRESSION = LintId(785);
 inline constexpr ED::ErrorType LINT_METHOD_OVERRIDE_ARGUMENT_NAME = LintId(786);
 inline constexpr ED::ErrorType LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE =
     LintId(787);
+inline constexpr ED::ErrorType
+    LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE = LintId(788);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -230,6 +232,10 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{.type = LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE,
                  .text = "return type of function must be the same as "
                          "prototype return type: %s"},
+    LintRuleInfo{
+        .type = LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE,
+        .text = "Internal return type for the implementation of extern method "
+                "requires scope resolution: %s"},
 };
 
 inline void RegisterLintRules() {

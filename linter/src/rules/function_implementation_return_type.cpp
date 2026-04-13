@@ -66,11 +66,21 @@ auto ExtractReturnTypeInfo(const SL::FileContent* fc,
     return std::nullopt;
   }
 
-  SL::VObjectType const kNodeType = fc->Type(kTypeChild);
+  SL::VObjectType kNodeType = fc->Type(kTypeChild);
+  SL::NodeId kNameNode = kTypeChild;
+
+  if (kNodeType == SL::VObjectType::paClass_scope) {
+    SL::NodeId const kScopedName = fc->Sibling(kTypeChild);
+    if (kScopedName &&
+        fc->Type(kScopedName) == SL::VObjectType::slStringConst) {
+      kNodeType = SL::VObjectType::slStringConst;
+      kNameNode = kScopedName;
+    }
+  }
 
   std::string_view name;
   if (kNodeType == SL::VObjectType::slStringConst) {
-    name = fc->SymName(kTypeChild);
+    name = fc->SymName(kNameNode);
   }
 
   return ReturnTypeInfo{
