@@ -149,6 +149,8 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "IMPLEMENT_INTERFACE_CLASS",
      .description = "implementing non existing interface class"},
     {.id = "CIRCULAR_INHERITANCE", .description = "class extends itself"},
+    {.id = "VOID_CAST_OF_VOID_FUNCTION",
+     .description = "void cast of void function not allowed"},
 });
 
 static constexpr auto kRuleCount = kRules.size();

@@ -184,6 +184,7 @@ set(LINTER_SRC
     linter/src/rules/method_override_argument_name.cpp
     linter/src/rules/function_implementation_return_type.cpp
     linter/src/rules/function_implementation_internal_return_type.cpp
+    linter/src/rules/void_cast_of_void_function.cpp
     linter/src/rules/method_implementation_argument_type.cpp
     linter/src/rules/extend_class.cpp
     linter/src/rules/duplicate_constructor.cpp

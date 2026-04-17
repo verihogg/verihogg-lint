@@ -80,6 +80,7 @@ inline constexpr ED::ErrorType
     LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE = LintId(788);
 inline constexpr ED::ErrorType LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE =
     LintId(789);
+inline constexpr ED::ErrorType LINT_VOID_CAST_OF_VOID_FUNCTION = LintId(790);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -243,6 +244,8 @@ inline constexpr std::array kLintRules = {
         .text =
             "Argument type of method must be the same as prototype argument "
             "type (non-standard use of type alias): %s"},
+    LintRuleInfo{.type = LINT_VOID_CAST_OF_VOID_FUNCTION,
+                 .text = "void cast of void function not allowed: %s"},
 };
 
 inline void RegisterLintRules() {

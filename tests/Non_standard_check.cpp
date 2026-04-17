@@ -61,6 +61,7 @@
 #include "rules/target_unpacked_array_concatenation.h"
 #include "rules/time_value.h"
 #include "rules/type_casting.h"
+#include "rules/void_cast_of_void_function.h"
 #include "rules/wildcard_operator.h"
 
 namespace SL = SURELOG;
@@ -539,6 +540,10 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
       {.folder = "EventControlExpression",
        .expected_error = verihogg_lint::LINT_EVENT_CONTROL_EXPRESSION,
        .check = CheckEventControlExpression,
+       .ignore_errors = {}},
+      {.folder = "VoidCastOfVoidFunction",
+       .expected_error = verihogg_lint::LINT_VOID_CAST_OF_VOID_FUNCTION,
+       .check = CheckVoidCastOfVoidFunction,
        .ignore_errors = {}},
   };
   return specs;

@@ -175,6 +175,9 @@ The project is intended for static code analysis and checking compliance with co
 - `METHOD_IMPLEMENTATION_ARGUMENT_TYPE`  
   Argument type of method must be the same as prototype argument type (non-standard use of type alias)
 
+- `VOID_CAST_OF_VOID_FUNCTION`  
+  Void cast of void function not allowed
+
 ---
 
 ## Project structure

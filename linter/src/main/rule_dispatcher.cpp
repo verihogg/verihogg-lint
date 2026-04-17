@@ -71,6 +71,7 @@
 #include "rules/target_unpacked_array_concatenation.h"
 #include "rules/time_value.h"
 #include "rules/type_casting.h"
+#include "rules/void_cast_of_void_function.h"
 #include "rules/wildcard_operator.h"
 #include "yaml-cpp/node/node.h"
 #include "yaml-cpp/null.h"
@@ -138,6 +139,7 @@ const auto allRules = std::to_array<Rule>({
     {.name = "ImplementClass", .check = CheckImplementClass},
     {.name = "ImplementInterfaceClass", .check = CheckImplementInterfaceClass},
     {.name = "CircularInheritance", .check = CheckCircularInheritance},
+    {.name = "VoidCastOfVoidFunction", .check = CheckVoidCastOfVoidFunction},
     // clang-format on
 });
 
