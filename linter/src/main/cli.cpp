@@ -128,6 +128,11 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "METHOD_IMPLEMENTATION_ARGUMENT_TYPE",
      .description = "Argument type of method must be the same as prototype "
                     "argument type (non-standard use of type alias)"},
+    {.id = "VOID_CAST_OF_VOID_FUNCTION",
+     .description = "void cast of void function not allowed"},
+    {.id = "LOGICAL_NEGATION",
+     .description = "Operand of type not allowed with logical negation (use == "
+                    "null instead)"},
 
     {.id = "EXTEND_CLASS", .description = "extending non existing class"},
     {.id = "DUPLICATE_CONSTRUCTOR",
@@ -149,8 +154,6 @@ static constexpr std::array kRules = std::to_array<RuleInfo>({
     {.id = "IMPLEMENT_INTERFACE_CLASS",
      .description = "implementing non existing interface class"},
     {.id = "CIRCULAR_INHERITANCE", .description = "class extends itself"},
-    {.id = "VOID_CAST_OF_VOID_FUNCTION",
-     .description = "void cast of void function not allowed"},
 });
 
 static constexpr auto kRuleCount = kRules.size();

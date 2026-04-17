@@ -40,6 +40,7 @@
 #include "rules/implicit_data_type.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
+#include "rules/logical_negation.h"
 #include "rules/method_implementation_argument_type.h"
 #include "rules/method_override_argument_name.h"
 #include "rules/missing_for_loop_condition.h"
@@ -544,6 +545,10 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
       {.folder = "VoidCastOfVoidFunction",
        .expected_error = verihogg_lint::LINT_VOID_CAST_OF_VOID_FUNCTION,
        .check = CheckVoidCastOfVoidFunction,
+       .ignore_errors = {}},
+      {.folder = "LogicalNegation",
+       .expected_error = verihogg_lint::LINT_LOGICAL_NEGATION,
+       .check = CheckLogicalNegation,
        .ignore_errors = {}},
   };
   return specs;

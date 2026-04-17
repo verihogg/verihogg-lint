@@ -50,6 +50,7 @@
 #include "rules/implicit_data_type.h"
 #include "rules/inside_operator.h"
 #include "rules/inside_operator_range.h"
+#include "rules/logical_negation.h"
 #include "rules/method_implementation_argument_type.h"
 #include "rules/method_override_argument_name.h"
 #include "rules/missing_for_loop_condition.h"
@@ -140,6 +141,7 @@ const auto allRules = std::to_array<Rule>({
     {.name = "ImplementInterfaceClass", .check = CheckImplementInterfaceClass},
     {.name = "CircularInheritance", .check = CheckCircularInheritance},
     {.name = "VoidCastOfVoidFunction", .check = CheckVoidCastOfVoidFunction},
+    {.name = "LogicalNegation", .check = CheckLogicalNegation},
     // clang-format on
 });
 

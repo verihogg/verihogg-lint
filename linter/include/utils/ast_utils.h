@@ -48,6 +48,9 @@ auto GetFullName(const SL::FileContent* fileContent, SL::NodeId node)
 auto GetClassIds(const SL::FileContent* fileContent)
     -> std::unordered_map<std::string, SL::NodeId>;
 
+auto GetClassDeclByName(const SL::FileContent* fileContent,
+                        std::string_view className) -> SL::NodeId;
+
 auto GetInterfaceClassSet(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string>;
 

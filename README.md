@@ -178,6 +178,8 @@ The project is intended for static code analysis and checking compliance with co
 - `VOID_CAST_OF_VOID_FUNCTION`  
   Void cast of void function not allowed
 
+- `LOGICAL_NEGATION`  
+  Operand of type not allowed with logical negation
 ---
 
 ## Project structure

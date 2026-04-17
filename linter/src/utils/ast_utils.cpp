@@ -200,6 +200,21 @@ auto GetClassIds(const SL::FileContent* fileContent)
   return classes;
 }
 
+auto GetClassDeclByName(const SL::FileContent* fileContent,
+                        std::string_view className) -> SL::NodeId {
+  if (fileContent == nullptr || className.empty()) {
+    return SL::InvalidNodeId;
+  }
+  SL::NodeId const kRoot = fileContent->getRootNode();
+  for (SL::NodeId const kClassDecl : fileContent->sl_collect_all(
+           kRoot, SL::VObjectType::paClass_declaration)) {
+    if (GetStringConst(fileContent, kClassDecl) == className) {
+      return kClassDecl;
+    }
+  }
+  return SL::InvalidNodeId;
+}
+
 auto GetInterfaceClassSet(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string> {
   const std::vector<SL::NodeId> kInterfaceClassDeclarations =

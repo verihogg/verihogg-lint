@@ -81,6 +81,7 @@ inline constexpr ED::ErrorType
 inline constexpr ED::ErrorType LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE =
     LintId(789);
 inline constexpr ED::ErrorType LINT_VOID_CAST_OF_VOID_FUNCTION = LintId(790);
+inline constexpr ED::ErrorType LINT_LOGICAL_NEGATION = LintId(791);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   ED::ErrorType type;
@@ -246,6 +247,10 @@ inline constexpr std::array kLintRules = {
             "type (non-standard use of type alias): %s"},
     LintRuleInfo{.type = LINT_VOID_CAST_OF_VOID_FUNCTION,
                  .text = "void cast of void function not allowed: %s"},
+    LintRuleInfo{.type = LINT_LOGICAL_NEGATION,
+                 .text =
+                     "Operand of type '%s' not allowed with logical negation "
+                     "(use == null instead)"},
 };
 
 inline void RegisterLintRules() {
