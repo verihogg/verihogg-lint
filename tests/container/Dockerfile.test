@@ -4,6 +4,9 @@ FROM ${BASE_IMAGE}
 COPY tests/NonStandardChecks /verihogg-test-fixtures/
 COPY tests/ClassChecks /verihogg-test-fixtures/
 COPY tests/AssignmentPatternChecks /verihogg-test-fixtures/
+COPY tests/CoverGroupChecks /verihogg-test-fixtures/
+COPY tests/EnumChecks /verihogg-test-fixtures/
+COPY tests/EventChecks /verihogg-test-fixtures/
 
 COPY tests/container/run_tests.sh /usr/local/bin/run_tests.sh
 

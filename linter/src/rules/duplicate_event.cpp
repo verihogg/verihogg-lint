@@ -7,7 +7,6 @@
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
-#include <cstddef>
 #include <cstdint>
 #include <sstream>
 #include <string>
@@ -17,42 +16,25 @@
 #include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
-class Location {
- public:
-  Location(SURELOG::PathId fid, uint32_t l) : fileId(fid), line(l) {}
-
-  [[nodiscard]] auto getFileId() const -> SURELOG::PathId { return fileId; }
-  [[nodiscard]] auto getLine() const -> uint32_t { return line; }
-
- private:
+struct Location {
   SURELOG::PathId fileId;
   uint32_t line;
 };
 
-class ScopeId {
- public:
-  ScopeId(SURELOG::PathId fid, SURELOG::NodeId node)
-      : fileId(fid), scopeNode(node) {}
-
-  [[nodiscard]] auto getFileId() const -> SURELOG::PathId { return fileId; }
-  [[nodiscard]] auto getScopeNode() const -> SURELOG::NodeId {
-    return scopeNode;
-  }
+struct ScopeId {
+  SURELOG::PathId fileId;
+  SURELOG::NodeId scopeNode;
 
   auto operator==(const ScopeId& other) const -> bool {
     return fileId == other.fileId && scopeNode == other.scopeNode;
   }
-
- private:
-  SURELOG::PathId fileId;
-  SURELOG::NodeId scopeNode;
 };
 
 struct ScopeIdHash {
   auto operator()(const ScopeId& id) const -> size_t {
     const SURELOG::PathIdHasher pathHasher;
     const SURELOG::NodeIdHasher nodeHasher;
-    return pathHasher(id.getFileId()) ^ (nodeHasher(id.getScopeNode()) << 1U);
+    return pathHasher(id.fileId) ^ (nodeHasher(id.scopeNode) << 1u);
   }
 };
 
@@ -106,7 +88,8 @@ void CheckDuplicateEvents(SURELOG::Design* design,
         scopeNode = root;
       }
 
-      const ScopeId scopeKey(fileContent->getFileId(scopeNode), scopeNode);
+      const ScopeId scopeKey{.fileId = fileContent->getFileId(scopeNode),
+                             .scopeNode = scopeNode};
 
       for (const SURELOG::NodeId identifier : fileContent->sl_collect_all(
                dataDecl, SURELOG::VObjectType::slStringConst)) {
@@ -120,17 +103,18 @@ void CheckDuplicateEvents(SURELOG::Design* design,
           if (parent == dataDecl) {
             const std::string eventName(fileContent->SymName(identifier));
             const unsigned line = fileContent->Line(dataDecl);
-            const Location currentLoc(fileContent->getFileId(dataDecl), line);
+            const Location currentLoc{
+                .fileId = fileContent->getFileId(dataDecl), .line = line};
 
             auto& eventsInScope = scopeEvents[scopeKey];
             const auto it = eventsInScope.find(eventName);
             if (it != eventsInScope.end()) {
               const Location& first = it->second;
               const std::string_view firstPath =
-                  SURELOG::FileSystem::getInstance()->toPath(first.getFileId());
+                  SURELOG::FileSystem::getInstance()->toPath(first.fileId);
               std::ostringstream context;
               context << "'" << eventName << "' already declared at "
-                      << firstPath << ":" << first.getLine();
+                      << firstPath << ":" << first.line;
 
               ReportError(fileContent, dataDecl, context.str(),
                           verihogg_lint::LINT_DUPLICATE_EVENT, errors, symbols);

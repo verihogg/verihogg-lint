@@ -49,6 +49,19 @@ target_include_directories(non_standard_checks_test
     ${SURELOG_INCLUDE_DIR}
     ${GTEST_INCLUDE_DIR}
 )
+add_executable(event_checks_test $<TARGET_OBJECTS:verihoggLintLib> event_checks_test.cpp)
+
+target_link_libraries(event_checks_test PUBLIC verihoggLintLib)
+target_link_libraries(event_checks_test PUBLIC gtest gtest_main)
+target_link_libraries(event_checks_test PUBLIC ${GTEST_LIBRARY})
+
+target_include_directories(event_checks_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
 
 set(NON_STANDARD_CHECK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/NonStandardChecks")
 
@@ -70,9 +83,40 @@ target_include_directories(assignment_pattern_checks_test
     ${SURELOG_INCLUDE_DIR}
     ${GTEST_INCLUDE_DIR}
 )
+include(GoogleTest)
+gtest_discover_tests(event_checks_test)
+
+add_executable(cover_group_checks_test $<TARGET_OBJECTS:verihoggLintLib> cover_group_checks_test.cpp)
+
+target_link_libraries(cover_group_checks_test PUBLIC verihoggLintLib gtest gtest_main ${GTEST_LIBRARY})
+target_include_directories(cover_group_checks_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
 
 include(GoogleTest)
 gtest_discover_tests(class_checks_test)
 gtest_discover_tests(non_standard_checks_test)
 gtest_discover_tests(assignment_pattern_checks_test)
 gtest_discover_tests(configurations_checks_test)
+gtest_discover_tests(cover_group_checks_test)
+
+add_executable(enum_checks_test $<TARGET_OBJECTS:verihoggLintLib> enum_checks_test.cpp)
+
+target_link_libraries(enum_checks_test PUBLIC verihoggLintLib)
+target_link_libraries(enum_checks_test PUBLIC gtest gtest_main)
+target_link_libraries(enum_checks_test PUBLIC ${GTEST_LIBRARY})
+
+target_include_directories(enum_checks_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
+
+include(GoogleTest)
+gtest_discover_tests(enum_checks_test)
