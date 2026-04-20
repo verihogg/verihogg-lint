@@ -77,7 +77,7 @@ void CheckEventSingular(SURELOG::Design* design,
           if (i > 0) {
             namesStr << ", ";
           }
-          namesStr << "'" << eventNames[i] << "'";
+          namesStr << "'" << eventNames.at(i) << "'";
         }
         const std::string context = namesStr.str();
 

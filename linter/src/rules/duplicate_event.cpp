@@ -34,7 +34,7 @@ struct ScopeIdHash {
   auto operator()(const ScopeId& id) const -> size_t {
     const SURELOG::PathIdHasher pathHasher;
     const SURELOG::NodeIdHasher nodeHasher;
-    return pathHasher(id.fileId) ^ (nodeHasher(id.scopeNode) << 1u);
+    return pathHasher(id.fileId) ^ (nodeHasher(id.scopeNode) << 1U);
   }
 };
 
