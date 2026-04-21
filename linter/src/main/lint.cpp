@@ -13,7 +13,11 @@
 #include <memory>
 #include <vector>
 
+#include "fix/replacement.h"
+#include "fix/source_manager.h"
+#include "fix/suggestion_printer.h"
 #include "main/cli.h"
+#include "main/lint_diagnostics.h"
 #include "main/lint_rules.h"
 #include "main/rule_dispatcher.h"
 #include "utils/init.h"
@@ -66,9 +70,6 @@ auto main(int argc, const char** argv) -> int {
   }
 
   std::vector<const char*> slArgv = kOpts.surelog_args;
-  if (kOpts.show_surelog_help) {
-    slArgv.push_back("--help");
-  }
 
   const int kSlArgc = static_cast<int>(slArgv.size());
   const bool kSuccess = clp->parseCommandLine(kSlArgc, slArgv.data());
@@ -109,17 +110,80 @@ auto main(int argc, const char** argv) -> int {
     return 1;
   }
 
+  // Lazily create autofix components based on which flags are active.
+  const bool kNeedCollector = kOpts.show_suggestions || kOpts.apply_fixes ||
+                              !kOpts.export_fixes.empty();
+  const bool kNeedReplacements =
+      kOpts.apply_fixes || !kOpts.export_fixes.empty();
+  const bool kNeedSourceMgr = kNeedReplacements || kOpts.show_suggestions;
+
+  std::unique_ptr<LintDiagnosticCollector> collector;
+  std::unique_ptr<FileReplacements> file_repls;
+  std::unique_ptr<FixSourceManager> source_mgr;
+
+  if (kNeedCollector) {
+    collector = std::make_unique<LintDiagnosticCollector>();
+  }
+  if (kNeedReplacements) {
+    file_repls = std::make_unique<FileReplacements>();
+  }
+  if (kNeedSourceMgr) {
+    source_mgr = std::make_unique<FixSourceManager>();
+  }
+
+  AutofixContext autofix_ctx;
+  autofix_ctx.collector = collector.get();
+  autofix_ctx.replacements = file_repls.get();
+  autofix_ctx.source_mgr = source_mgr.get();
+
+  AutofixContext* autofix_ptr = kNeedCollector ? &autofix_ctx : nullptr;
+
   RunAllRulesOnDesign(theDesign, uhdmDesign, errors.get(), symbolTable.get(),
-                      kOpts.config_file);
+                      kOpts.config_file, autofix_ptr);
 
   errors->printMessages(clp->muteStdout());
 
   const uint32_t kErrorCount = errors->getErrors().size();
 
   if (kErrorCount == 0) {
-    std::cout << "Lint completed successfully. No issues found." << '\n';
+    std::cout << "Lint completed successfully. No issues found.\n";
   } else {
-    std::cout << "Lint finished with " << kErrorCount << " error(s)." << '\n';
+    std::cout << "Lint finished with " << kErrorCount << " error(s).\n";
+  }
+
+  // Print "note: fix available" hints for each fixable diagnostic.
+  if (kOpts.show_suggestions && collector && collector->hasFixable()) {
+    SuggestionPrinter::print(collector->all(), source_mgr.get(),
+                             /*show_diff=*/true);
+  }
+
+  // Export collected replacements to YAML without applying.
+  if (!kOpts.export_fixes.empty() && file_repls && !file_repls->empty()) {
+    if (file_repls->exportToYaml(kOpts.export_fixes)) {
+      std::cout << "Fixes exported to: " << kOpts.export_fixes << "\n";
+    } else {
+      std::cerr << "autofix: failed to export fixes to: " << kOpts.export_fixes
+                << "\n";
+    }
+  }
+
+  // Apply collected replacements to source files on disk.
+  if (kOpts.apply_fixes && file_repls && !file_repls->empty()) {
+    std::vector<std::string> fixed_files;
+    std::vector<std::string> failed_files;
+
+    file_repls->applyAll(&fixed_files, &failed_files);
+
+    for (const auto& f : fixed_files) {
+      std::cout << "Fixed: " << f << "\n";
+    }
+    for (const auto& f : failed_files) {
+      std::cerr << "autofix: failed to fix: " << f << "\n";
+    }
+
+    if (!fixed_files.empty()) {
+      std::cout << "Applied " << fixed_files.size() << " fix(es).\n";
+    }
   }
 
   if (compiler != nullptr) {
