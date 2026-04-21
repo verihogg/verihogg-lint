@@ -12,6 +12,7 @@
 namespace cli {
 
 constexpr size_t CONFIG_FLAG_LEN = 13;
+constexpr size_t EXPORT_FIXES_ARG_LEN = 15;
 
 auto ParseArgs(const gsl::span<const char*> args) -> Options {
   Options opts;
@@ -47,6 +48,13 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
         return opts;
       }
       opts.config_file = config_path;
+    } else if (std::strcmp(arg, "--fix") == 0) {
+      opts.apply_fixes = true;
+    } else if (std::strcmp(arg, "--no-suggestions") == 0) {
+      opts.show_suggestions = false;
+    } else if (std::strncmp(arg, "--export-fixes=", EXPORT_FIXES_ARG_LEN) ==
+               0) {
+      opts.export_fixes = std::string(arg + EXPORT_FIXES_ARG_LEN);
     } else {
       opts.surelog_args.push_back(arg);
     }
@@ -137,6 +145,11 @@ void PrintHelp(const char* programName) {
     << "  --config-file=<path>\n"
     << "                      Use lint config from <path> (default: ./" << DefaultConfigFileName << ")\n"
     << "  --surelog-help      Show full Surelog parser/elaboration options\n"
+    << "\n"
+    << "AUTOFIX:\n"
+    << "  --fix                   Apply all fixable suggestions automatically\n"
+    << "  --no-suggestions        Do not print fix hints after error output\n"
+    << "  --export-fixes=<file>   Export fixes to YAML without applying\n"
     << "\n"
     << "INPUT:\n"
     << "  <file>.sv           SystemVerilog source file\n"

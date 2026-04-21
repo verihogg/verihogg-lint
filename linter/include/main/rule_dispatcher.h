@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Surelog/Design/Design.h>
-#include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <uhdm/vpi_user.h>
@@ -99,6 +98,14 @@ struct Rule {
       check;
 };
 
+struct FixableRule {
+  std::string_view name;
+  bool enabled = true;
+  std::function<std::vector<LintDiagnostic>(
+      const SL::FileContent*, SL::ErrorContainer*, SL::SymbolTable*)>
+      check;
+};
+
 struct GlobalRule {
   std::string_view idName;
   std::string_view description;
@@ -113,6 +120,22 @@ struct UhdmRule {
   std::function<void(const vpiHandle&, SURELOG::ErrorContainer*,
                      SURELOG::SymbolTable*)>
       check;
+};
+
+class LintDiagnosticCollector;
+class FileReplacements;
+class FixSourceManager;
+
+// Nullable pointers to autofix components; nullptr means autofix is disabled.
+struct AutofixContext {
+  // Collects LintDiagnostic instances for SuggestionPrinter.
+  LintDiagnosticCollector* collector = nullptr;
+
+  // Aggregates byte-offset Replacements for apply/export.
+  FileReplacements* replacements = nullptr;
+
+  // Converts line/col to byte offset for fixItToReplacement.
+  FixSourceManager* source_mgr = nullptr;
 };
 
 const auto allRules = std::to_array<Rule>({
@@ -268,6 +291,10 @@ const auto allRules = std::to_array<Rule>({
 
 constexpr size_t AllRulesSize = allRules.size();
 
+const std::vector<FixableRule> fixableRules{
+    // TODO: add fixable rules here
+};
+
 const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "NOF_PARAMETER_OVERRIDES",
      .description = "Expected # parameter overrides, found #module; endmodule",
@@ -393,4 +420,5 @@ static_assert(TotalRuleCount == verihogg_lint::kLintRules.size());
 void RunAllRulesOnDesign(SURELOG::Design* design, const vpiHandle& uhdmDesign,
                          SURELOG::ErrorContainer* errors,
                          SURELOG::SymbolTable* symbols,
-                         const std::filesystem::path& configFile);
+                         const std::filesystem::path& configFile,
+                         AutofixContext* autofix = nullptr);
