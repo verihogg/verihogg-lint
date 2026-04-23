@@ -69,11 +69,17 @@ void CheckNamedPortConnectionExpressions(const SL::FileContent* fileContent,
                                          SL::ErrorContainer* errors,
                                          SL::SymbolTable* symbols) {
   using VT = SL::VObjectType;
-  auto exprs = fileContent->sl_collect_all(npc, VT::paExpression);
-  for (SL::NodeId const expr : exprs) {
-    auto ids = fileContent->sl_collect_all(expr, VT::slStringConst);
-    if (ids.size() > 1) {
-      ReportError(fileContent, expr, JoinNames(fileContent, ids),
+  for (SL::NodeId const cfc :
+       fileContent->sl_collect_all(npc, VT::paComplex_func_call)) {
+    std::vector<SL::NodeId> parts;
+    for (SL::NodeId child = fileContent->Child(cfc); child;
+         child = fileContent->Sibling(child)) {
+      if (fileContent->Type(child) == VT::slStringConst) {
+        parts.push_back(child);
+      }
+    }
+    if (parts.size() > 2) {
+      ReportError(fileContent, cfc, JoinNames(fileContent, parts),
                   verihogg_lint::LINT_HIERARCHICAL_INTERFACE_IDENTIFIER, errors,
                   symbols);
     }

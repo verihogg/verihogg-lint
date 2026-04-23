@@ -33,6 +33,10 @@ void CheckTypeCasting(const SL::FileContent* fileContent,
 
   for (SL::NodeId const kFuncCallNode : fileContent->sl_collect_all(
            kRoot, SL::VObjectType::paComplex_func_call)) {
+    if (fileContent->sl_get(kFuncCallNode, SL::VObjectType::paClass_scope)) {
+      continue;
+    }
+
     std::string_view const kTypeName = ExtractName(fileContent, kFuncCallNode);
     if (kTypeName.empty()) {
       continue;

@@ -7,6 +7,6 @@ class Monitor;
 
     function void check();
         assert (last_txn != null)
-            else $fatal("last_txn must not be null");
+            else $fatal(1, "last_txn must not be null");
     endfunction
 endclass

@@ -29,18 +29,33 @@ auto EventExprHasEdge(const SL::FileContent* fileContent,
   });
 }
 
-auto ShouldPruneEdgeEventExpr(const SL::FileContent* fileContent,
+auto IsBitSelect(const SL::FileContent* fileContent, SL::NodeId selectNode)
+    -> bool {
+  SL::NodeId const kFirstChild = fileContent->Child(selectNode);
+  if (!kFirstChild) {
+    return false;
+  }
+  if (fileContent->Type(kFirstChild) != SL::VObjectType::paBit_select) {
+    return true;
+  }
+  return fileContent->Child(kFirstChild) != SL::InvalidNodeId;
+}
+
+auto ShouldPruneSelectInEvent(const SL::FileContent* fileContent,
                               SL::NodeId node, SL::VObjectType type) -> bool {
-  return type == SL::VObjectType::paEvent_expression &&
-         EventExprHasEdge(fileContent, node);
+  if (type == SL::VObjectType::paEvent_expression) {
+    return EventExprHasEdge(fileContent, node);
+  }
+  if (type == SL::VObjectType::paSelect) {
+    return !IsBitSelect(fileContent, node);
+  }
+  return false;
 }
 
 auto ContainsSelectInEventExpr(const SL::FileContent* fileContent,
                                SL::NodeId node) -> bool {
-  return SubtreeContainsAnyType(
-      fileContent, node,
-      {SL::VObjectType::paSelect, SL::VObjectType::paConstant_select},
-      ShouldPruneEdgeEventExpr);
+  return SubtreeContainsAnyType(fileContent, node, {SL::VObjectType::paSelect},
+                                ShouldPruneSelectInEvent);
 }
 }  // namespace
 

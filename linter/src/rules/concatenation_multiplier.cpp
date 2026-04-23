@@ -35,6 +35,11 @@ static constexpr std::array kLiteralTypes = {
     SL::VObjectType::paNumber_TickB0,
 };
 
+static constexpr std::array<std::string_view, 8> kConstantSystemFunctions = {
+    "bits", "size", "left",       "right",
+    "high", "low",  "dimensions", "unpacked_dimensions",
+};
+
 static constexpr std::array kPassThroughTypes = {
     SL::VObjectType::paPrimary_literal,
     SL::VObjectType::paPrimary,
@@ -141,6 +146,22 @@ auto IsConstantExpression(const SL::FileContent* fileContent, SL::NodeId node,
         return false;
       }
       continue;
+    }
+
+    if (kType == SL::VObjectType::paComplex_func_call) {
+      const SL::NodeId kDollar = fileContent->Child(kCurrent);
+      if (kDollar &&
+          fileContent->Type(kDollar) == SL::VObjectType::paDollar_keyword) {
+        const SL::NodeId kNameNode = fileContent->Sibling(kDollar);
+        if (kNameNode &&
+            fileContent->Type(kNameNode) == SL::VObjectType::slStringConst) {
+          const std::string_view kFuncName = fileContent->SymName(kNameNode);
+          if (std::ranges::find(kConstantSystemFunctions, kFuncName) !=
+              kConstantSystemFunctions.end()) {
+            continue;
+          }
+        }
+      }
     }
 
     EnqueueChildren(fileContent, kCurrent, workList);

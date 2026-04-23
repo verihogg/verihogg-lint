@@ -2,11 +2,14 @@ interface intf_c;
   logic clk;
 endinterface
 
+module mid;
+  intf_c sub_ifc();
+endmodule
+
 module child(input intf_c ifc);
 endmodule
 
 module top;
-  intf_c top_ifc();
-  child u1(.ifc(top_ifc));
-  child u2(.ifc(top_ifc.sub_ifc));
+  mid u_mid();
+  child u2(.ifc(u_mid.sub_ifc.clk));
 endmodule

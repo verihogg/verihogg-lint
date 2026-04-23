@@ -454,11 +454,17 @@ auto CollectUserDefinedTypes(const SL::FileContent* fileContent,
   std::unordered_set<std::string_view> userTypes;
   for (SL::NodeId const kDeclNode :
        fileContent->sl_collect_all(root, SL::VObjectType::paType_declaration)) {
-    for (SL::NodeId const kChild : fileContent->sl_collect_all(
-             kDeclNode, SL::VObjectType::slStringConst, false)) {
-      std::string_view const kTypeName = fileContent->SymName(kChild);
-      if (!kTypeName.empty()) {
-        userTypes.insert(kTypeName);
+    bool seenDataType = false;
+    for (SL::NodeId cur = fileContent->Child(kDeclNode); cur;
+         cur = fileContent->Sibling(cur)) {
+      const SL::VObjectType kChildType = fileContent->Type(cur);
+      if (kChildType == SL::VObjectType::paData_type) {
+        seenDataType = true;
+      } else if (kChildType == SL::VObjectType::slStringConst && seenDataType) {
+        std::string_view const kTypeName = fileContent->SymName(cur);
+        if (!kTypeName.empty()) {
+          userTypes.insert(kTypeName);
+        }
       }
     }
   }
@@ -518,8 +524,15 @@ auto ExtractArgTypesFromPortList(const SL::FileContent* fc, SL::NodeId portList)
       continue;
     }
 
-    SL::NodeId const kDtoi = fc->Child(item);
-    if (!kDtoi || fc->Type(kDtoi) != SL::VObjectType::paData_type_or_implicit) {
+    SL::NodeId kDtoi = SL::InvalidNodeId;
+    for (SL::NodeId child = fc->Child(item); child;
+         child = fc->Sibling(child)) {
+      if (fc->Type(child) == SL::VObjectType::paData_type_or_implicit) {
+        kDtoi = child;
+        break;
+      }
+    }
+    if (!kDtoi) {
       continue;
     }
 

@@ -80,9 +80,12 @@ auto TypeFromPortDecl(const SL::FileContent* fileContent,
     }
 
     SL::NodeId const kPortDir = fileContent->Child(kHeader);
-    SL::NodeId const kNetType = (kPortDir != SL::InvalidNodeId)
-                                    ? fileContent->Sibling(kPortDir)
-                                    : SL::InvalidNodeId;
+    SL::NodeId kNetType = (kPortDir != SL::InvalidNodeId)
+                              ? fileContent->Sibling(kPortDir)
+                              : SL::InvalidNodeId;
+    if (kNetType == SL::InvalidNodeId && kPortDir != SL::InvalidNodeId) {
+      kNetType = kPortDir;
+    }
     SL::NodeId const kDataType =
         (kNetType != SL::InvalidNodeId)
             ? fileContent->Child(fileContent->Child(kNetType))
@@ -92,6 +95,9 @@ auto TypeFromPortDecl(const SL::FileContent* fileContent,
                                  : kDataType;
     if (kBase != SL::InvalidNodeId) {
       return fileContent->Type(kBase);
+    }
+    if (kDataType != SL::InvalidNodeId) {
+      return fileContent->Type(kDataType);
     }
   }
   return SL::VObjectType::slNoType;
@@ -113,7 +119,15 @@ auto TypeFromTfPortItem(const SL::FileContent* fileContent,
       continue;
     }
 
-    SL::NodeId const kDtNode = fileContent->Child(kTfId);
+    SL::NodeId kDtNode = SL::InvalidNodeId;
+    for (SL::NodeId child = fileContent->Child(kTfId); child;
+         child = fileContent->Sibling(child)) {
+      if (fileContent->Type(child) ==
+          SL::VObjectType::paData_type_or_implicit) {
+        kDtNode = child;
+        break;
+      }
+    }
     if (kDtNode == SL::InvalidNodeId) {
       continue;
     }
@@ -168,6 +182,9 @@ void CheckSingleCoverpoint(const SL::FileContent* fileContent, SL::NodeId cpId,
   }
 
   SL::VObjectType const kVarType = GetVariableType(fileContent, exprNode);
+  if (kVarType == SL::VObjectType::slNoType) {
+    return;
+  }
   if (!IsIntegralType(kVarType)) {
     std::string_view const kCpName = ExtractName(fileContent, cpId);
     ReportError(fileContent, cpId, kCpName,
