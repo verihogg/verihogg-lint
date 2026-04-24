@@ -19,9 +19,11 @@ struct Options {
   bool show_rules = false;
   bool show_surelog_help = false;
 
-  bool apply_fixes = false;      // --fix
-  bool show_suggestions = true;  // --no-suggestions to disable
-  std::string export_fixes;      // --export-fixes=<path>
+  bool apply_fixes = false;
+  bool fix_dry_run = false;
+  bool show_suggestions = true;
+  std::string export_fixes;
+  std::string backup_suffix;
 
   std::filesystem::path config_file;
   std::vector<const char*> surelog_args;

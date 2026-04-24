@@ -111,10 +111,25 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
       continue;
     }
 
-    std::vector<LintDiagnostic> diags = rule.check(fC, errors, symbols);
+    std::vector<LintDiagnostic> diags;
+    try {
+      diags = rule.check(fC, errors, symbols);
+    } catch (const std::exception& e) {
+      std::cerr << "autofix: rule [" << rule.name << "] threw exception"
+                << " — " << e.what() << "\n";
+      continue;
+    } catch (...) {
+      std::cerr << "autofix: rule [" << rule.name
+                << "] threw unknown exception\n";
+      continue;
+    }
 
     if (autofix == nullptr) {
       continue;
+    }
+
+    if (autofix->source_mgr != nullptr) {
+      autofix->source_mgr->loadFile(fC->getFileId());
     }
 
     for (auto& d : diags) {
@@ -125,8 +140,6 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
       }
 
       if (autofix->replacements != nullptr && autofix->source_mgr != nullptr) {
-        autofix->source_mgr->loadFile(fC->getFileId(fC->getRootNode()));
-
         for (const auto& fix : d.fixes) {
           try {
             Replacement r = fixItToReplacement(fix, *autofix->source_mgr);
