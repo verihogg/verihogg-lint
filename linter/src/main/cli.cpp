@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <gsl/span>
 #include <iostream>
+#include <string>
 #include <string_view>
 
 #include "main/rule_dispatcher.h"
@@ -12,7 +13,9 @@
 namespace cli {
 
 constexpr size_t CONFIG_FLAG_LEN = 13;
-constexpr size_t EXPORT_FIXES_ARG_LEN = 15;
+inline constexpr std::string_view kConfigFilePrefix = "--config-file=";
+inline constexpr std::string_view kExportFixesPrefix = "--export-fixes=";
+inline constexpr std::string_view kBackupSuffixPrefix = "--backup-suffix=";
 
 auto ParseArgs(const gsl::span<const char*> args) -> Options {
   Options opts;
@@ -50,11 +53,23 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
       opts.config_file = config_path;
     } else if (std::strcmp(arg, "--fix") == 0) {
       opts.apply_fixes = true;
+
+    } else if (std::strcmp(arg, "--fix-dry-run") == 0) {
+      opts.fix_dry_run = true;
+
     } else if (std::strcmp(arg, "--no-suggestions") == 0) {
       opts.show_suggestions = false;
-    } else if (std::strncmp(arg, "--export-fixes=", EXPORT_FIXES_ARG_LEN) ==
-               0) {
-      opts.export_fixes = std::string(arg + EXPORT_FIXES_ARG_LEN);
+
+    } else if (std::strncmp(
+                   arg, "--export-fixes=", kExportFixesPrefix.size()) == 0) {
+      std::string_view sv(arg);
+      opts.export_fixes = std::string(sv.substr(kExportFixesPrefix.size()));
+
+    } else if (std::strncmp(
+                   arg, "--backup-suffix=", kBackupSuffixPrefix.size()) == 0) {
+      std::string_view sv(arg);
+      opts.backup_suffix = std::string(sv.substr(kBackupSuffixPrefix.size()));
+
     } else {
       opts.surelog_args.push_back(arg);
     }
@@ -146,10 +161,12 @@ void PrintHelp(const char* programName) {
     << "                      Use lint config from <path> (default: ./" << DefaultConfigFileName << ")\n"
     << "  --surelog-help      Show full Surelog parser/elaboration options\n"
     << "\n"
-    << "AUTOFIX:\n"
-    << "  --fix                   Apply all fixable suggestions automatically\n"
-    << "  --no-suggestions        Do not print fix hints after error output\n"
-    << "  --export-fixes=<file>   Export fixes to YAML without applying\n"
+      << "AUTOFIX:\n"
+    << "  --fix                         Apply all fixable suggestions automatically\n"
+    << "  --fix-dry-run                 Show diff in stdout without modifying files\n"
+    << "  --no-suggestions              Do not print fix hints after error output\n"
+    << "  --export-fixes=<file>         Export fixes to YAML without applying\n"
+    << "  --backup-suffix=<suffix>      Save originals before --fix (e.g. .bak)\n"
     << "\n"
     << "INPUT:\n"
     << "  <file>.sv           SystemVerilog source file\n"

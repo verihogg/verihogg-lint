@@ -151,13 +151,15 @@ auto main(int argc, const char** argv) -> int {
     std::cout << "Lint finished with " << kErrorCount << " error(s).\n";
   }
 
-  // Print "note: fix available" hints for each fixable diagnostic.
   if (kOpts.show_suggestions && collector && collector->hasFixable()) {
     SuggestionPrinter::print(collector->all(), source_mgr.get(),
                              /*show_diff=*/true);
   }
 
-  // Export collected replacements to YAML without applying.
+  if (kOpts.fix_dry_run && file_repls && !file_repls->empty()) {
+    file_repls->printDiff();
+  }
+
   if (!kOpts.export_fixes.empty() && file_repls && !file_repls->empty()) {
     if (file_repls->exportToYaml(kOpts.export_fixes)) {
       std::cout << "Fixes exported to: " << kOpts.export_fixes << "\n";
@@ -167,12 +169,11 @@ auto main(int argc, const char** argv) -> int {
     }
   }
 
-  // Apply collected replacements to source files on disk.
   if (kOpts.apply_fixes && file_repls && !file_repls->empty()) {
     std::vector<std::string> fixed_files;
     std::vector<std::string> failed_files;
 
-    file_repls->applyAll(&fixed_files, &failed_files);
+    file_repls->applyAll(&fixed_files, &failed_files, kOpts.backup_suffix);
 
     for (const auto& f : fixed_files) {
       std::cout << "Fixed: " << f << "\n";
@@ -180,7 +181,10 @@ auto main(int argc, const char** argv) -> int {
     for (const auto& f : failed_files) {
       std::cerr << "autofix: failed to fix: " << f << "\n";
     }
-
+    if (!failed_files.empty()) {
+      std::cerr << "autofix: warning: " << failed_files.size()
+                << " file(s) failed — design may be in inconsistent state\n";
+    }
     if (!fixed_files.empty()) {
       std::cout << "Applied " << fixed_files.size() << " fix(es).\n";
     }
