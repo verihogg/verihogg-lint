@@ -1,88 +1,141 @@
 #include "fix/source_manager.h"
 
+#include <Surelog/Common/FileSystem.h>
+
 #include <stdexcept>
 #include <string>
 
-// Load file via Surelog FileSystem, build offset table, cache by PathId and
-// string path.
-bool FixSourceManager::loadFile(SURELOG::PathId fileId) {
-  // TODO
-  (void)fileId;
-  return false;
+auto FixSourceManager::loadFile(SURELOG::PathId fileId) -> bool {
+  if (cache_.count(fileId) > 0) {
+    return true;
+  }
+
+  std::string content;
+  if (!SURELOG::FileSystem::getInstance()->readContent(fileId, content)) {
+    return false;
+  }
+
+  const std::string_view pathView =
+      SURELOG::FileSystem::getInstance()->toPath(fileId);
+  if (!pathView.empty()) {
+    path_index_[std::string(pathView)] = fileId;
+  }
+
+  cache_[fileId] = buildFileData(std::move(content));
+  return true;
 }
 
-// Build line_offsets table: line_offsets[i] = byte offset of line (i+1).
-FixSourceManager::FileData FixSourceManager::buildFileData(
-    const std::string& content) {
-  // TODO
-  (void)content;
-  return FileData{};
+auto FixSourceManager::buildFileData(std::string content)
+    -> FixSourceManager::FileData {
+  FileData fd;
+  fd.content = std::move(content);
+  fd.line_offsets.push_back(0U);
+
+  for (uint32_t i = 0; i < static_cast<uint32_t>(fd.content.size()); ++i) {
+    if (fd.content.at(i) == '\n') {
+      fd.line_offsets.push_back(i + 1U);
+    }
+  }
+  return fd;
 }
 
-// Return byte offset of (line, col); throws out_of_range if not loaded or out
-// of bounds.
-unsigned FixSourceManager::getOffset(SURELOG::PathId fileId, unsigned line,
-                                     unsigned col) const {
-  // TODO
-  (void)fileId;
-  (void)line;
-  (void)col;
-  throw std::out_of_range("FixSourceManager::getOffset — not implemented");
+auto FixSourceManager::getOffset(SURELOG::PathId fileId, unsigned line,
+                                 unsigned col) const -> unsigned {
+  const auto it = cache_.find(fileId);
+  if (it == cache_.end()) {
+    throw std::out_of_range(
+        "FixSourceManager: file not loaded; call loadFile() before "
+        "getOffset()");
+  }
+  const FileData& fd = it->second;
+
+  if (line == 0 || line > static_cast<unsigned>(fd.line_offsets.size())) {
+    throw std::out_of_range("FixSourceManager: line " + std::to_string(line) +
+                            " out of range (file has " +
+                            std::to_string(fd.line_offsets.size()) + " lines)");
+  }
+
+  const unsigned line_start = fd.line_offsets.at(line - 1U);
+  const unsigned col_offset = (col > 0U) ? (col - 1U) : 0U;
+  const unsigned offset = line_start + col_offset;
+
+  if (offset > static_cast<unsigned>(fd.content.size())) {
+    throw std::out_of_range("FixSourceManager: col " + std::to_string(col) +
+                            " out of range at line " + std::to_string(line));
+  }
+  return offset;
 }
 
-// Return byte length of range [begin, end).
-unsigned FixSourceManager::rangeLength(SURELOG::PathId fileId,
-                                       unsigned begin_line, unsigned begin_col,
-                                       unsigned end_line,
-                                       unsigned end_col) const {
-  // TODO
-  (void)fileId;
-  (void)begin_line;
-  (void)begin_col;
-  (void)end_line;
-  (void)end_col;
-  return 0;
+auto FixSourceManager::rangeLength(SURELOG::PathId fileId, unsigned bl,
+                                   unsigned bc, unsigned el, unsigned ec) const
+    -> unsigned {
+  const unsigned start = getOffset(fileId, bl, bc);
+  const unsigned end = getOffset(fileId, el, ec);
+  return (end >= start) ? (end - start) : 0U;
 }
 
-// Return line content (without newline) by 1-based line number.
-std::string FixSourceManager::getLine(SURELOG::PathId fileId,
-                                      unsigned line) const {
-  // TODO
-  (void)fileId;
-  (void)line;
-  return "";
+auto FixSourceManager::getLine(SURELOG::PathId fileId, unsigned line) const
+    -> std::string {
+  const auto it = cache_.find(fileId);
+  if (it == cache_.end()) {
+    return "";
+  }
+  const FileData& fd = it->second;
+
+  if (line == 0 || line > static_cast<unsigned>(fd.line_offsets.size())) {
+    return "";
+  }
+
+  const unsigned start = fd.line_offsets.at(line - 1U);
+  unsigned end = start;
+  while (end < static_cast<unsigned>(fd.content.size()) &&
+         fd.content.at(end) != '\n') {
+    ++end;
+  }
+
+  if (end > start && fd.content.at(end - 1) == '\r') {
+    --end;
+  }
+
+  return fd.content.substr(start, end - start);
 }
 
-// Look up filepath in path_index_, delegate to PathId overload.
-unsigned FixSourceManager::getOffset(const std::string& filepath, unsigned line,
-                                     unsigned col) const {
-  // TODO
-  (void)filepath;
-  (void)line;
-  (void)col;
-  throw std::out_of_range(
-      "FixSourceManager::getOffset(string) — not implemented");
+auto FixSourceManager::getOffset(const std::string& filepath, unsigned line,
+                                 unsigned col) const -> unsigned {
+  const auto it = path_index_.find(filepath);
+  if (it == path_index_.end()) {
+    throw std::out_of_range("FixSourceManager: file not loaded: " + filepath);
+  }
+  return getOffset(it->second, line, col);
 }
 
-// Delegate rangeLength through path_index_; return 0 if not found.
-unsigned FixSourceManager::rangeLength(const std::string& filepath,
-                                       unsigned begin_line, unsigned begin_col,
-                                       unsigned end_line,
-                                       unsigned end_col) const {
-  // TODO
-  (void)filepath;
-  (void)begin_line;
-  (void)begin_col;
-  (void)end_line;
-  (void)end_col;
-  return 0;
+auto FixSourceManager::rangeLength(const std::string& filepath, unsigned bl,
+                                   unsigned bc, unsigned el, unsigned ec) const
+    -> unsigned {
+  const auto it = path_index_.find(filepath);
+  if (it == path_index_.end()) {
+    return 0U;
+  }
+  return rangeLength(it->second, bl, bc, el, ec);
 }
 
-// Delegate getLine through path_index_; return "" if not found.
-std::string FixSourceManager::getLine(const std::string& filepath,
-                                      unsigned line) const {
-  // TODO
-  (void)filepath;
-  (void)line;
-  return "";
+auto FixSourceManager::getLine(const std::string& filepath, unsigned line) const
+    -> std::string {
+  const auto it = path_index_.find(filepath);
+  if (it == path_index_.end()) {
+    return "";
+  }
+  return getLine(it->second, line);
+}
+
+auto FixSourceManager::getSlice(const std::string& filepath, unsigned line,
+                                unsigned col_begin, unsigned col_end) const
+    -> std::string {
+  const std::string full_line = getLine(filepath, line);
+  if (col_begin >= full_line.size()) {
+    return "";
+  }
+  const unsigned safe_end =
+      std::min(col_end, static_cast<unsigned>(full_line.size()));
+  return full_line.substr(col_begin, safe_end - col_begin);
 }
