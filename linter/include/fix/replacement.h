@@ -1,5 +1,6 @@
 #pragma once
 
+#include <compare>
 #include <map>
 #include <string>
 #include <vector>
@@ -14,44 +15,46 @@ struct Replacement {
   std::string text;
   std::string rule_id;
 
-  bool operator<(const Replacement& o) const {
+  auto operator<=>(const Replacement& o) const -> std::weak_ordering {
     if (offset != o.offset) {
-      return offset > o.offset;
+      return o.offset <=> offset;  // descending by offset
     }
-    return length > o.length;
+    return o.length <=> length;  // descending by length
   }
+  auto operator==(const Replacement& o) const -> bool = default;
 };
 
-Replacement fixItToReplacement(const FixIt& fix, FixSourceManager& sm);
+auto fixItToReplacement(const FixIt& fix, FixSourceManager& sm) -> Replacement;
 
 class Replacements {
  public:
-  [[nodiscard]] bool add(const Replacement& r,
-                         std::string* conflict_msg = nullptr);
+  [[nodiscard]] auto add(const Replacement& r,
+                         std::string* conflict_msg = nullptr) -> bool;
 
-  [[nodiscard]] std::string apply(const std::string& source) const;
+  [[nodiscard]] auto apply(const std::string& source) const -> std::string;
 
-  [[nodiscard]] bool empty() const { return repls_.empty(); }
-  [[nodiscard]] size_t size() const { return repls_.size(); }
+  [[nodiscard]] auto empty() const -> bool { return repls_.empty(); }
+  [[nodiscard]] auto size() const -> size_t { return repls_.size(); }
 
-  auto begin() const { return repls_.cbegin(); }
-  auto end() const { return repls_.cend(); }
-  auto rbegin() const { return repls_.crbegin(); }
-  auto rend() const { return repls_.crend(); }
+  [[nodiscard]] auto begin() const { return repls_.cbegin(); }
+  [[nodiscard]] auto end() const { return repls_.cend(); }
+  [[nodiscard]] auto rbegin() const { return repls_.crbegin(); }
+  [[nodiscard]] auto rend() const { return repls_.crend(); }
 
  private:
   std::vector<Replacement> repls_;
 
-  static bool overlaps(const Replacement& a, const Replacement& b);
+  static auto overlaps(const Replacement& a, const Replacement& b) -> bool;
 };
 
 class FileReplacements {
  public:
-  [[nodiscard]] bool add(const Replacement& r,
-                         std::string* conflict_msg = nullptr);
+  [[nodiscard]] auto add(const Replacement& r,
+                         std::string* conflict_msg = nullptr) -> bool;
 
-  [[nodiscard]] bool applyToFile(const std::string& filepath,
-                                 const std::string& backup_suffix = "") const;
+  [[nodiscard]] auto applyToFile(const std::string& filepath,
+                                 const std::string& backup_suffix = "") const
+      -> bool;
 
   void applyAll(std::vector<std::string>* fixed = nullptr,
                 std::vector<std::string>* failed = nullptr,
@@ -59,9 +62,9 @@ class FileReplacements {
 
   void printDiff() const;
 
-  [[nodiscard]] bool exportToYaml(const std::string& output_path) const;
+  [[nodiscard]] auto exportToYaml(const std::string& output_path) const -> bool;
 
-  [[nodiscard]] bool empty() const { return by_file_.empty(); }
+  [[nodiscard]] auto empty() const -> bool { return by_file_.empty(); }
 
  private:
   std::map<std::string, Replacements> by_file_;
