@@ -66,8 +66,9 @@ auto FixSourceManager::getOffset(SURELOG::PathId fileId, unsigned line,
   return offset;
 }
 
-auto FixSourceManager::rangeLength(SURELOG::PathId fileId, unsigned bl,
-                                   unsigned bc, unsigned el, unsigned ec) const
+auto FixSourceManager::rangeLength(
+    SURELOG::PathId fileId, unsigned bl, unsigned bc, unsigned el,
+    unsigned ec) const  // NOLINT(bugprone-easily-swappable-parameters)
     -> unsigned {
   const unsigned start = getOffset(fileId, bl, bc);
   const unsigned end = getOffset(fileId, el, ec);
@@ -109,8 +110,9 @@ auto FixSourceManager::getOffset(const std::string& filepath, unsigned line,
   return getOffset(it->second, line, col);
 }
 
-auto FixSourceManager::rangeLength(const std::string& filepath, unsigned bl,
-                                   unsigned bc, unsigned el, unsigned ec) const
+auto FixSourceManager::rangeLength(
+    const std::string& filepath, unsigned bl, unsigned bc, unsigned el,
+    unsigned ec) const  // NOLINT(bugprone-easily-swappable-parameters)
     -> unsigned {
   const auto it = path_index_.find(filepath);
   if (it == path_index_.end()) {
@@ -128,9 +130,10 @@ auto FixSourceManager::getLine(const std::string& filepath, unsigned line) const
   return getLine(it->second, line);
 }
 
-auto FixSourceManager::getSlice(const std::string& filepath, unsigned line,
-                                unsigned col_begin, unsigned col_end) const
-    -> std::string {
+auto FixSourceManager::getSlice(
+    const std::string& filepath,
+    unsigned line,  // NOLINT(bugprone-easily-swappable-parameters)
+    unsigned col_begin, unsigned col_end) const -> std::string {
   const std::string full_line = getLine(filepath, line);
   if (col_begin >= full_line.size()) {
     return "";

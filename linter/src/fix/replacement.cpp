@@ -7,11 +7,12 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
-Replacement fixItToReplacement(const FixIt& fix, FixSourceManager& sm) {
+auto fixItToReplacement(const FixIt& fix, FixSourceManager& sm) -> Replacement {
   fix.range.validate();
 
   Replacement r;
@@ -38,7 +39,8 @@ Replacement fixItToReplacement(const FixIt& fix, FixSourceManager& sm) {
   return r;
 }
 
-bool Replacements::overlaps(const Replacement& a, const Replacement& b) {
+auto Replacements::overlaps(const Replacement& a, const Replacement& b)
+    -> bool {
   if (a.length == 0 && b.length == 0 && a.offset == b.offset) {
     return false;
   }
@@ -47,7 +49,8 @@ bool Replacements::overlaps(const Replacement& a, const Replacement& b) {
   return (a_end > b.offset) && (b_end > a.offset);
 }
 
-bool Replacements::add(const Replacement& r, std::string* conflict_msg) {
+auto Replacements::add(const Replacement& r, std::string* conflict_msg)
+    -> bool {
   for (const auto& existing : repls_) {
     if (existing.offset == r.offset && existing.length == r.length &&
         existing.text == r.text) {
@@ -64,12 +67,12 @@ bool Replacements::add(const Replacement& r, std::string* conflict_msg) {
       return false;
     }
   }
-  const auto pos = std::lower_bound(repls_.begin(), repls_.end(), r);
+  const auto pos = std::ranges::lower_bound(repls_, r);
   repls_.insert(pos, r);
   return true;
 }
 
-std::string Replacements::apply(const std::string& source) const {
+auto Replacements::apply(const std::string& source) const -> std::string {
   std::string result = source;
   for (const auto& repl : repls_) {
     if (repl.offset > result.size()) {
@@ -89,12 +92,14 @@ std::string Replacements::apply(const std::string& source) const {
   return result;
 }
 
-bool FileReplacements::add(const Replacement& r, std::string* conflict_msg) {
+auto FileReplacements::add(const Replacement& r, std::string* conflict_msg)
+    -> bool {
   return by_file_[r.filename].add(r, conflict_msg);
 }
 
-bool FileReplacements::applyToFile(const std::string& filepath,
-                                   const std::string& backup_suffix) const {
+auto FileReplacements::applyToFile(const std::string& filepath,
+                                   const std::string& backup_suffix) const
+    -> bool {
   const auto it = by_file_.find(filepath);
   if (it == by_file_.end() || it->second.empty()) {
     return true;
@@ -248,7 +253,8 @@ void FileReplacements::printDiff() const {
   }
 }
 
-bool FileReplacements::exportToYaml(const std::string& output_path) const {
+auto FileReplacements::exportToYaml(const std::string& output_path) const
+    -> bool {
   const auto parent = std::filesystem::path(output_path).parent_path();
   if (!parent.empty()) {
     std::error_code ec;
@@ -265,8 +271,7 @@ bool FileReplacements::exportToYaml(const std::string& output_path) const {
   out << YAML::Key << "Replacements" << YAML::Value << YAML::BeginSeq;
 
   for (const auto& [filepath, repls] : by_file_) {
-    for (auto it = repls.rbegin(); it != repls.rend(); ++it) {
-      const auto& r = *it;
+    for (const auto& r : std::views::reverse(repls)) {
       out << YAML::BeginMap;
       out << YAML::Key << "FilePath" << YAML::Value << filepath;
       out << YAML::Key << "Offset" << YAML::Value << r.offset;

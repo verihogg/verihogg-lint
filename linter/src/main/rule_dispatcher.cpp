@@ -129,7 +129,7 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
     }
 
     if (autofix->source_mgr != nullptr) {
-      autofix->source_mgr->loadFile(fC->getFileId());
+      (void)autofix->source_mgr->loadFile(fC->getFileId());
     }
 
     for (auto& d : diags) {
