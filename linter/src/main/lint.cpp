@@ -94,15 +94,13 @@ auto main(int argc, const char** argv) -> int {
   SL::scompiler* compiler = nullptr;
   vpiHandle uhdmDesign = nullptr;
 
-  if (kSuccess) {
-    try {
-      compiler = start_compiler(clp.get());
-      theDesign = get_design(compiler);
-      uhdmDesign = get_uhdm_design(compiler);
-    } catch (const std::exception& e) {
-      std::cerr << "Compiler error: " << e.what() << '\n';
-      return 1;
-    }
+  try {
+    compiler = start_compiler(clp.get());
+    theDesign = get_design(compiler);
+    uhdmDesign = get_uhdm_design(compiler);
+  } catch (const std::exception& e) {
+    std::cerr << "Compiler error: " << e.what() << '\n';
+    return 1;
   }
 
   if (theDesign == nullptr && uhdmDesign == nullptr) {
@@ -112,9 +110,9 @@ auto main(int argc, const char** argv) -> int {
 
   // Lazily create autofix components based on which flags are active.
   const bool kNeedCollector = kOpts.show_suggestions || kOpts.apply_fixes ||
-                              !kOpts.export_fixes.empty();
+                              !kOpts.export_fixes.empty() || kOpts.fix_dry_run;
   const bool kNeedReplacements =
-      kOpts.apply_fixes || !kOpts.export_fixes.empty();
+      kOpts.apply_fixes || !kOpts.export_fixes.empty() || kOpts.fix_dry_run;
   const bool kNeedSourceMgr = kNeedReplacements || kOpts.show_suggestions;
 
   std::unique_ptr<LintDiagnosticCollector> collector;
@@ -157,6 +155,7 @@ auto main(int argc, const char** argv) -> int {
   }
 
   if (kOpts.fix_dry_run && file_repls && !file_repls->empty()) {
+    std::cout << "\n";
     file_repls->printDiff();
   }
 
@@ -181,12 +180,17 @@ auto main(int argc, const char** argv) -> int {
     for (const auto& f : failed_files) {
       std::cerr << "autofix: failed to fix: " << f << "\n";
     }
-    if (!failed_files.empty()) {
-      std::cerr << "autofix: warning: " << failed_files.size()
-                << " file(s) failed — design may be in inconsistent state\n";
-    }
+
     if (!fixed_files.empty()) {
-      std::cout << "Applied " << fixed_files.size() << " fix(es).\n";
+      std::cout << "Applied " << file_repls->totalCount() << " fix(es) across "
+                << fixed_files.size() << " file(s).\n";
+    }
+
+    if (!failed_files.empty()) {
+      std::cerr << "WARNING: " << failed_files.size()
+                << " file(s) could not be fixed. "
+                << "Design may be in partially-fixed state. "
+                << "Check file permissions and re-run.\n";
     }
   }
 

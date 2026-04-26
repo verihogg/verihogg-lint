@@ -21,7 +21,7 @@ struct Options {
 
   bool apply_fixes = false;
   bool fix_dry_run = false;
-  bool show_suggestions = true;
+  bool show_suggestions = false;
   std::string export_fixes;
   std::string backup_suffix;
 
