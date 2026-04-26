@@ -1,3 +1,23 @@
+add_executable(autofix_unit_tests
+    unit/test_replacements.cpp
+    unit/test_source_manager.cpp
+)
+
+target_link_libraries(autofix_unit_tests PUBLIC verihoggLintLib)
+target_link_libraries(autofix_unit_tests PUBLIC gtest gtest_main)
+target_link_libraries(autofix_unit_tests PUBLIC ${GTEST_LIBRARY})
+
+target_include_directories(autofix_unit_tests
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
+
+include(GoogleTest)
+gtest_discover_tests(autofix_unit_tests)
+
 add_executable(class_checks_test $<TARGET_OBJECTS:verihoggLintLib> class_checks_test.cpp utils.cpp)
 
 target_link_libraries(class_checks_test PUBLIC verihoggLintLib)
