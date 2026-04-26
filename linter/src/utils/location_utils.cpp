@@ -14,7 +14,8 @@
 
 namespace SL = SURELOG;
 
-auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node) {
+auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node)
+    -> uint16_t {
   if (fileContent == nullptr || !node) {
     return uint16_t{0};
   }
@@ -26,7 +27,8 @@ auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node) {
 }
 
 auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
-                 const std::string_view& symbolName, SL::SymbolTable* symbols) {
+                 const std::string_view& symbolName, SL::SymbolTable* symbols)
+    -> SL::Location {
   if (symbols == nullptr) {
     return SL::Location{SL::PathId{}, 0, 0, SL::SymbolId{}};
   }

@@ -126,15 +126,9 @@ class LintDiagnosticCollector;
 class FileReplacements;
 class FixSourceManager;
 
-// Nullable pointers to autofix components; nullptr means autofix is disabled.
 struct AutofixContext {
-  // Collects LintDiagnostic instances for SuggestionPrinter.
   LintDiagnosticCollector* collector = nullptr;
-
-  // Aggregates byte-offset Replacements for apply/export.
   FileReplacements* replacements = nullptr;
-
-  // Converts line/col to byte offset for fixItToReplacement.
   FixSourceManager* source_mgr = nullptr;
 };
 
