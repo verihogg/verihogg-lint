@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 
+#include "fix/source_manager.h"
 #include "main/lint_rules.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
@@ -542,7 +543,12 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
   static const std::vector<RuleSpec> specs = {
       {.folder = "ClassVariableLifetime",
        .expected_error = verihogg_lint::LINT_CLASS_VARIABLE_LIFETIME,
-       .check = CheckClassVariableLifetime,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)CheckClassVariableLifetimeFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "DpiDeclarationString",
        .expected_error = verihogg_lint::LINT_DPI_DECLARATION_STRING,
