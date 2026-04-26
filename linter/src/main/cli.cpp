@@ -57,8 +57,8 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
     } else if (std::strcmp(arg, "--fix-dry-run") == 0) {
       opts.fix_dry_run = true;
 
-    } else if (std::strcmp(arg, "--no-suggestions") == 0) {
-      opts.show_suggestions = false;
+    } else if (std::strcmp(arg, "--show-suggestions") == 0) {
+      opts.show_suggestions = true;
 
     } else if (std::strncmp(
                    arg, "--export-fixes=", kExportFixesPrefix.size()) == 0) {
@@ -164,7 +164,7 @@ void PrintHelp(const char* programName) {
       << "AUTOFIX:\n"
     << "  --fix                         Apply all fixable suggestions automatically\n"
     << "  --fix-dry-run                 Show diff in stdout without modifying files\n"
-    << "  --no-suggestions              Do not print fix hints after error output\n"
+    << "  --show-suggestions            Print fix hints with before/after snippets\n"
     << "  --export-fixes=<file>         Export fixes to YAML without applying\n"
     << "  --backup-suffix=<suffix>      Save originals before --fix (e.g. .bak)\n"
     << "\n"
