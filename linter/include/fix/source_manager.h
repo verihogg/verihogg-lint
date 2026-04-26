@@ -7,6 +7,16 @@
 #include <unordered_map>
 #include <vector>
 
+struct LineCol {
+  unsigned line = 0;
+  unsigned col = 0;
+};
+
+struct LineRange {
+  LineCol begin;
+  LineCol end;
+};
+
 class FixSourceManager {
  public:
   [[nodiscard]] auto loadFile(SURELOG::PathId fileId) -> bool;
@@ -16,21 +26,18 @@ class FixSourceManager {
   [[nodiscard]] auto getOffset(const std::string& filepath, unsigned line,
                                unsigned col) const -> unsigned;
 
-  [[nodiscard]] auto rangeLength(SURELOG::PathId fileId, unsigned bl,
-                                 unsigned bc, unsigned el, unsigned ec) const
+  [[nodiscard]] auto rangeLength(SURELOG::PathId fileId, LineRange range) const
       -> unsigned;
-  [[nodiscard]] auto rangeLength(const std::string& filepath, unsigned bl,
-                                 unsigned bc, unsigned el, unsigned ec) const
-      -> unsigned;
+  [[nodiscard]] auto rangeLength(const std::string& filepath,
+                                 LineRange range) const -> unsigned;
 
   [[nodiscard]] auto getLine(SURELOG::PathId fileId, unsigned line) const
       -> std::string;
   [[nodiscard]] auto getLine(const std::string& filepath, unsigned line) const
       -> std::string;
 
-  [[nodiscard]] auto getSlice(const std::string& filepath, unsigned line,
-                              unsigned col_begin, unsigned col_end) const
-      -> std::string;
+  [[nodiscard]] auto getSlice(const std::string& filepath, LineCol begin,
+                              unsigned col_end) const -> std::string;
 
   [[nodiscard]] auto isLoaded(SURELOG::PathId fileId) const -> bool {
     return cache_.count(fileId) > 0;

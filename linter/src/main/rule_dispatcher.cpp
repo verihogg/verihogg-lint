@@ -106,30 +106,40 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
     return;
   }
 
+  if (autofix != nullptr && autofix->source_mgr != nullptr) {
+    if (!autofix->source_mgr->loadFile(fC->getFileId())) {
+      std::cerr
+          << "autofix: warning: cannot load file for offset computation\n";
+    }
+  }
+
   for (const auto& rule : rules) {
     if (!rule.enabled) {
       continue;
     }
 
+    FixSourceManager empty_sm;
+    FixSourceManager& sm =
+        (autofix != nullptr && autofix->source_mgr != nullptr)
+            ? *autofix->source_mgr
+            : empty_sm;
+
     std::vector<LintDiagnostic> diags;
     try {
-      diags = rule.check(fC, errors, symbols);
+      diags = rule.check(fC, errors, symbols, sm);
     } catch (const std::exception& e) {
-      std::cerr << "autofix: rule [" << rule.name << "] threw exception"
-                << " — " << e.what() << "\n";
+      std::cerr << "lint: rule [" << rule.name
+                << "] threw exception: " << e.what()
+                << "\nlint: skipping rule for this file\n";
       continue;
     } catch (...) {
-      std::cerr << "autofix: rule [" << rule.name
-                << "] threw unknown exception\n";
+      std::cerr << "lint: rule [" << rule.name
+                << "] threw unknown exception; skipping\n";
       continue;
     }
 
     if (autofix == nullptr) {
       continue;
-    }
-
-    if (autofix->source_mgr != nullptr) {
-      (void)autofix->source_mgr->loadFile(fC->getFileId());
     }
 
     for (auto& d : diags) {

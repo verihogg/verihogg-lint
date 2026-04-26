@@ -6,17 +6,20 @@
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 
+#include <cstdint>
 #include <string_view>
 
 #include "main/lint_rules.h"
 
 namespace SL = SURELOG;
 // Безопасно извлекает номер столбца из узла, возвращая 0, если он недоступен.
-auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node);
+auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node)
+    -> uint16_t;
 
 // Создать объект Location из узла.
 auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
-                 const std::string_view& symbolName, SL::SymbolTable* symbols);
+                 const std::string_view& symbolName, SL::SymbolTable* symbols)
+    -> SL::Location;
 
 // Сообщить об ошибке линтинга в определенном месте узла.
 // Это основная функция отчетности об ошибках, используемая всеми правилами.

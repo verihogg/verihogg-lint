@@ -17,9 +17,9 @@ struct Replacement {
 
   auto operator<=>(const Replacement& o) const -> std::weak_ordering {
     if (offset != o.offset) {
-      return o.offset <=> offset;  // descending by offset
+      return o.offset <=> offset;
     }
-    return o.length <=> length;  // descending by length
+    return o.length <=> length;
   }
   auto operator==(const Replacement& o) const -> bool = default;
 };
@@ -65,6 +65,14 @@ class FileReplacements {
   [[nodiscard]] auto exportToYaml(const std::string& output_path) const -> bool;
 
   [[nodiscard]] auto empty() const -> bool { return by_file_.empty(); }
+
+  [[nodiscard]] auto totalCount() const -> std::size_t {
+    std::size_t n = 0;
+    for (const auto& [_, repls] : by_file_) {
+      n += repls.size();
+    }
+    return n;
+  }
 
  private:
   std::map<std::string, Replacements> by_file_;

@@ -66,12 +66,10 @@ auto FixSourceManager::getOffset(SURELOG::PathId fileId, unsigned line,
   return offset;
 }
 
-auto FixSourceManager::rangeLength(
-    SURELOG::PathId fileId, unsigned bl, unsigned bc, unsigned el,
-    unsigned ec) const  // NOLINT(bugprone-easily-swappable-parameters)
-    -> unsigned {
-  const unsigned start = getOffset(fileId, bl, bc);
-  const unsigned end = getOffset(fileId, el, ec);
+auto FixSourceManager::rangeLength(SURELOG::PathId fileId,
+                                   LineRange range) const -> unsigned {
+  const unsigned start = getOffset(fileId, range.begin.line, range.begin.col);
+  const unsigned end = getOffset(fileId, range.end.line, range.end.col);
   return (end >= start) ? (end - start) : 0U;
 }
 
@@ -110,15 +108,13 @@ auto FixSourceManager::getOffset(const std::string& filepath, unsigned line,
   return getOffset(it->second, line, col);
 }
 
-auto FixSourceManager::rangeLength(
-    const std::string& filepath, unsigned bl, unsigned bc, unsigned el,
-    unsigned ec) const  // NOLINT(bugprone-easily-swappable-parameters)
-    -> unsigned {
+auto FixSourceManager::rangeLength(const std::string& filepath,
+                                   LineRange range) const -> unsigned {
   const auto it = path_index_.find(filepath);
   if (it == path_index_.end()) {
     return 0U;
   }
-  return rangeLength(it->second, bl, bc, el, ec);
+  return rangeLength(it->second, range);
 }
 
 auto FixSourceManager::getLine(const std::string& filepath, unsigned line) const
@@ -130,15 +126,13 @@ auto FixSourceManager::getLine(const std::string& filepath, unsigned line) const
   return getLine(it->second, line);
 }
 
-auto FixSourceManager::getSlice(
-    const std::string& filepath,
-    unsigned line,  // NOLINT(bugprone-easily-swappable-parameters)
-    unsigned col_begin, unsigned col_end) const -> std::string {
-  const std::string full_line = getLine(filepath, line);
-  if (col_begin >= full_line.size()) {
+auto FixSourceManager::getSlice(const std::string& filepath, LineCol begin,
+                                unsigned col_end) const -> std::string {
+  const std::string full_line = getLine(filepath, begin.line);
+  if (begin.col >= full_line.size()) {
     return "";
   }
   const unsigned safe_end =
       std::min(col_end, static_cast<unsigned>(full_line.size()));
-  return full_line.substr(col_begin, safe_end - col_begin);
+  return full_line.substr(begin.col, safe_end - begin.col);
 }
