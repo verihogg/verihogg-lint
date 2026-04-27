@@ -1,6 +1,5 @@
 #include "rules/class_variable_lifetime.h"
 
-#include <Surelog/Common/FileSystem.h>
 #include <Surelog/Common/NodeId.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
@@ -37,9 +36,7 @@ auto CheckClassVariableLifetimeFixable(const SL::FileContent* fC,
     return diags;
   }
 
-  const std::string filepath =
-      std::string(SL::FileSystem::getInstance()->toPath(fC->getFileId()));
-
+  const std::string filepath = GetFixFilepath(fC);
   if (filepath.empty()) {
     return diags;
   }

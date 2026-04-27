@@ -10,6 +10,7 @@
 
 #include <cstdint>
 #include <exception>
+#include <string>
 #include <string_view>
 
 namespace SL = SURELOG;
@@ -67,4 +68,11 @@ auto FindArrayIdNode(const SL::FileContent* fileContent,
     }
   }
   return SL::InvalidNodeId;
+}
+
+auto GetFixFilepath(const SL::FileContent* fC) -> std::string {
+  if (fC == nullptr) {
+    return {};
+  }
+  return std::string(SL::FileSystem::getInstance()->toPath(fC->getFileId()));
 }

@@ -7,6 +7,7 @@
 #include <Surelog/SourceCompile/SymbolTable.h>
 
 #include <cstdint>
+#include <string>
 #include <string_view>
 
 #include "main/lint_rules.h"
@@ -30,3 +31,6 @@ void ReportError(const SL::FileContent* fileContent, SL::NodeId node,
 
 auto FindArrayIdNode(const SL::FileContent* fileContent,
                      SL::NodeId foreachKeyword) -> SL::NodeId;
+
+// Вернуть абсолютный путь к файлу. Пустая строка если fC == nullptr.
+auto GetFixFilepath(const SURELOG::FileContent* fC) -> std::string;

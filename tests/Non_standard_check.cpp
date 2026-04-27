@@ -649,7 +649,13 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .ignore_errors = {}},
       {.folder = "TimeValue",
        .expected_error = verihogg_lint::LINT_TIME_VALUE,
-       .check = CheckTimeValue,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)sm.loadFile(fC->getFileId());
+             (void)CheckTimeValueFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "MultipleBins",
        .expected_error = verihogg_lint::LINT_MULTIPLE_BINS,

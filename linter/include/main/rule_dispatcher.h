@@ -102,7 +102,8 @@ struct FixableRule {
   std::string_view name;
   bool enabled = true;
   std::function<std::vector<LintDiagnostic>(
-      const SL::FileContent*, SL::ErrorContainer*, SL::SymbolTable*)>
+      const SL::FileContent*, SL::ErrorContainer*, SL::SymbolTable*,
+      FixSourceManager&)>
       check;
 };
 
@@ -285,9 +286,14 @@ const auto allRules = std::to_array<Rule>({
 
 constexpr size_t AllRulesSize = allRules.size();
 
-const std::vector<FixableRule> fixableRules{
-    // TODO: add fixable rules here
-};
+const auto fixableRules = std::to_array<FixableRule>({
+    // clang-format off
+    {.name = "ClassVariableLifetime", .check = CheckClassVariableLifetimeFixable},
+    {.name = "TimeValue",             .check = CheckTimeValueFixable},
+    // clang-format on
+});
+
+constexpr size_t AllFixableRulesSize = fixableRules.size();
 
 const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "NOF_PARAMETER_OVERRIDES",
