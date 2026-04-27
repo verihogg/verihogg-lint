@@ -96,6 +96,8 @@ void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
       continue;
     }
     rule.check(fileContent, errors, symbols);
+  }
+}
 
 static void RunFixableRulesOnFile(const SL::FileContent* fC,
                                   SL::ErrorContainer* errors,
