@@ -9,8 +9,8 @@
 #include "fix/source_manager.h"
 #include "main/lint_diagnostics.h"
 
-auto CheckTypeCastingFixable(const SURELOG::FileContent* fileContent,
-                             SURELOG::ErrorContainer* errors,
-                             SURELOG::SymbolTable* symbols,
-                             FixSourceManager& sm)
+auto CheckWildcardOperatorsFixable(const SURELOG::FileContent* fileContent,
+                                   SURELOG::ErrorContainer* errors,
+                                   SURELOG::SymbolTable* symbols,
+                                   FixSourceManager& sm)
     -> std::vector<LintDiagnostic>;

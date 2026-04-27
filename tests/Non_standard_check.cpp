@@ -645,7 +645,13 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .ignore_errors = {}},
       {.folder = "TypeCasting",
        .expected_error = verihogg_lint::LINT_TYPE_CASTING,
-       .check = CheckTypeCasting,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)sm.loadFile(fC->getFileId());
+             (void)CheckTypeCastingFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "TimeValue",
        .expected_error = verihogg_lint::LINT_TIME_VALUE,
@@ -667,11 +673,13 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .ignore_errors = {}},
       {.folder = "WildcardEqualityOperator",
        .expected_error = verihogg_lint::LINT_WILDCARD_EQUALITY_OPERATOR,
-       .check = CheckWildcardEqualityOperator,
-       .ignore_errors = {}},
-      {.folder = "WildcardInequalityOperator",
-       .expected_error = verihogg_lint::LINT_WILDCARD_INEQUALITY_OPERATOR,
-       .check = CheckWildcardInequalityOperator,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)sm.loadFile(fC->getFileId());
+             (void)CheckWildcardOperatorsFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "ExponentFormatTimeValue",
        .expected_error = verihogg_lint::LINT_EXPONENT_FORMAT_TIME_VALUE,
