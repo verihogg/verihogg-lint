@@ -94,14 +94,14 @@ using CheckFuncGlobal = void (*)(SL::Design*, SL::ErrorContainer*,
 
 struct RuleSpec {
   std::string folder;
-  SURELOG::ErrorDefinition::ErrorType expected_error;
+  verihogg_lint::LintId expected_error;
   CheckFunc check;
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignore_errors;
 };
 
 struct RuleSpecGlobal {
   std::string folder;
-  SURELOG::ErrorDefinition::ErrorType expected_error;
+  verihogg_lint::LintId expected_error;
   CheckFuncGlobal check;
   std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignore_errors;
 };

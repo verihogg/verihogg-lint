@@ -43,8 +43,8 @@ auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
 
 void ReportError(const SL::FileContent* fileContent, SL::NodeId node,
                  const std::string_view& symbolName,
-                 SL::ErrorDefinition::ErrorType errorType,
-                 SL::ErrorContainer* errors, SL::SymbolTable* symbols) {
+                 verihogg_lint::LintId errorType, SL::ErrorContainer* errors,
+                 SL::SymbolTable* symbols) {
   if (fileContent == nullptr || !node || errors == nullptr ||
       symbols == nullptr) {
     return;

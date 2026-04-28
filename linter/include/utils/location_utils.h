@@ -8,6 +8,8 @@
 
 #include <string_view>
 
+#include "main/lint_rules.h"
+
 namespace SL = SURELOG;
 // Безопасно извлекает номер столбца из узла, возвращая 0, если он недоступен.
 auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node);
@@ -20,8 +22,8 @@ auto GetLocation(const SL::FileContent* fileContent, SL::NodeId node,
 // Это основная функция отчетности об ошибках, используемая всеми правилами.
 void ReportError(const SL::FileContent* fileContent, SL::NodeId node,
                  const std::string_view& symbolName,
-                 SL::ErrorDefinition::ErrorType errorType,
-                 SL::ErrorContainer* errors, SL::SymbolTable* symbols);
+                 verihogg_lint::LintId errorType, SL::ErrorContainer* errors,
+                 SL::SymbolTable* symbols);
 
 auto FindArrayIdNode(const SL::FileContent* fileContent,
                      SL::NodeId foreachKeyword) -> SL::NodeId;

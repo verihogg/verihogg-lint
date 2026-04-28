@@ -150,7 +150,8 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     SL::PathId const kFileId =
         SL::FileSystem::getInstance()->toPathId(file, symbols_);
     SL::Location const kLoc(kFileId, line, column, kSym);
-    SL::Error err(verihogg_lint::LINT_FATAL_SYSCALL, kLoc);
+    SL::Error err(verihogg_lint::LintId(verihogg_lint::LINT_FATAL_SYSCALL),
+                  kLoc);
     errors_->addError(err, false);
   };
 

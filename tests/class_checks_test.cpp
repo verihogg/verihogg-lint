@@ -79,8 +79,7 @@ void testCheckWithNoErrorsExpected(
 }
 
 void testCheckWithErrorsExpected(
-    const fs::path& tests_path,
-    SURELOG::ErrorDefinition::ErrorType errorIdExpected,
+    const fs::path& tests_path, verihogg_lint::LintId errorIdExpected,
     const std::unordered_set<SURELOG::ErrorDefinition::ErrorType>& ignoreList,
     const std::function<void(const SL::FileContent*, SL::ErrorContainer*,
                              SL::SymbolTable*)>& check_func) {

@@ -287,7 +287,7 @@ void CheckMissingFunctionImplementation(SL::Design* design,
       continue;
     }
 
-    SL::ErrorDefinition::ErrorType const kErrorType =
+    const auto kErrorType =
         externInfo.kind == MethodKind::kTask
             ? verihogg_lint::LINT_MISSING_TASK_IMPLEMENTATION
             : verihogg_lint::LINT_MISSING_FUNCTION_IMPLEMENTATION;

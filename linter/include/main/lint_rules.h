@@ -3,91 +3,100 @@
 
 #include <algorithm>
 #include <array>
+#include <cstdint>
 #include <string_view>
 
 namespace verihogg_lint {
 
 using ED = SURELOG::ErrorDefinition;
 
-[[nodiscard]] consteval auto LintId(int ident) -> ED::ErrorType {
-  return static_cast<ED::ErrorType>(ident);
-}
+// NOLINTBEGIN(cppcoreguidelines-use-enum-class)
+enum LintIdEnum : uint16_t {
+  LINT_CLASS_VARIABLE_LIFETIME = 734,
+  LINT_DPI_DECLARATION_STRING,
+  LINT_HIERARCHICAL_INTERFACE_IDENTIFIER,
+  LINT_IMPLICIT_DATA_TYPE,
+  LINT_PARAMETR_DYNAMIC_ARRAY,
+  LINT_PROTOTYPE_RETURN_DATA_TYPE,
+  LINT_REPETITION_IN_SEQUENCE,
+  LINT_FATAL_SYSCALL,
+  LINT_COVERPOINT_EXPRESSION_TYPE,
+  LINT_COVERGROUP_EXPRESSION,
+  LINT_CONCATENATION_MULTIPLIER,
+  LINT_PARAMETR_OVERRIDE,
+  LINT_MULTIPLE_DOT_STAR_CONNECTIONS,
+  LINT_SELECT_IN_EVENT_CONTROL,
+  LINT_EMPTY_ASSIGNMENT_PATTERN,
+  LINT_MISSING_FOR_LOOP_INITIALIZATION,
+  LINT_MISSING_FOR_LOOP_CONDITION,
+  LINT_MISSING_FOR_LOOP_STEP,
+  LINT_FOREACH_LOOP_CONDITION,
+  LINT_SELECT_IN_WEIGHT,
+  LINT_ASSIGNMENT_PATTERN,
+  LINT_ASSIGNMENT_PATTERN_CONTEXT,
+  LINT_SCALAR_ASSIGNMENT_PATTERN,
+  LINT_TARGET_UNPACKED_ARRAY_CONCATENATION,
+  LINT_INSIDE_OPERATOR,
+  LINT_INSIDE_OPERATOR_RANGE,
+  LINT_TYPE_CASTING,
+  LINT_TIME_VALUE,
+  LINT_MULTIPLE_BINS,
+  LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
+  LINT_SYSTEM_FUNCTION_ARGUMENTS,
+  LINT_WILDCARD_EQUALITY_OPERATOR,
+  LINT_WILDCARD_INEQUALITY_OPERATOR,
+  LINT_EXPONENT_FORMAT_TIME_VALUE,
+  LINT_NOF_PARAMETER_OVERRIDE,
+  LINT_MISSING_FUNCTION_IMPLEMENTATION,
+  LINT_MISSING_TASK_IMPLEMENTATION,
+  LINT_FUNC_IMPL_SCOPE,
+  LINT_TASK_IMPL_SCOPE,
+  LINT_CONSTRAINT_IMPL_SCOPE,
+  LINT_EXTEND_CLASS,
+  LINT_DUPLICATE_CONSTRUCTOR,
+  LINT_DUPLICATE_CLASS,
+  LINT_EXTERN_CONSTRAINT_UNDECLARED,
+  LINT_EXTERN_FUNCTION_UNDECLARED,
+  LINT_EXTERN_TASK_UNDECLARED,
+  LINT_EXTEND_INTERFACE_CLASS,
+  LINT_IMPLEMENT_CLASS,
+  LINT_IMPLEMENT_INTERFACE_CLASS,
+  LINT_CIRCULAR_INHERITANCE,
+  LINT_MODPORT_IMPORT_EXPORT_PORT,
+  LINT_EVENT_CONTROL_EXPRESSION,
+  LINT_METHOD_OVERRIDE_ARGUMENT_NAME,
+  LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE,
+  LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE,
+  LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE,
+  LINT_VOID_CAST_OF_VOID_FUNCTION,
+  LINT_LOGICAL_NEGATION,
+  LINT_INCOMPLETE_ASSIGNMENT_PATTERN,
+  LINT_ASSIGNMENT_PATTERN_VALUES,
+};
+// NOLINTEND(cppcoreguidelines-use-enum-class)
+
+class LintId {
+ public:
+  // NOLINTBEGIN(google-explicit-constructor, hicpp-explicit-conversions)
+  /*implicit*/ constexpr LintId(LintIdEnum e) : e(e) {}
+
+  /*implicit*/ constexpr operator LintIdEnum() const { return e; }
+  /*implicit*/ constexpr operator ED::ErrorType() const {
+    return static_cast<ED::ErrorType>(e);
+  }
+  // NOLINTEND(google-explicit-constructor, hicpp-explicit-conversions)
+  explicit constexpr operator int() const { return static_cast<int>(e); }
+  explicit operator bool() const = delete;
+
+ private:
+  LintIdEnum e;
+};
 
 // NOLINTBEGIN(readability-identifier-naming)
-inline constexpr ED::ErrorType LINT_CLASS_VARIABLE_LIFETIME = LintId(734);
-inline constexpr ED::ErrorType LINT_DPI_DECLARATION_STRING = LintId(735);
-inline constexpr ED::ErrorType LINT_HIERARCHICAL_INTERFACE_IDENTIFIER =
-    LintId(736);
-inline constexpr ED::ErrorType LINT_IMPLICIT_DATA_TYPE = LintId(737);
-inline constexpr ED::ErrorType LINT_PARAMETR_DYNAMIC_ARRAY = LintId(738);
-inline constexpr ED::ErrorType LINT_PROTOTYPE_RETURN_DATA_TYPE = LintId(739);
-inline constexpr ED::ErrorType LINT_REPETITION_IN_SEQUENCE = LintId(740);
-inline constexpr ED::ErrorType LINT_FATAL_SYSCALL = LintId(741);
-inline constexpr ED::ErrorType LINT_COVERPOINT_EXPRESSION_TYPE = LintId(742);
-inline constexpr ED::ErrorType LINT_COVERGROUP_EXPRESSION = LintId(743);
-inline constexpr ED::ErrorType LINT_CONCATENATION_MULTIPLIER = LintId(744);
-inline constexpr ED::ErrorType LINT_PARAMETR_OVERRIDE = LintId(745);
-inline constexpr ED::ErrorType LINT_MULTIPLE_DOT_STAR_CONNECTIONS = LintId(746);
-inline constexpr ED::ErrorType LINT_SELECT_IN_EVENT_CONTROL = LintId(747);
-inline constexpr ED::ErrorType LINT_EMPTY_ASSIGNMENT_PATTERN = LintId(748);
-inline constexpr ED::ErrorType LINT_MISSING_FOR_LOOP_INITIALIZATION =
-    LintId(749);
-inline constexpr ED::ErrorType LINT_MISSING_FOR_LOOP_CONDITION = LintId(750);
-inline constexpr ED::ErrorType LINT_MISSING_FOR_LOOP_STEP = LintId(751);
-inline constexpr ED::ErrorType LINT_FOREACH_LOOP_CONDITION = LintId(752);
-inline constexpr ED::ErrorType LINT_SELECT_IN_WEIGHT = LintId(753);
-inline constexpr ED::ErrorType LINT_ASSIGNMENT_PATTERN = LintId(754);
-inline constexpr ED::ErrorType LINT_ASSIGNMENT_PATTERN_CONTEXT = LintId(755);
-inline constexpr ED::ErrorType LINT_SCALAR_ASSIGNMENT_PATTERN = LintId(756);
-inline constexpr ED::ErrorType LINT_TARGET_UNPACKED_ARRAY_CONCATENATION =
-    LintId(757);
-inline constexpr ED::ErrorType LINT_INSIDE_OPERATOR = LintId(758);
-inline constexpr ED::ErrorType LINT_INSIDE_OPERATOR_RANGE = LintId(759);
-inline constexpr ED::ErrorType LINT_TYPE_CASTING = LintId(760);
-inline constexpr ED::ErrorType LINT_TIME_VALUE = LintId(761);
-inline constexpr ED::ErrorType LINT_MULTIPLE_BINS = LintId(762);
-inline constexpr ED::ErrorType LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE =
-    LintId(763);
-inline constexpr ED::ErrorType LINT_SYSTEM_FUNCTION_ARGUMENTS = LintId(764);
-inline constexpr ED::ErrorType LINT_WILDCARD_EQUALITY_OPERATOR = LintId(765);
-inline constexpr ED::ErrorType LINT_WILDCARD_INEQUALITY_OPERATOR = LintId(766);
-inline constexpr ED::ErrorType LINT_EXPONENT_FORMAT_TIME_VALUE = LintId(767);
-inline constexpr ED::ErrorType LINT_NOF_PARAMETER_OVERRIDE = LintId(768);
-inline constexpr ED::ErrorType LINT_MISSING_FUNCTION_IMPLEMENTATION =
-    LintId(769);
-inline constexpr ED::ErrorType LINT_MISSING_TASK_IMPLEMENTATION = LintId(770);
-inline constexpr ED::ErrorType LINT_FUNC_IMPL_SCOPE = LintId(771);
-inline constexpr ED::ErrorType LINT_TASK_IMPL_SCOPE = LintId(772);
-inline constexpr ED::ErrorType LINT_CONSTRAINT_IMPL_SCOPE = LintId(773);
 
-inline constexpr ED::ErrorType LINT_EXTEND_CLASS = LintId(774);
-inline constexpr ED::ErrorType LINT_DUPLICATE_CONSTRUCTOR = LintId(775);
-inline constexpr ED::ErrorType LINT_DUPLICATE_CLASS = LintId(776);
-inline constexpr ED::ErrorType LINT_EXTERN_CONSTRAINT_UNDECLARED = LintId(777);
-inline constexpr ED::ErrorType LINT_EXTERN_FUNCTION_UNDECLARED = LintId(778);
-inline constexpr ED::ErrorType LINT_EXTERN_TASK_UNDECLARED = LintId(779);
-inline constexpr ED::ErrorType LINT_EXTEND_INTERFACE_CLASS = LintId(780);
-inline constexpr ED::ErrorType LINT_IMPLEMENT_CLASS = LintId(781);
-inline constexpr ED::ErrorType LINT_IMPLEMENT_INTERFACE_CLASS = LintId(782);
-inline constexpr ED::ErrorType LINT_CIRCULAR_INHERITANCE = LintId(783);
-
-inline constexpr ED::ErrorType LINT_MODPORT_IMPORT_EXPORT_PORT = LintId(784);
-inline constexpr ED::ErrorType LINT_EVENT_CONTROL_EXPRESSION = LintId(785);
-inline constexpr ED::ErrorType LINT_METHOD_OVERRIDE_ARGUMENT_NAME = LintId(786);
-inline constexpr ED::ErrorType LINT_FUNCTION_IMPLEMENTATION_RETURN_TYPE =
-    LintId(787);
-inline constexpr ED::ErrorType
-    LINT_FUNCTION_IMPLEMENTATION_INTERNAL_RETURN_TYPE = LintId(788);
-inline constexpr ED::ErrorType LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE =
-    LintId(789);
-inline constexpr ED::ErrorType LINT_VOID_CAST_OF_VOID_FUNCTION = LintId(790);
-inline constexpr ED::ErrorType LINT_LOGICAL_NEGATION = LintId(791);
-
-inline constexpr ED::ErrorType LINT_INCOMPLETE_ASSIGNMENT_PATTERN = LintId(784);
-inline constexpr ED::ErrorType LINT_ASSIGNMENT_PATTERN_VALUES = LintId(785);
 // NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
-  ED::ErrorType type;
+  verihogg_lint::LintId type;
   ED::ErrorSeverity severity = ED::ERROR;
   ED::ErrorCategory category = ED::LINT;
   std::string_view text;

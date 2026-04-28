@@ -151,7 +151,7 @@ auto HasMatchingClassScope(const ClassScopeMap& classScopeMap,
                      });
 }
 
-auto ErrorTypeFor(ImplKind kind) -> SL::ErrorDefinition::ErrorType {
+auto ErrorTypeFor(ImplKind kind) -> verihogg_lint::LintId {
   switch (kind) {
     case ImplKind::kFunction:
       return verihogg_lint::LINT_FUNC_IMPL_SCOPE;
