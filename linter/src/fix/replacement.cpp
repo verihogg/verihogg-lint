@@ -110,10 +110,11 @@ auto FileReplacements::applyToFile(const std::string& filepath,
     std::cerr << "autofix: cannot read: " << filepath << "\n";
     return false;
   }
-  std::ostringstream buf;
-  buf << in.rdbuf();
+  in.seekg(0, std::ios::end);
+  std::string source(static_cast<size_t>(in.tellg()), '\0');
+  in.seekg(0, std::ios::beg);
+  in.read(source.data(), static_cast<std::streamsize>(source.size()));
   in.close();
-  const std::string source = buf.str();
 
   std::string fixed;
   try {
@@ -193,9 +194,10 @@ void FileReplacements::printDiff() const {
       std::cerr << "autofix[dry-run]: cannot read: " << filepath << "\n";
       continue;
     }
-    std::ostringstream buf;
-    buf << in.rdbuf();
-    const std::string source = buf.str();
+    in.seekg(0, std::ios::end);
+    std::string source(static_cast<size_t>(in.tellg()), '\0');
+    in.seekg(0, std::ios::beg);
+    in.read(source.data(), static_cast<std::streamsize>(source.size()));
 
     std::string fixed;
     try {

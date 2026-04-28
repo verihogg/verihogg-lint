@@ -128,11 +128,35 @@ auto FixSourceManager::getLine(const std::string& filepath, unsigned line) const
 
 auto FixSourceManager::getSlice(const std::string& filepath, LineCol begin,
                                 unsigned col_end) const -> std::string {
-  const std::string full_line = getLine(filepath, begin.line);
-  if (begin.col >= full_line.size()) {
+  const auto path_it = path_index_.find(filepath);
+  if (path_it == path_index_.end()) {
     return "";
   }
-  const unsigned safe_end =
-      std::min(col_end, static_cast<unsigned>(full_line.size()));
-  return full_line.substr(begin.col, safe_end - begin.col);
+  const auto cache_it = cache_.find(path_it->second);
+  if (cache_it == cache_.end()) {
+    return "";
+  }
+  const FileData& fd = cache_it->second;
+
+  if (begin.line == 0 ||
+      begin.line > static_cast<unsigned>(fd.line_offsets.size())) {
+    return "";
+  }
+
+  const unsigned line_start = fd.line_offsets.at(begin.line - 1);
+  unsigned line_end = line_start;
+  while (line_end < static_cast<unsigned>(fd.content.size()) &&
+         fd.content.at(line_end) != '\n') {
+    ++line_end;
+  }
+  if (line_end > line_start && fd.content.at(line_end - 1) == '\r') {
+    --line_end;
+  }
+
+  const unsigned line_len = line_end - line_start;
+  if (begin.col >= line_len) {
+    return "";
+  }
+  const unsigned safe_end = std::min(col_end, line_len);
+  return fd.content.substr(line_start + begin.col, safe_end - begin.col);
 }

@@ -620,7 +620,12 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .ignore_errors = {}},
       {.folder = "AssignmentPattern",
        .expected_error = verihogg_lint::LINT_ASSIGNMENT_PATTERN,
-       .check = CheckAssignmentPattern,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)CheckAssignmentPatternFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "AssignmentPatternContext",
        .expected_error = verihogg_lint::LINT_ASSIGNMENT_PATTERN_CONTEXT,
