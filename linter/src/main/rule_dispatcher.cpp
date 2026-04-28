@@ -115,16 +115,15 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
     }
   }
 
+  FixSourceManager empty_sm;
+  FixSourceManager& sm = (autofix != nullptr && autofix->source_mgr != nullptr)
+                             ? *autofix->source_mgr
+                             : empty_sm;
+
   for (const auto& rule : rules) {
     if (!rule.enabled) {
       continue;
     }
-
-    FixSourceManager empty_sm;
-    FixSourceManager& sm =
-        (autofix != nullptr && autofix->source_mgr != nullptr)
-            ? *autofix->source_mgr
-            : empty_sm;
 
     std::vector<LintDiagnostic> diags;
     try {

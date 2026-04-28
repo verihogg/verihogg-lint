@@ -21,6 +21,7 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
   Options opts;
 
   opts.surelog_args.push_back(args[0]);
+  opts.surelog_args.push_back("-nobuiltin");
 
   const std::filesystem::path configFileName = DefaultConfigFileName;
   opts.config_file = std::filesystem::current_path() / configFileName;

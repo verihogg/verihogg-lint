@@ -7,12 +7,17 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
+#include <iostream>
 #include <iterator>
+#include <string>
 #include <string_view>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include "fix/fix_it.h"
+#include "fix/source_manager.h"
+#include "main/lint_diagnostics.h"
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/location_utils.h"
@@ -212,16 +217,25 @@ auto BuildModuleVarTraits(const SL::FileContent* fileContent,
 
 }  // namespace
 
-void CheckAssignmentPattern(const SL::FileContent* fileContent,
-                            SL::ErrorContainer* errors,
-                            SL::SymbolTable* symbols) {
+auto CheckAssignmentPatternFixable(const SL::FileContent* fileContent,
+                                   SL::ErrorContainer* errors,
+                                   SL::SymbolTable* symbols,
+                                   [[maybe_unused]] FixSourceManager& sm)
+    -> std::vector<LintDiagnostic> {
+  std::vector<LintDiagnostic> diags;
+
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
-    return;
+    return diags;
   }
 
   SL::NodeId const kRoot = fileContent->getRootNode();
   if (!kRoot) {
-    return;
+    return diags;
+  }
+
+  const std::string filepath = GetFixFilepath(fileContent);
+  if (filepath.empty()) {
+    return diags;
   }
 
   std::vector<std::pair<SL::NodeId, ModuleVarTraits>> moduleTraitsCache;
@@ -259,16 +273,45 @@ void CheckAssignmentPattern(const SL::FileContent* fileContent,
 
     const ModuleVarTraits& traits = cacheIt->second;
 
-    if (hasLabel) {
-      ReportError(fileContent, kConcat, kVarName,
-                  verihogg_lint::LINT_ASSIGNMENT_PATTERN, errors, symbols);
+    const bool isViolation = hasLabel || traits.structVars.contains(kVarName) ||
+                             traits.arrayVars.contains(kVarName);
+
+    if (!isViolation) {
       continue;
     }
 
-    if (traits.structVars.contains(kVarName) ||
-        traits.arrayVars.contains(kVarName)) {
-      ReportError(fileContent, kConcat, kVarName,
-                  verihogg_lint::LINT_ASSIGNMENT_PATTERN, errors, symbols);
+    ReportError(fileContent, kConcat, kVarName,
+                verihogg_lint::LINT_ASSIGNMENT_PATTERN, errors, symbols);
+
+    const unsigned line = fileContent->Line(kConcat);
+    const unsigned col = GetColumnSafe(fileContent, kConcat);
+
+    if (line == 0 || col == 0) {
+      continue;
     }
+
+    const FixLocation insert_pos{
+        .filename = filepath, .line = line, .col = col};
+
+    LintDiagnostic d;
+    d.filepath = filepath;
+    d.line = line;
+    d.col = col;
+    d.message = std::string(kVarName) + " = {...} -> " + std::string(kVarName) +
+                " = '{...}";
+
+    try {
+      d.fixes.push_back(
+          FixIt::Insert(insert_pos, "'", "add tick for assignment pattern"));
+    } catch (const std::exception& e) {
+      std::cerr << "autofix: cannot create fix at " << filepath << ":" << line
+                << ":" << col << ": " << e.what() << "\n";
+      diags.push_back(std::move(d));
+      continue;
+    }
+
+    diags.push_back(std::move(d));
   }
+
+  return diags;
 }
