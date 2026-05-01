@@ -688,7 +688,13 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .ignore_errors = {}},
       {.folder = "ExponentFormatTimeValue",
        .expected_error = verihogg_lint::LINT_EXPONENT_FORMAT_TIME_VALUE,
-       .check = CheckExponentFormatTimeValue,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)sm.loadFile(fC->getFileId());
+             (void)CheckExponentFormatTimeValueFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "ModportImportExport",
        .expected_error = verihogg_lint::LINT_MODPORT_IMPORT_EXPORT_PORT,

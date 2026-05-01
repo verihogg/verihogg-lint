@@ -12,12 +12,15 @@
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "fix/fix_it.h"
+#include "main/lint_diagnostics.h"
 #include "main/lint_rules.h"
 #include "utils/location_utils.h"
 
@@ -96,67 +99,198 @@ auto TokenContainsExponent(const SL::FileContent* fileContent,
   return std::ranges::any_of(
       kText, [](char chr) -> bool { return chr == 'e' || chr == 'E'; });
 }
-void CheckTimeLiteralForExponent(const SL::FileContent* fileContent,
-                                 SL::NodeId timeLiteral,
-                                 SL::ErrorContainer* errors,
-                                 SL::SymbolTable* symbols) {
-  SL::NodeId const kNumNode = fileContent->Child(timeLiteral);
-  if (!kNumNode) {
-    return;
+
+auto ExpandExponent(std::string_view text) -> std::string {
+  const auto ePos = text.find_first_of("eE");
+  if (ePos == std::string_view::npos) {
+    return {};
   }
 
-  const SL::VObjectType kNumType = fileContent->Type(kNumNode);
-  if (kNumType != SL::VObjectType::slIntConst &&
-      kNumType != SL::VObjectType::slRealConst) {
-    return;
+  const std::string_view mantissa_sv = text.substr(0, ePos);
+  const std::string_view exp_sv = text.substr(ePos + 1);
+  if (mantissa_sv.empty() || exp_sv.empty()) {
+    return {};
   }
 
-  SL::NodeId const kTimeUnitNode = fileContent->Sibling(kNumNode);
-  if (!kTimeUnitNode) {
-    return;
+  int exp_val = 0;
+  bool exp_neg = false;
+  size_t exp_i = 0;
+  if (exp_sv.at(exp_i) == '+' || exp_sv.at(exp_i) == '-') {
+    exp_neg = (exp_sv.at(exp_i) == '-');
+    ++exp_i;
   }
-  if (fileContent->Type(kTimeUnitNode) != SL::VObjectType::paTime_unit) {
-    return;
+  constexpr int kDecimalBase = 10;
+  const size_t exp_digit_start = exp_i;
+  for (; exp_i < exp_sv.size(); ++exp_i) {
+    if (exp_sv.at(exp_i) < '0' || exp_sv.at(exp_i) > '9') {
+      return {};
+    }
+    exp_val = exp_val * kDecimalBase + (exp_sv.at(exp_i) - '0');
+  }
+  if (exp_i == exp_digit_start) {
+    return {};
+  }
+  if (exp_neg) {
+    exp_val = -exp_val;
   }
 
-  if (!TokenContainsExponent(fileContent, kNumNode)) {
-    return;
+  const auto dotPos = mantissa_sv.find('.');
+  std::string digits;
+  int frac_digits = 0;
+  if (dotPos == std::string_view::npos) {
+    digits = std::string(mantissa_sv);
+  } else {
+    digits = std::string(mantissa_sv.substr(0, dotPos)) +
+             std::string(mantissa_sv.substr(dotPos + 1));
+    frac_digits = static_cast<int>(mantissa_sv.size() - dotPos - 1);
+  }
+  for (char c : digits) {
+    if (c < '0' || c > '9') {
+      return {};
+    }
+  }
+  if (digits.empty()) {
+    return {};
   }
 
-  const SL::PathId kFileId = fileContent->getFileId(kNumNode);
-  const uint32_t kLine = fileContent->Line(kNumNode);
-  const uint32_t kColStart = fileContent->Column(kNumNode);
-  const uint32_t kColEnd = fileContent->EndColumn(kNumNode);
-  const std::string_view kUnit = fileContent->SymName(kTimeUnitNode);
+  const int net = exp_val - frac_digits;
+  const int dlen = static_cast<int>(digits.size());
 
-  std::string originalNum = GetTokenText(kFileId, kLine, kColStart, kColEnd);
-  if (originalNum.empty()) {
-    originalNum = fileContent->SymName(kNumNode);
+  std::string result;
+  if (net >= 0) {
+    result = digits + std::string(static_cast<size_t>(net), '0');
+  } else {
+    const int abs_net = -net;
+    if (abs_net >= dlen) {
+      result =
+          "0." + std::string(static_cast<size_t>(abs_net - dlen), '0') + digits;
+    } else {
+      const auto split = static_cast<size_t>(dlen - abs_net);
+      result = digits.substr(0, split) + "." + digits.substr(split);
+    }
   }
 
-  std::string badValue;
-  badValue.reserve(originalNum.size() + kUnit.size());
-  badValue.append(originalNum).append(kUnit);
+  const auto dot_in_result = result.find('.');
+  const size_t int_end =
+      (dot_in_result == std::string::npos) ? result.size() : dot_in_result;
+  const size_t first_nz = result.find_first_not_of('0');
+  if (first_nz == std::string::npos || first_nz >= int_end) {
+    result = "0" + result.substr(int_end);
+  } else if (first_nz > 0) {
+    result = result.substr(first_nz);
+  }
 
-  ReportError(fileContent, kNumNode, badValue,
-              verihogg_lint::LINT_EXPONENT_FORMAT_TIME_VALUE, errors, symbols);
+  return result;
 }
+
 }  // namespace
 
-void CheckExponentFormatTimeValue(const SL::FileContent* fileContent,
-                                  SL::ErrorContainer* errors,
-                                  SL::SymbolTable* symbols) {
+auto CheckExponentFormatTimeValueFixable(const SL::FileContent* fileContent,
+                                         SL::ErrorContainer* errors,
+                                         SL::SymbolTable* symbols,
+                                         [[maybe_unused]] FixSourceManager& sm)
+    -> std::vector<LintDiagnostic> {
+  std::vector<LintDiagnostic> diags;
+
   if (fileContent == nullptr || errors == nullptr || symbols == nullptr) {
-    return;
+    return diags;
   }
 
   SL::NodeId const kRoot = fileContent->getRootNode();
   if (!kRoot) {
-    return;
+    return diags;
+  }
+
+  const std::string filepath = GetFixFilepath(fileContent);
+  if (filepath.empty()) {
+    return diags;
   }
 
   for (SL::NodeId const kTimeLiteral :
        fileContent->sl_collect_all(kRoot, SL::VObjectType::paTime_literal)) {
-    CheckTimeLiteralForExponent(fileContent, kTimeLiteral, errors, symbols);
+    SL::NodeId const kNumNode = fileContent->Child(kTimeLiteral);
+    if (!kNumNode) {
+      continue;
+    }
+
+    const SL::VObjectType kNumType = fileContent->Type(kNumNode);
+    if (kNumType != SL::VObjectType::slIntConst &&
+        kNumType != SL::VObjectType::slRealConst) {
+      continue;
+    }
+
+    SL::NodeId const kTimeUnitNode = fileContent->Sibling(kNumNode);
+    if (!kTimeUnitNode) {
+      continue;
+    }
+    if (fileContent->Type(kTimeUnitNode) != SL::VObjectType::paTime_unit) {
+      continue;
+    }
+
+    if (!TokenContainsExponent(fileContent, kNumNode)) {
+      continue;
+    }
+
+    const SL::PathId kFileId = fileContent->getFileId(kNumNode);
+    const auto kLine = static_cast<unsigned>(fileContent->Line(kNumNode));
+    const auto kColStart = static_cast<unsigned>(fileContent->Column(kNumNode));
+    const auto kColEnd =
+        static_cast<unsigned>(fileContent->EndColumn(kNumNode));
+    const std::string_view kUnit = fileContent->SymName(kTimeUnitNode);
+
+    std::string originalNum = GetTokenText(kFileId, kLine, kColStart, kColEnd);
+    if (originalNum.empty()) {
+      originalNum = std::string(fileContent->SymName(kNumNode));
+    }
+
+    std::string badValue;
+    badValue.reserve(originalNum.size() + kUnit.size());
+    badValue.append(originalNum).append(kUnit);
+
+    ReportError(fileContent, kNumNode, badValue,
+                verihogg_lint::LINT_EXPONENT_FORMAT_TIME_VALUE, errors,
+                symbols);
+
+    const std::string expanded = ExpandExponent(originalNum);
+    if (expanded.empty()) {
+      continue;
+    }
+
+    if (kLine == 0 || kColStart == 0 || kColEnd == 0 || kColEnd <= kColStart) {
+      continue;
+    }
+
+    const FixRange replace_range{
+        .begin =
+            FixLocation{.filename = filepath, .line = kLine, .col = kColStart},
+        .end =
+            FixLocation{.filename = filepath, .line = kLine, .col = kColEnd}};
+
+    LintDiagnostic d;
+    d.filepath = filepath;
+    d.line = kLine;
+    d.col = kColStart;
+    d.message.reserve(originalNum.size() + kUnit.size() + 4 + expanded.size() +
+                      kUnit.size());
+    d.message.append(originalNum)
+        .append(kUnit)
+        .append(" -> ")
+        .append(expanded)
+        .append(kUnit);
+
+    try {
+      d.fixes.push_back(
+          FixIt::Replace(replace_range, expanded,
+                         "replace exponent notation with plain decimal"));
+    } catch (const std::exception& e) {
+      std::cerr << "autofix: cannot create fix at " << filepath << ":" << kLine
+                << ":" << kColStart << ": " << e.what() << "\n";
+      diags.push_back(std::move(d));
+      continue;
+    }
+
+    diags.push_back(std::move(d));
   }
+
+  return diags;
 }
