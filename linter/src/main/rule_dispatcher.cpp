@@ -14,8 +14,6 @@
 
 #include <filesystem>
 
-#include "rules/fatal_rule.h"
-
 namespace SL = SURELOG;
 
 namespace {
@@ -56,6 +54,9 @@ auto BuildSetOfAllSelectedRules() -> std::unordered_set<std::string_view> {
     set.insert(rule.idName);
   }
   for (auto& rule : RuleInfo::globalRules) {
+    set.insert(rule.idName);
+  }
+  for (auto& rule : RuleInfo::uhdmRules) {
     set.insert(rule.idName);
   }
   return set;
@@ -102,10 +103,7 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     if (fileContent == nullptr) {
       continue;
     }
-
     RunAllRules(fileContent, errors, symbols, kRuleSet);
-    FatalListener listener(errors, symbols);
-    listener.Listen(uhdmDesign);
   }
 
   for (const auto& rule : RuleInfo::globalRules) {
@@ -113,5 +111,12 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
       continue;
     }
     rule.check(design, errors, symbols);
+  }
+
+  for (const auto& rule : RuleInfo::uhdmRules) {
+    if (kRuleSet.find(rule.idName) == kRuleSet.end() && rule.check != nullptr) {
+      continue;
+    }
+    rule.check(uhdmDesign, errors, symbols);
   }
 }

@@ -174,11 +174,18 @@ set(LINTER_SRC
     linter/src/rules/multiple_bins.cpp
     linter/src/rules/assertion_statement_atribute_instance.cpp
     linter/src/rules/system_function_arguments.cpp
-    linter/src/rules/wildcard_operator.cpp
+    linter/src/rules/wildcard_operator_common.cpp
+    linter/src/rules/wildcard_equality_operator.cpp
+    linter/src/rules/wildcard_inequality_operator.cpp
     linter/src/rules/exponent_format_time_value.cpp
     linter/src/rules/nof_parameter_override.cpp
+    linter/src/rules/missing_method_implementation_common.cpp
     linter/src/rules/missing_function_implementation.cpp
+    linter/src/rules/missing_task_implementation.cpp
+    linter/src/rules/method_implemention_scope_common.cpp
     linter/src/rules/function_implemention_scope.cpp
+    linter/src/rules/task_implemention_scope.cpp
+    linter/src/rules/constraint_implemention_scope.cpp
     linter/src/rules/modport_import_export_port.cpp
     linter/src/rules/event_control_expression.cpp
     linter/src/rules/method_override_argument_name.cpp

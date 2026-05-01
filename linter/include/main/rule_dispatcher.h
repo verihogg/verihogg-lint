@@ -19,6 +19,7 @@
 #include "rules/circular_inheritance.h"
 #include "rules/class_variable_lifetime.h"
 #include "rules/concatenation_multiplier.h"
+#include "rules/constraint_implemention_scope.h"
 #include "rules/covergroup_expression.h"
 #include "rules/coverpoint_expression_type.h"
 #include "rules/dpi_decl_string.h"
@@ -32,6 +33,7 @@
 #include "rules/extern_constraint_undeclared.h"
 #include "rules/extern_function_undeclared.h"
 #include "rules/extern_task_undeclared.h"
+#include "rules/fatal_rule.h"
 #include "rules/foreach_loop_condition.h"
 #include "rules/function_implementation_internal_return_type.h"
 #include "rules/function_implementation_return_type.h"
@@ -50,6 +52,7 @@
 #include "rules/missing_for_loop_initialization.h"
 #include "rules/missing_for_loop_step.h"
 #include "rules/missing_function_implementation.h"
+#include "rules/missing_task_implementation.h"
 #include "rules/modport_import_export_port.h"
 #include "rules/multiple_bins.h"
 #include "rules/multiple_dot_star_connection.h"
@@ -63,11 +66,12 @@
 #include "rules/select_in_weight.h"
 #include "rules/system_function_arguments.h"
 #include "rules/target_unpacked_array_concatenation.h"
+#include "rules/task_implemention_scope.h"
 #include "rules/time_value.h"
 #include "rules/type_casting.h"
 #include "rules/void_cast_of_void_function.h"
-#include "rules/wildcard_operator.h"
-
+#include "rules/wildcard_equality_operator.h"
+#include "rules/wildcard_inequality_operator.h"
 constexpr const char* DefaultConfigFileName = ".verihogg-lint";
 
 namespace RuleInfo {
@@ -83,6 +87,14 @@ struct GlobalRule {
   std::string_view idName;
   std::string_view description;
   std::function<void(SURELOG::Design*, SURELOG::ErrorContainer*,
+                     SURELOG::SymbolTable*)>
+      check;
+};
+
+struct UhdmRule {
+  std::string_view idName;
+  std::string_view description;
+  std::function<void(const vpiHandle&, SURELOG::ErrorContainer*,
                      SURELOG::SymbolTable*)>
       check;
 };
@@ -236,12 +248,12 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "TYPE_CASTING",
      .description = "Expecting tick before type casting expression",
      .check = CheckTypeCasting},
-    // TODO(Andrey): next function combines multiple checks:
-    // - WILDCARD_EQUALITY_OPERATOR
-    // - WILDCARD_INEQUALITY_OPERATOR
     {.idName = "WILDCARD_EQUALITY_OPERATOR",
      .description = "Expecting wildcard operator '==?' instead of '=?='",
-     .check = CheckWildcardOperators},
+     .check = CheckWildcardEqualityOperator},
+    {.idName = "WILDCARD_INEQUALITY_OPERATOR",
+     .description = "Expecting wildcard operator '!=?' instead of '!?='",
+     .check = CheckWildcardInequalityOperator},
     {.idName = "VOID_CAST_OF_VOID_FUNCTION",
      .description = "void cast of void function not allowed",
      .check = CheckVoidCastOfVoidFunction},
@@ -257,19 +269,21 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "NOF_PARAMETER_OVERRIDES",
      .description = "Expected # parameter overrides, found #module; endmodule",
      .check = CheckNofParameterOverrides},
-    // TODO(Andrey): next function combines multiple checks:
-    // - MISSING_FUNCTION_IMPLEMENTATION
-    // - MISSING_TASK_IMPLEMENTATION
     {.idName = "MISSING_FUNCTION_IMPLEMENTATION",
      .description = "extern function is not implemented",
      .check = CheckMissingFunctionImplementation},
-    // TODO(Andrey): next function combines multiple checks:
-    // - FUNCTION_IMPLEMENTATION_SCOPE
-    // - TASK_IMPLEMENTATION_SCOPE,
-    // - CONSTRAINT_IMPLEMENTATION_SCOPE
+    {.idName = "MISSING_TASK_IMPLEMENTATION",
+     .description = "extern task is not implemented",
+     .check = CheckMissingTaskImplementation},
     {.idName = "FUNCTION_IMPLEMENTATION_SCOPE",
-     .description = "extern task implemented outside of its class scope",
+     .description = "extern function implemented outside of its class scope",
      .check = CheckFuncImplScope},
+    {.idName = "TASK_IMPLEMENTATION_SCOPE",
+     .description = "extern task implemented outside of its class scope",
+     .check = CheckTaskImplScope},
+    {.idName = "CONSTRAINT_IMPLEMENTATION_SCOPE",
+     .description = "extern constraint implemented outside of its class scope",
+     .check = CheckConstraintImplScope},
     {.idName = "METHOD_OVERRIDE_ARGUMENT_NAME",
      .description = "argument name of method does not match of override",
      .check = CheckMethodOverrideArgumentName},
@@ -285,19 +299,22 @@ const auto globalRules = std::to_array<GlobalRule>({
      .description = "Argument type of method must be the same as prototype "
                     "argument type (non-standard use of type alias)",
      .check = CheckMethodImplementationArgumentType},
-    {.idName = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
-     .description = "TODO(Andrey): Description",
-     .check = [](auto...) { /*TODO(Andrey): actual check */ }},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
 
-constexpr size_t TotalRuleCount = AllRulesSize + AllGlobalRulesSize;
+const auto uhdmRules = std::to_array<UhdmRule>({
+    {.idName = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
+     .description = "$fatal system call violation",
+     .check = CheckFatalSyscall},
+});
 
-static_assert(TotalRuleCount + /* CheckWildcardOperators */ 1 +
-                  /* CheckMissingFunctionImplementation */ 1 +
-                  /* CheckFuncImplScope */ 2 ==
-              verihogg_lint::kLintRules.size());
+constexpr size_t AllUhdmRulesSize = uhdmRules.size();
+
+constexpr size_t TotalRuleCount =
+    AllRulesSize + AllGlobalRulesSize + AllUhdmRulesSize;
+
+static_assert(TotalRuleCount == verihogg_lint::kLintRules.size());
 }  // namespace RuleInfo
 
 void RunAllRulesOnDesign(SURELOG::Design* design, const vpiHandle& uhdmDesign,

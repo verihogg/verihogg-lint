@@ -19,7 +19,7 @@ enum LintIdEnum : uint16_t {
   LINT_PARAMETR_DYNAMIC_ARRAY,
   LINT_PROTOTYPE_RETURN_DATA_TYPE,
   LINT_REPETITION_IN_SEQUENCE,
-  LINT_FATAL_SYSCALL,
+  LINT_FATAL_SYSTEM_TASK_FIRST_ARGUMENT,
   LINT_COVERPOINT_EXPRESSION_TYPE,
   LINT_COVERGROUP_EXPRESSION,
   LINT_CONCATENATION_MULTIPLIER,
@@ -121,7 +121,7 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{.type = LINT_REPETITION_IN_SEQUENCE,
                  .text = "sequence \"%s\" uses both goto '[->]' and "
                          "non-consecutive '[=]' repetitions"},
-    LintRuleInfo{.type = LINT_FATAL_SYSCALL,
+    LintRuleInfo{.type = LINT_FATAL_SYSTEM_TASK_FIRST_ARGUMENT,
                  .text = "$fatal system call violation: %s"},
     LintRuleInfo{
         .type = LINT_COVERPOINT_EXPRESSION_TYPE,

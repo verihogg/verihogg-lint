@@ -114,6 +114,15 @@ void ValidateMessage(const UHDM::VectorOfany* args,
 
 }  // namespace
 
+void CheckFatalSyscall(const vpiHandle& design, SL::ErrorContainer* errors,
+                       SL::SymbolTable* symbols) {
+  if (errors == nullptr || symbols == nullptr) {
+    return;
+  }
+  FatalListener listener(errors, symbols);
+  listener.Listen(design);
+}
+
 void FatalListener::Listen(const vpiHandle& design) {
   if (design == nullptr) {
     return;
@@ -150,7 +159,8 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
     SL::PathId const kFileId =
         SL::FileSystem::getInstance()->toPathId(file, symbols_);
     SL::Location const kLoc(kFileId, line, column, kSym);
-    SL::Error err(verihogg_lint::LintId(verihogg_lint::LINT_FATAL_SYSCALL),
+    SL::Error err(verihogg_lint::LintId(
+                      verihogg_lint::LINT_FATAL_SYSTEM_TASK_FIRST_ARGUMENT),
                   kLoc);
     errors_->addError(err, false);
   };

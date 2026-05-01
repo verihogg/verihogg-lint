@@ -26,3 +26,6 @@ class FatalListener : public UHDM::VpiListener {
   SL::ErrorContainer* errors_;
   SL::SymbolTable* symbols_;
 };
+
+void CheckFatalSyscall(const vpiHandle& design, SL::ErrorContainer* errors,
+                       SL::SymbolTable* symbols);
