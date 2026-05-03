@@ -682,8 +682,16 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
            [](const SL::FileContent* fC, SL::ErrorContainer* e,
               SL::SymbolTable* s) {
              FixSourceManager sm;
-             (void)sm.loadFile(fC->getFileId());
-             (void)CheckWildcardOperatorsFixable(fC, e, s, sm);
+             (void)CheckWildcardEqualityOperatorFixable(fC, e, s, sm);
+           },
+       .ignore_errors = {}},
+      {.folder = "WildcardInequalityOperator",
+       .expected_error = verihogg_lint::LINT_WILDCARD_INEQUALITY_OPERATOR,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)CheckWildcardInequalityOperatorFixable(fC, e, s, sm);
            },
        .ignore_errors = {}},
       {.folder = "ExponentFormatTimeValue",
