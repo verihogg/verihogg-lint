@@ -588,7 +588,12 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .ignore_errors = {}},
       {.folder = "MultipleDotStarConnections",
        .expected_error = verihogg_lint::LINT_MULTIPLE_DOT_STAR_CONNECTIONS,
-       .check = CheckMultipleDotStarConnections,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)CheckMultipleDotStarConnectionsFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "SelectInEventControl",
        .expected_error = verihogg_lint::LINT_SELECT_IN_EVENT_CONTROL,
