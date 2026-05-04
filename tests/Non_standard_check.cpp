@@ -719,7 +719,12 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .ignore_errors = {}},
       {.folder = "VoidCastOfVoidFunction",
        .expected_error = verihogg_lint::LINT_VOID_CAST_OF_VOID_FUNCTION,
-       .check = CheckVoidCastOfVoidFunction,
+       .check =
+           [](const SL::FileContent* fC, SL::ErrorContainer* e,
+              SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)CheckVoidCastOfVoidFunctionFixable(fC, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "LogicalNegation",
        .expected_error = verihogg_lint::LINT_LOGICAL_NEGATION,
