@@ -88,6 +88,22 @@ auto BuildSetOfSelectedRules(const std::filesystem::path& configFile)
 
 }  // namespace
 
+struct FixableGlobalRule {
+  std::string_view name;
+  bool enabled = true;
+  std::function<std::vector<LintDiagnostic>(SL::Design*, SL::ErrorContainer*,
+                                            SL::SymbolTable*, FixSourceManager&)>
+      check;
+};
+
+const auto fixableGlobalRules = std::to_array<FixableGlobalRule>({
+    // clang-format off
+    {.name = "MethodOverrideArgumentName", .check = CheckMethodOverrideArgumentNameFixable},
+    // clang-format on
+});
+
+constexpr size_t AllFixableGlobalRulesSize = fixableGlobalRules.size();
+
 void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
                  SL::SymbolTable* symbols,
                  const std::unordered_set<std::string_view>& ruleSet) {
@@ -172,8 +188,88 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
     }
   }
 }
+
+static void RunFixableGlobalRules(
+    SL::Design* design, SL::ErrorContainer* errors, SL::SymbolTable* symbols,
+    const std::array<FixableGlobalRule, AllFixableGlobalRulesSize>& rules,
+    AutofixContext* autofix) {
+  if (design == nullptr) {
+    return;
+  }
+
+  FixSourceManager empty_sm;
+  FixSourceManager& sm = (autofix != nullptr && autofix->source_mgr != nullptr)
+                             ? *autofix->source_mgr
+                             : empty_sm;
+
+  if (autofix != nullptr && autofix->source_mgr != nullptr) {
+    for (auto& [name, fC] : design->getAllFileContents()) {
+      if (fC != nullptr) {
+        if (!sm.loadFile(fC->getFileId())) {
+          std::cerr
+              << "autofix: warning: cannot load file for offset computation\n";
+        }
+      }
+    }
+  }
+
+  for (const auto& rule : rules) {
+    if (!rule.enabled) {
+      continue;
+    }
+
+    std::vector<LintDiagnostic> diags;
+    try {
+      diags = rule.check(design, errors, symbols, sm);
+    } catch (const std::exception& e) {
+      std::cerr << "lint: rule [" << rule.name
+                << "] threw exception: " << e.what()
+                << "\nlint: skipping rule\n";
+      continue;
+    } catch (...) {
+      std::cerr << "lint: rule [" << rule.name
+                << "] threw unknown exception; skipping\n";
+      continue;
+    }
+
+    if (autofix == nullptr) {
+      continue;
+    }
+
+    for (auto& d : diags) {
+      d.rule_id = std::string(rule.name);
+
+      if (autofix->collector != nullptr) {
+        autofix->collector->add(d);
+      }
+
+      if (autofix->replacements != nullptr && autofix->source_mgr != nullptr) {
+        for (const auto& fix : d.fixes) {
+          try {
+            Replacement r = fixItToReplacement(fix, *autofix->source_mgr);
+            r.rule_id = d.rule_id;
+
+            std::string conflict_msg;
+            if (!autofix->replacements->add(r, &conflict_msg)) {
+              std::cerr << "autofix: skipped conflicting fix [" << d.rule_id
+                        << "] at " << d.filepath << ":" << d.line << ":"
+                        << d.col << " — " << conflict_msg << "\n";
+            }
+          } catch (const std::exception& e) {
+            std::cerr << "autofix: cannot convert fix [" << d.rule_id << "] at "
+                      << d.filepath << ":" << d.line << " — " << e.what()
+                      << "\n";
+          }
+        }
+      }
+    }
+  }
+}
   }
   for (auto& rule : fixableRules) {
+    std::cout << rule.name << ": true\n";
+  }
+  for (auto& rule : fixableGlobalRules) {
     std::cout << rule.name << ": true\n";
   }
 }
@@ -201,6 +297,7 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
       continue;
     }
     rule.check(design, errors, symbols);
+    RunFixableGlobalRules(design, errors, symbols, kFixableGlobalRules, autofix);
   }
 
   for (const auto& rule : RuleInfo::uhdmRules) {

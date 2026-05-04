@@ -762,7 +762,11 @@ auto GlobalRuleSpecs() -> const std::vector<RuleSpecGlobal>& {
        .ignore_errors = {}},
       {.folder = "MethodOverrideArgumentName",
        .expected_error = verihogg_lint::LINT_METHOD_OVERRIDE_ARGUMENT_NAME,
-       .check = CheckMethodOverrideArgumentName,
+       .check =
+           [](SL::Design* d, SL::ErrorContainer* e, SL::SymbolTable* s) {
+             FixSourceManager sm;
+             (void)CheckMethodOverrideArgumentNameFixable(d, e, s, sm);
+           },
        .ignore_errors = {}},
       {.folder = "FunctionImplementationReturnType",
        .expected_error =
