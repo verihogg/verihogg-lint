@@ -9,12 +9,15 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <algorithm>
+#include <iostream>
 #include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <vector>
 
+#include "fix/fix_it.h"
+#include "main/lint_diagnostics.h"
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
 #include "utils/design_utils.h"
@@ -273,57 +276,105 @@ auto FindBaseArgNames(const std::string& parentClassName,
   return nullptr;
 }
 
-auto CheckClass(const ClassInfo& childClass, const GlobalMap& globalMap,
-                SL::ErrorContainer* errors, SL::SymbolTable* symbols) -> void {
-  if (childClass.parentClassName.empty()) {
-    return;
-  }
-
-  for (const auto& childMethod : childClass.virtualMethods) {
-    const std::vector<std::string>* baseArgs = FindBaseArgNames(
-        childClass.parentClassName, globalMap, childMethod.methodName);
-    if (baseArgs == nullptr) {
-      continue;
-    }
-
-    const std::size_t kCompareCount =
-        std::min(baseArgs->size(), childMethod.args.size());
-
-    for (std::size_t i = 0; i < kCompareCount; ++i) {
-      if ((*baseArgs).at(i) == childMethod.args.at(i).name) {
-        continue;
-      }
-
-      ReportError(
-          childMethod.args.at(i).fileContent, childMethod.args.at(i).reportNode,
-          childMethod.args.at(i).name,
-          verihogg_lint::LINT_METHOD_OVERRIDE_ARGUMENT_NAME, errors, symbols);
-    }
-  }
-}
-
-}  // namespace
-
-void CheckMethodOverrideArgumentName(SL::Design* design,
-                                     SL::ErrorContainer* errors,
-                                     SL::SymbolTable* symbols) {
-  if (design == nullptr || errors == nullptr || symbols == nullptr) {
-    return;
-  }
-
+auto CollectAllClasses(SL::Design* design) -> std::vector<ClassInfo> {
   std::vector<ClassInfo> allClasses;
   DesignUtils::ForEachFileContent(design, [&](const SL::FileContent* fc) {
     auto local = CollectClassInfosFromFile(fc);
     allClasses.insert(allClasses.end(), local.begin(), local.end());
   });
+  return allClasses;
+}
 
+}  // namespace
+
+auto CheckMethodOverrideArgumentNameFixable(SL::Design* design,
+                                            SL::ErrorContainer* errors,
+                                            SL::SymbolTable* symbols,
+                                            FixSourceManager& /*sm*/)
+    -> std::vector<LintDiagnostic> {
+  std::vector<LintDiagnostic> diags;
+
+  if (design == nullptr || errors == nullptr || symbols == nullptr) {
+    return diags;
+  }
+
+  const std::vector<ClassInfo> allClasses = CollectAllClasses(design);
   if (allClasses.empty()) {
-    return;
+    return diags;
   }
 
-  GlobalMap const kGlobalMap = BuildGlobalMap(allClasses);
+  const GlobalMap kGlobalMap = BuildGlobalMap(allClasses);
 
-  for (const auto& classInfo : allClasses) {
-    CheckClass(classInfo, kGlobalMap, errors, symbols);
+  for (const auto& childClass : allClasses) {
+    if (childClass.parentClassName.empty()) {
+      continue;
+    }
+
+    for (const auto& childMethod : childClass.virtualMethods) {
+      const std::vector<std::string>* baseArgs = FindBaseArgNames(
+          childClass.parentClassName, kGlobalMap, childMethod.methodName);
+      if (baseArgs == nullptr) {
+        continue;
+      }
+
+      const std::size_t kCompareCount =
+          std::min(baseArgs->size(), childMethod.args.size());
+
+      for (std::size_t i = 0; i < kCompareCount; ++i) {
+        const std::string& wrongName = childMethod.args.at(i).name;
+        const std::string& rightName = baseArgs->at(i);
+        if (wrongName == rightName) {
+          continue;
+        }
+
+        const SL::FileContent* fc = childMethod.args.at(i).fileContent;
+        const SL::NodeId reportNode = childMethod.args.at(i).reportNode;
+
+        ReportError(fc, reportNode, wrongName,
+                    verihogg_lint::LINT_METHOD_OVERRIDE_ARGUMENT_NAME, errors,
+                    symbols);
+
+        const std::string filepath = GetFixFilepath(fc);
+        if (filepath.empty()) {
+          continue;
+        }
+
+        const unsigned line = fc->Line(reportNode);
+        const unsigned col = GetColumnSafe(fc, reportNode);
+        if (line == 0 || col == 0) {
+          continue;
+        }
+
+        const unsigned endCol =
+            static_cast<unsigned>(col + wrongName.size());
+
+        const FixRange range{
+            .begin =
+                FixLocation{.filename = filepath, .line = line, .col = col},
+            .end =
+                FixLocation{.filename = filepath, .line = line, .col = endCol},
+        };
+
+        LintDiagnostic d;
+        d.filepath = filepath;
+        d.line = line;
+        d.col = col;
+        d.message = wrongName + " -> " + rightName;
+
+        try {
+          d.fixes.push_back(FixIt::Replace(
+              range, rightName, "rename argument to match parent class"));
+        } catch (const std::exception& e) {
+          std::cerr << "autofix: cannot create fix at " << filepath << ":"
+                    << line << ":" << col << ": " << e.what() << "\n";
+          diags.push_back(std::move(d));
+          continue;
+        }
+
+        diags.push_back(std::move(d));
+      }
+    }
   }
+
+  return diags;
 }
