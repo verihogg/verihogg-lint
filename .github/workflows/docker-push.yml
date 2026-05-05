@@ -3,7 +3,7 @@ name: Push Docker Image
 on:
   workflow_run:
     workflows:
-      - Container Tests
+      - Docker Build And Test
     types:
       - completed
 

@@ -1,4 +1,4 @@
-name: Docker Build
+name: Docker Build And Test
 
 on:
   push:
@@ -34,3 +34,17 @@ jobs:
           path: /tmp/verihogg-lint-image.tar
           if-no-files-found: error
           retention-days: 1
+
+      - name: Load Docker image
+        run: docker load --input /tmp/verihogg-lint-image.tar
+
+      - name: Build ephemeral test image
+        run: |
+          docker build \
+            --file tests/container/Dockerfile.test \
+            --build-arg BASE_IMAGE="local/verihogg-lint:${{ github.sha }}" \
+            --tag verihogg-lint:test \
+            .
+
+      - name: Run all fixture tests
+        run: docker run --rm verihogg-lint:test /usr/local/bin/run_tests.sh
