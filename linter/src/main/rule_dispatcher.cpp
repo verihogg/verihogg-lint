@@ -91,8 +91,8 @@ auto BuildSetOfSelectedRules(const std::filesystem::path& configFile)
 struct FixableGlobalRule {
   std::string_view name;
   bool enabled = true;
-  std::function<std::vector<LintDiagnostic>(SL::Design*, SL::ErrorContainer*,
-                                            SL::SymbolTable*, FixSourceManager&)>
+  std::function<std::vector<LintDiagnostic>(
+      SL::Design*, SL::ErrorContainer*, SL::SymbolTable*, FixSourceManager&)>
       check;
 };
 
@@ -103,6 +103,39 @@ const auto fixableGlobalRules = std::to_array<FixableGlobalRule>({
 });
 
 constexpr size_t AllFixableGlobalRulesSize = fixableGlobalRules.size();
+
+static void CommitDiags(std::vector<LintDiagnostic>& diags,
+                        std::string_view ruleName, AutofixContext* autofix) {
+  if (autofix == nullptr) {
+    return;
+  }
+  for (auto& d : diags) {
+    d.rule_id = std::string(ruleName);
+
+    if (autofix->collector != nullptr) {
+      autofix->collector->add(d);
+    }
+
+    if (autofix->replacements != nullptr && autofix->source_mgr != nullptr) {
+      for (const auto& fix : d.fixes) {
+        try {
+          Replacement r = fixItToReplacement(fix, *autofix->source_mgr);
+          r.rule_id = d.rule_id;
+
+          std::string conflict_msg;
+          if (!autofix->replacements->add(r, &conflict_msg)) {
+            std::cerr << "autofix: skipped conflicting fix [" << d.rule_id
+                      << "] at " << d.filepath << ":" << d.line << ":" << d.col
+                      << " — " << conflict_msg << "\n";
+          }
+        } catch (const std::exception& e) {
+          std::cerr << "autofix: cannot convert fix [" << d.rule_id << "] at "
+                    << d.filepath << ":" << d.line << " — " << e.what() << "\n";
+        }
+      }
+    }
+  }
+}
 
 void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
                  SL::SymbolTable* symbols,
@@ -155,37 +188,7 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
       continue;
     }
 
-    if (autofix == nullptr) {
-      continue;
-    }
-
-    for (auto& d : diags) {
-      d.rule_id = std::string(rule.name);
-
-      if (autofix->collector != nullptr) {
-        autofix->collector->add(d);
-      }
-
-      if (autofix->replacements != nullptr && autofix->source_mgr != nullptr) {
-        for (const auto& fix : d.fixes) {
-          try {
-            Replacement r = fixItToReplacement(fix, *autofix->source_mgr);
-            r.rule_id = d.rule_id;
-
-            std::string conflict_msg;
-            if (!autofix->replacements->add(r, &conflict_msg)) {
-              std::cerr << "autofix: skipped conflicting fix [" << d.rule_id
-                        << "] at " << d.filepath << ":" << d.line << ":"
-                        << d.col << " — " << conflict_msg << "\n";
-            }
-          } catch (const std::exception& e) {
-            std::cerr << "autofix: cannot convert fix [" << d.rule_id << "] at "
-                      << d.filepath << ":" << d.line << " — " << e.what()
-                      << "\n";
-          }
-        }
-      }
-    }
+    CommitDiags(diags, rule.name, autofix);
   }
 }
 
@@ -232,45 +235,7 @@ static void RunFixableGlobalRules(
       continue;
     }
 
-    if (autofix == nullptr) {
-      continue;
-    }
-
-    for (auto& d : diags) {
-      d.rule_id = std::string(rule.name);
-
-      if (autofix->collector != nullptr) {
-        autofix->collector->add(d);
-      }
-
-      if (autofix->replacements != nullptr && autofix->source_mgr != nullptr) {
-        for (const auto& fix : d.fixes) {
-          try {
-            Replacement r = fixItToReplacement(fix, *autofix->source_mgr);
-            r.rule_id = d.rule_id;
-
-            std::string conflict_msg;
-            if (!autofix->replacements->add(r, &conflict_msg)) {
-              std::cerr << "autofix: skipped conflicting fix [" << d.rule_id
-                        << "] at " << d.filepath << ":" << d.line << ":"
-                        << d.col << " — " << conflict_msg << "\n";
-            }
-          } catch (const std::exception& e) {
-            std::cerr << "autofix: cannot convert fix [" << d.rule_id << "] at "
-                      << d.filepath << ":" << d.line << " — " << e.what()
-                      << "\n";
-          }
-        }
-      }
-    }
-  }
-}
-  }
-  for (auto& rule : fixableRules) {
-    std::cout << rule.name << ": true\n";
-  }
-  for (auto& rule : fixableGlobalRules) {
-    std::cout << rule.name << ": true\n";
+    CommitDiags(diags, rule.name, autofix);
   }
 }
 

@@ -345,8 +345,7 @@ auto CheckMethodOverrideArgumentNameFixable(SL::Design* design,
           continue;
         }
 
-        const unsigned endCol =
-            static_cast<unsigned>(col + wrongName.size());
+        const auto endCol = static_cast<unsigned>(col + wrongName.size());
 
         const FixRange range{
             .begin =
@@ -359,7 +358,9 @@ auto CheckMethodOverrideArgumentNameFixable(SL::Design* design,
         d.filepath = filepath;
         d.line = line;
         d.col = col;
-        d.message = wrongName + " -> " + rightName;
+        d.message = wrongName;
+        d.message += " -> ";
+        d.message += rightName;
 
         try {
           d.fixes.push_back(FixIt::Replace(

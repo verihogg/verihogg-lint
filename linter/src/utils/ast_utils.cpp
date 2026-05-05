@@ -168,7 +168,7 @@ auto GetPrefix(const SL::FileContent* fileContent, SL::NodeId node)
     result += contexts.at(i);
   }
 
-  if (contexts.size() > 0) {
+  if (!contexts.empty()) {
     result += "::";
   }
 
