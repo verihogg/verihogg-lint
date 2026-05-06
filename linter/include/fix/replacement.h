@@ -64,6 +64,8 @@ class FileReplacements {
 
   [[nodiscard]] auto exportToYaml(const std::string& output_path) const -> bool;
 
+  [[nodiscard]] auto importFromYaml(const std::string& input_path) -> bool;
+
   [[nodiscard]] auto empty() const -> bool { return by_file_.empty(); }
 
   [[nodiscard]] auto totalCount() const -> std::size_t {

@@ -111,7 +111,12 @@ auto FileReplacements::applyToFile(const std::string& filepath,
     return false;
   }
   in.seekg(0, std::ios::end);
-  std::string source(static_cast<size_t>(in.tellg()), '\0');
+  const auto file_size = in.tellg();
+  if (file_size < 0) {
+    std::cerr << "autofix: cannot determine size of: " << filepath << "\n";
+    return false;
+  }
+  std::string source(static_cast<size_t>(file_size), '\0');
   in.seekg(0, std::ios::beg);
   in.read(source.data(), static_cast<std::streamsize>(source.size()));
   in.close();
@@ -132,7 +137,7 @@ auto FileReplacements::applyToFile(const std::string& filepath,
       std::cerr << "autofix: cannot create backup: " << backup_path << "\n";
       return false;
     }
-    bak << source;
+    bak.write(source.data(), static_cast<std::streamsize>(source.size()));
     if (!bak.good()) {
       std::cerr << "autofix: backup write failed: " << backup_path << "\n";
       return false;
@@ -195,7 +200,13 @@ void FileReplacements::printDiff() const {
       continue;
     }
     in.seekg(0, std::ios::end);
-    std::string source(static_cast<size_t>(in.tellg()), '\0');
+    const auto file_size = in.tellg();
+    if (file_size < 0) {
+      std::cerr << "autofix[dry-run]: cannot determine size of: " << filepath
+                << "\n";
+      continue;
+    }
+    std::string source(static_cast<size_t>(file_size), '\0');
     in.seekg(0, std::ios::beg);
     in.read(source.data(), static_cast<std::streamsize>(source.size()));
 
@@ -253,6 +264,53 @@ void FileReplacements::printDiff() const {
       ++lineno;
     }
   }
+}
+
+auto FileReplacements::importFromYaml(const std::string& input_path) -> bool {
+  YAML::Node doc;
+  try {
+    doc = YAML::LoadFile(input_path);
+  } catch (const YAML::Exception& e) {
+    std::cerr << "autofix: failed to load YAML: " << input_path << ": "
+              << e.what() << "\n";
+    return false;
+  }
+
+  const YAML::Node& repls_node = doc["Replacements"];
+  if (!repls_node || !repls_node.IsSequence()) {
+    std::cerr << "autofix: invalid YAML format in: " << input_path
+              << " (expected top-level 'Replacements' sequence)\n";
+    return false;
+  }
+
+  for (const auto& node : repls_node) {
+    if (!node["FilePath"] || !node["Offset"] || !node["Length"]) {
+      std::cerr << "autofix: skipping malformed entry in: " << input_path
+                << " (missing FilePath/Offset/Length)\n";
+      continue;
+    }
+
+    Replacement r;
+    try {
+      r.filename = node["FilePath"].as<std::string>();
+      r.offset = node["Offset"].as<unsigned>();
+      r.length = node["Length"].as<unsigned>();
+      r.text = node["ReplacementText"]
+                   ? node["ReplacementText"].as<std::string>()
+                   : "";
+    } catch (const YAML::Exception& e) {
+      std::cerr << "autofix: skipping entry with bad values in: " << input_path
+                << ": " << e.what() << "\n";
+      continue;
+    }
+
+    std::string conflict_msg;
+    if (!add(r, &conflict_msg)) {
+      std::cerr << "autofix: import conflict: " << conflict_msg << "\n";
+    }
+  }
+
+  return true;
 }
 
 auto FileReplacements::exportToYaml(const std::string& output_path) const

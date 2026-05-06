@@ -40,6 +40,40 @@ auto main(int argc, const char** argv) -> int {
     return 0;
   }
 
+  if (!kOpts.import_fixes.empty()) {
+    FileReplacements file_repls;
+    if (!file_repls.importFromYaml(kOpts.import_fixes)) {
+      return 1;
+    }
+    if (file_repls.empty()) {
+      std::cout << "No fixes to apply.\n";
+      return 0;
+    }
+    if (kOpts.fix_dry_run) {
+      file_repls.printDiff();
+      return 0;
+    }
+    std::vector<std::string> fixed_files;
+    std::vector<std::string> failed_files;
+    file_repls.applyAll(&fixed_files, &failed_files, kOpts.backup_suffix);
+    for (const auto& f : fixed_files) {
+      std::cout << "Fixed: " << f << "\n";
+    }
+    for (const auto& f : failed_files) {
+      std::cerr << "autofix: failed to fix: " << f << "\n";
+    }
+    if (!fixed_files.empty()) {
+      std::cout << "Applied " << file_repls.totalCount() << " fix(es) across "
+                << fixed_files.size() << " file(s).\n";
+    }
+    if (!failed_files.empty()) {
+      std::cerr << "WARNING: " << failed_files.size()
+                << " file(s) could not be fixed. "
+                << "Check file permissions and re-run.\n";
+    }
+    return failed_files.empty() ? 0 : 1;
+  }
+
   if (kOpts.show_version) {
     cli::PrintVersion();
     return 0;

@@ -40,10 +40,10 @@ class FixSourceManager {
                               unsigned col_end) const -> std::string;
 
   [[nodiscard]] auto isLoaded(SURELOG::PathId fileId) const -> bool {
-    return cache_.count(fileId) > 0;
+    return cache_.contains(fileId);
   }
   [[nodiscard]] auto isLoaded(const std::string& filepath) const -> bool {
-    return path_index_.count(filepath) > 0;
+    return path_index_.contains(filepath);
   }
 
  private:
@@ -53,6 +53,9 @@ class FixSourceManager {
   };
 
   static auto buildFileData(std::string content) -> FileData;
+  // Returns the offset of the character past the last non-CR/LF content byte
+  // on the given line (i.e. the stripped line end, not the '\n' itself).
+  static auto findLineEnd(const FileData& fd, unsigned line_start) -> unsigned;
 
   std::unordered_map<SURELOG::PathId, FileData, SURELOG::PathIdHasher,
                      SURELOG::PathIdEqualityComparer>
