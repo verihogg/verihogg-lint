@@ -6,7 +6,7 @@
 #include <string>
 
 auto FixSourceManager::loadFile(SURELOG::PathId fileId) -> bool {
-  if (cache_.count(fileId) > 0) {
+  if (cache_.contains(fileId)) {
     return true;
   }
 
@@ -37,6 +37,19 @@ auto FixSourceManager::buildFileData(std::string content)
     }
   }
   return fd;
+}
+
+auto FixSourceManager::findLineEnd(const FileData& fd, unsigned start)
+    -> unsigned {
+  unsigned end = start;
+  while (end < static_cast<unsigned>(fd.content.size()) &&
+         fd.content.at(end) != '\n') {
+    ++end;
+  }
+  if (end > start && fd.content.at(end - 1) == '\r') {
+    --end;
+  }
+  return end;
 }
 
 auto FixSourceManager::getOffset(SURELOG::PathId fileId, unsigned line,
@@ -86,16 +99,7 @@ auto FixSourceManager::getLine(SURELOG::PathId fileId, unsigned line) const
   }
 
   const unsigned start = fd.line_offsets.at(line - 1U);
-  unsigned end = start;
-  while (end < static_cast<unsigned>(fd.content.size()) &&
-         fd.content.at(end) != '\n') {
-    ++end;
-  }
-
-  if (end > start && fd.content.at(end - 1) == '\r') {
-    --end;
-  }
-
+  const unsigned end = findLineEnd(fd, start);
   return fd.content.substr(start, end - start);
 }
 
@@ -144,14 +148,7 @@ auto FixSourceManager::getSlice(const std::string& filepath, LineCol begin,
   }
 
   const unsigned line_start = fd.line_offsets.at(begin.line - 1);
-  unsigned line_end = line_start;
-  while (line_end < static_cast<unsigned>(fd.content.size()) &&
-         fd.content.at(line_end) != '\n') {
-    ++line_end;
-  }
-  if (line_end > line_start && fd.content.at(line_end - 1) == '\r') {
-    --line_end;
-  }
+  const unsigned line_end = findLineEnd(fd, line_start);
 
   const unsigned line_len = line_end - line_start;
   if (begin.col >= line_len) {

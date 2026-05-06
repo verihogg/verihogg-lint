@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <string>
 #include <vector>
@@ -24,22 +25,14 @@ class LintDiagnosticCollector {
   }
 
   [[nodiscard]] auto fixableCount() const -> std::size_t {
-    std::size_t n = 0;
-    for (const auto& d : diags_) {
-      if (!d.fixes.empty()) {
-        ++n;
-      }
-    }
-    return n;
+    return static_cast<std::size_t>(std::count_if(
+        diags_.begin(), diags_.end(),
+        [](const LintDiagnostic& d) { return !d.fixes.empty(); }));
   }
 
   [[nodiscard]] auto hasFixable() const -> bool {
-    for (const auto& d : diags_) {
-      if (!d.fixes.empty()) {
-        return true;
-      }
-    }
-    return false;
+    return std::ranges::any_of(
+        diags_, [](const LintDiagnostic& d) { return !d.fixes.empty(); });
   }
 
  private:

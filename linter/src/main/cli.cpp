@@ -15,6 +15,7 @@ namespace cli {
 constexpr size_t CONFIG_FLAG_LEN = 13;
 inline constexpr std::string_view kConfigFilePrefix = "--config-file=";
 inline constexpr std::string_view kExportFixesPrefix = "--export-fixes=";
+inline constexpr std::string_view kImportFixesPrefix = "--apply-fixes-from=";
 inline constexpr std::string_view kBackupSuffixPrefix = "--backup-suffix=";
 
 auto ParseArgs(const gsl::span<const char*> args) -> Options {
@@ -65,6 +66,11 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
                    arg, "--export-fixes=", kExportFixesPrefix.size()) == 0) {
       std::string_view sv(arg);
       opts.export_fixes = std::string(sv.substr(kExportFixesPrefix.size()));
+
+    } else if (std::strncmp(arg, "--apply-fixes-from=",
+                            kImportFixesPrefix.size()) == 0) {
+      std::string_view sv(arg);
+      opts.import_fixes = std::string(sv.substr(kImportFixesPrefix.size()));
 
     } else if (std::strncmp(
                    arg, "--backup-suffix=", kBackupSuffixPrefix.size()) == 0) {
@@ -167,6 +173,7 @@ void PrintHelp(const char* programName) {
     << "  --fix-dry-run                 Show diff in stdout without modifying files\n"
     << "  --show-suggestions            Print fix hints with before/after snippets\n"
     << "  --export-fixes=<file>         Export fixes to YAML without applying\n"
+    << "  --apply-fixes-from=<file>     Apply fixes from a previously exported YAML\n"
     << "  --backup-suffix=<suffix>      Save originals before --fix (e.g. .bak)\n"
     << "\n"
     << "INPUT:\n"
