@@ -109,9 +109,6 @@ class LintId {
   LintIdEnum e;
 };
 
-// NOLINTBEGIN(readability-identifier-naming)
-
-// NOLINTEND(readability-identifier-naming)
 struct LintRuleInfo {
   verihogg_lint::LintId type;
   ED::ErrorSeverity severity = ED::ERROR;

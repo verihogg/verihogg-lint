@@ -142,7 +142,6 @@ auto main(int argc, const char** argv) -> int {
     return 1;
   }
 
-  // Lazily create autofix components based on which flags are active.
   const bool kNeedCollector = kOpts.show_suggestions || kOpts.apply_fixes ||
                               !kOpts.export_fixes.empty() || kOpts.fix_dry_run;
   const bool kNeedReplacements =

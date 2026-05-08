@@ -10,6 +10,9 @@
 #include <functional>
 #include <string_view>
 
+#include "fix/replacement.h"
+#include "fix/source_manager.h"
+#include "main/lint_diagnostics.h"
 #include "main/lint_rules.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
@@ -99,8 +102,8 @@ struct Rule {
 };
 
 struct FixableRule {
-  std::string_view name;
-  bool enabled = true;
+  std::string_view idName;
+  std::string_view description;
   std::function<std::vector<LintDiagnostic>(
       const SL::FileContent*, SL::ErrorContainer*, SL::SymbolTable*,
       FixSourceManager&)>
@@ -115,22 +118,20 @@ struct GlobalRule {
       check;
 };
 
+struct FixableGlobalRule {
+  std::string_view idName;
+  std::string_view description;
+  std::function<std::vector<LintDiagnostic>(
+      SL::Design*, SL::ErrorContainer*, SL::SymbolTable*, FixSourceManager&)>
+      check;
+};
+
 struct UhdmRule {
   std::string_view idName;
   std::string_view description;
   std::function<void(const vpiHandle&, SURELOG::ErrorContainer*,
                      SURELOG::SymbolTable*)>
       check;
-};
-
-class LintDiagnosticCollector;
-class FileReplacements;
-class FixSourceManager;
-
-struct AutofixContext {
-  LintDiagnosticCollector* collector = nullptr;
-  FileReplacements* replacements = nullptr;
-  FixSourceManager* source_mgr = nullptr;
 };
 
 const auto allRules = std::to_array<Rule>({
@@ -142,10 +143,9 @@ const auto allRules = std::to_array<Rule>({
      .description =
          "Assignment pattern not allowed outside assignment-like context",
      .check = CheckAssignmentPatternContext},
-
-    {.idName = "CLASS_VARIABLE_LIFETIME",
-     .description = "'automatic' lifetime for class variable not allowed",
-     .check = CheckClassVariableLifetime},
+    {.idName = "CIRCULAR_INHERITANCE",
+     .description = "Classes cannot have circular inheritance",
+     .check = CheckCircularInheritance},
     {.idName = "CONCATENATION_MULTIPLIER",
      .description = "Expecting constant expression as concatenation multiplier",
      .check = CheckConcatenationMultiplier},
@@ -163,10 +163,9 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "EMPTY_ASSIGNMENT_PATTERN",
      .description = "Empty assignment pattern '{}' not allowed",
      .check = CheckEmptyAssignmentPattern},
-    {.idName = "EXPONENT_FORMAT_TIME_VALUE",
-     .description = "Unexpected exponent format for time value",
-     .check = CheckExponentFormatTimeValue},
-
+    {.idName = "EXTEND_CLASS",
+     .description = "extending non existing class",
+     .check = CheckExtendClass},
     {.idName = "MODPORT_IMPORT_EXPORT_PORT",
      .description = "еxpected method name instead of interface signal name",
      .check = CheckModportImportExportPort},
@@ -200,9 +199,6 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "MISSING_FOR_LOOP_STEP",
      .description = "'for' loop step required",
      .check = CheckMissingForLoopStep},
-    {.idName = "MULTIPLE_DOT_STAR_CONNECTIONS",
-     .description = "'.*' cannot appear more than once in the port list",
-     .check = CheckMultipleDotStarConnections},
     {.idName = "PARAMETER_DYNAMIC_ARRAY",
      .description = "Fixed size required for parameter dimension",
      .check = CheckParameterDynamicArray},
@@ -243,21 +239,6 @@ const auto allRules = std::to_array<Rule>({
      .description =
          "Unpacked array concatenation not allowed as target expression",
      .check = CheckTargetUnpackedArrayConcatenation},
-    {.idName = "TIME_VALUE",
-     .description = "Unexpected white space between number and time value",
-     .check = CheckTimeValue},
-    {.idName = "TYPE_CASTING",
-     .description = "Expecting tick before type casting expression",
-     .check = CheckTypeCasting},
-    {.idName = "WILDCARD_EQUALITY_OPERATOR",
-     .description = "Expecting wildcard operator '==?' instead of '=?='",
-     .check = CheckWildcardEqualityOperator},
-    {.idName = "WILDCARD_INEQUALITY_OPERATOR",
-     .description = "Expecting wildcard operator '!=?' instead of '!?='",
-     .check = CheckWildcardInequalityOperator},
-    {.idName = "VOID_CAST_OF_VOID_FUNCTION",
-     .description = "void cast of void function not allowed",
-     .check = CheckVoidCastOfVoidFunction},
     {.idName = "LOGICAL_NEGATION",
      .description = "Operand of type not allowed with logical negation (use == "
                     "null instead)",
@@ -288,8 +269,34 @@ constexpr size_t AllRulesSize = allRules.size();
 
 const auto fixableRules = std::to_array<FixableRule>({
     // clang-format off
-    {.name = "ClassVariableLifetime", .check = CheckClassVariableLifetimeFixable},
-    {.name = "TimeValue",             .check = CheckTimeValueFixable},
+    {.idName = "CLASS_VARIABLE_LIFETIME",
+     .description = "'automatic' lifetime for class variable not allowed",
+     .check = CheckClassVariableLifetimeFixable},
+    {.idName = "TIME_VALUE",
+     .description = "Unexpected white space between number and time value",
+     .check = CheckTimeValueFixable},
+    {.idName = "WILDCARD_EQUALITY_OPERATOR",
+     .description = "Expecting wildcard operator '==?' instead of '=?='",
+     .check = CheckWildcardEqualityOperatorFixable},
+    {.idName = "WILDCARD_INEQUALITY_OPERATOR",
+     .description = "Expecting wildcard operator '!=?' instead of '!?='",
+     .check = CheckWildcardInequalityOperatorFixable},
+    {.idName = "TYPE_CASTING",
+     .description = "Expecting tick before type casting expression",
+     .check = CheckTypeCastingFixable},
+     {.idName = "ASSIGNMENT_PATTERN",
+     .description =
+         "Expecting assignment pattern '{...}' instead of concatenation",
+     .check = CheckAssignmentPatternFixable},
+    {.idName = "EXPONENT_FORMAT_TIME_VALUE",
+     .description = "Unexpected exponent format for time value",
+     .check = CheckExponentFormatTimeValueFixable},
+    {.idName = "MULTIPLE_DOT_STAR_CONNECTIONS",
+     .description = "'.*' cannot appear more than once in the port list",
+     .check = CheckMultipleDotStarConnectionsFixable},
+    {.idName = "VOID_CAST_OF_VOID_FUNCTION",
+     .description = "void cast of void function not allowed",
+     .check = CheckVoidCastOfVoidFunctionFixable},
     // clang-format on
 });
 
@@ -314,9 +321,6 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "CONSTRAINT_IMPLEMENTATION_SCOPE",
      .description = "extern constraint implemented outside of its class scope",
      .check = CheckConstraintImplScope},
-    {.idName = "METHOD_OVERRIDE_ARGUMENT_NAME",
-     .description = "argument name of method does not match of override",
-     .check = CheckMethodOverrideArgumentName},
     {.idName = "FUNCTION_IMPLEMENTATION_RETURN_TYPE",
      .description =
          "return type of function must be the same as prototype return type",
@@ -399,6 +403,16 @@ const auto globalRules = std::to_array<GlobalRule>({
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
 
+const auto fixableGlobalRules = std::to_array<FixableGlobalRule>({
+    // clang-format off
+     {.idName = "METHOD_OVERRIDE_ARGUMENT_NAME",
+     .description = "argument name of method does not match of override",
+     .check = CheckMethodOverrideArgumentNameFixable},
+    // clang-format on
+});
+
+constexpr size_t AllFixableGlobalRulesSize = fixableGlobalRules.size();
+
 const auto uhdmRules = std::to_array<UhdmRule>({
     {.idName = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
      .description = "$fatal system call violation",
@@ -411,11 +425,22 @@ const auto uhdmRules = std::to_array<UhdmRule>({
 
 constexpr size_t AllUhdmRulesSize = uhdmRules.size();
 
-constexpr size_t TotalRuleCount =
-    AllRulesSize + AllGlobalRulesSize + AllUhdmRulesSize;
+constexpr size_t TotalRuleCount = AllRulesSize + AllFixableRulesSize +
+                                  AllGlobalRulesSize +
+                                  AllFixableGlobalRulesSize + AllUhdmRulesSize;
 
 static_assert(TotalRuleCount == verihogg_lint::kLintRules.size());
 }  // namespace RuleInfo
+
+class LintDiagnosticCollector;
+class FileReplacements;
+class FixSourceManager;
+
+struct AutofixContext {
+  LintDiagnosticCollector* collector = nullptr;
+  FileReplacements* replacements = nullptr;
+  FixSourceManager* source_mgr = nullptr;
+};
 
 void RunAllRulesOnDesign(SURELOG::Design* design, const vpiHandle& uhdmDesign,
                          SURELOG::ErrorContainer* errors,

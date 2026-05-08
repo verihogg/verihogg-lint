@@ -55,6 +55,35 @@ for rule_dir in "$FIXTURES_DIR"/*/; do
             fi
         done
     fi
+
+    fix_dir="$rule_dir/Fix"
+    if [ -d "$fix_dir" ]; then
+        for sv_file in "$fix_dir"/case*.sv; do
+            [ -f "$sv_file" ] || continue
+
+            stem=$(basename "$sv_file" .sv)
+            case "$stem" in *.fixed) continue ;; esac
+
+            expected_file="${sv_file%.sv}.fixed.sv"
+            [ -f "$expected_file" ] || continue
+
+            tmp_file="/tmp/verihogg_fix_${rule_name}_${stem}.sv"
+            cp "$sv_file" "$tmp_file"
+
+            "$BINARY" --fix "$tmp_file" > /tmp/lint_out.txt 2>&1
+
+            if [ "$(cat "$tmp_file")" = "$(cat "$expected_file")" ]; then
+                PASS=$((PASS + 1))
+                printf "  PASS [fix]  %s\n" "$sv_file"
+            else
+                FAIL=$((FAIL + 1))
+                printf "  FAIL [fix mismatch]  %s\n" "$sv_file"
+                ERRORS="${ERRORS}\nFAIL Fix: $sv_file (output mismatch)"
+            fi
+
+            rm -f "$tmp_file"
+        done
+    fi
 done
 
 echo ""

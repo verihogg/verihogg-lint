@@ -210,7 +210,22 @@ void PrintRules() {
               << "      " << rule.description << "\n";
   }
 
+  for (const auto& rule : RuleInfo::fixableRules) {
+    std::cout << "\n  " << rule.idName << "\n"
+              << "      " << rule.description << "\n";
+  }
+
   for (const auto& rule : RuleInfo::globalRules) {
+    std::cout << "\n  " << rule.idName << "\n"
+              << "      " << rule.description << "\n";
+  }
+
+  for (const auto& rule : RuleInfo::fixableGlobalRules) {
+    std::cout << "\n  " << rule.idName << "\n"
+              << "      " << rule.description << "\n";
+  }
+
+  for (const auto& rule : RuleInfo::uhdmRules) {
     std::cout << "\n  " << rule.idName << "\n"
               << "      " << rule.description << "\n";
   }
