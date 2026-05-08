@@ -19,10 +19,6 @@
 #include <string_view>
 #include <vector>
 
-#include "fix/replacement.h"
-#include "fix/source_manager.h"
-#include "main/lint_diagnostics.h"
-
 namespace SL = SURELOG;
 
 namespace {
@@ -62,7 +58,13 @@ auto BuildSetOfAllSelectedRules() -> std::unordered_set<std::string_view> {
   for (auto& rule : RuleInfo::allRules) {
     set.insert(rule.idName);
   }
+  for (auto& rule : RuleInfo::fixableRules) {
+    set.insert(rule.idName);
+  }
   for (auto& rule : RuleInfo::globalRules) {
+    set.insert(rule.idName);
+  }
+  for (auto& rule : RuleInfo::fixableGlobalRules) {
     set.insert(rule.idName);
   }
   for (auto& rule : RuleInfo::uhdmRules) {
@@ -87,22 +89,6 @@ auto BuildSetOfSelectedRules(const std::filesystem::path& configFile)
 }
 
 }  // namespace
-
-struct FixableGlobalRule {
-  std::string_view name;
-  bool enabled = true;
-  std::function<std::vector<LintDiagnostic>(
-      SL::Design*, SL::ErrorContainer*, SL::SymbolTable*, FixSourceManager&)>
-      check;
-};
-
-const auto fixableGlobalRules = std::to_array<FixableGlobalRule>({
-    // clang-format off
-    {.name = "MethodOverrideArgumentName", .check = CheckMethodOverrideArgumentNameFixable},
-    // clang-format on
-});
-
-constexpr size_t AllFixableGlobalRulesSize = fixableGlobalRules.size();
 
 static void CommitDiags(std::vector<LintDiagnostic>& diags,
                         std::string_view ruleName, AutofixContext* autofix) {
@@ -148,15 +134,11 @@ void RunAllRules(const SL::FileContent* fileContent, SL::ErrorContainer* errors,
   }
 }
 
-static void RunFixableRulesOnFile(const SL::FileContent* fC,
-                                  SL::ErrorContainer* errors,
-                                  SL::SymbolTable* symbols,
-                                  const std::vector<FixableRule>& rules,
-                                  AutofixContext* autofix) {
-  if (fC == nullptr) {
-    return;
-  }
-
+static void RunFixableRulesOnFile(
+    const SL::FileContent* fC, SL::ErrorContainer* errors,
+    SL::SymbolTable* symbols,
+    const std::unordered_set<std::string_view>& ruleSet,
+    AutofixContext* autofix) {
   if (autofix != nullptr && autofix->source_mgr != nullptr) {
     if (!autofix->source_mgr->loadFile(fC->getFileId())) {
       std::cerr
@@ -169,8 +151,8 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
                              ? *autofix->source_mgr
                              : empty_sm;
 
-  for (const auto& rule : rules) {
-    if (!rule.enabled) {
+  for (const auto& rule : RuleInfo::fixableRules) {
+    if (ruleSet.find(rule.idName) == ruleSet.end() && rule.check != nullptr) {
       continue;
     }
 
@@ -178,28 +160,24 @@ static void RunFixableRulesOnFile(const SL::FileContent* fC,
     try {
       diags = rule.check(fC, errors, symbols, sm);
     } catch (const std::exception& e) {
-      std::cerr << "lint: rule [" << rule.name
+      std::cerr << "lint: rule [" << rule.idName
                 << "] threw exception: " << e.what()
                 << "\nlint: skipping rule for this file\n";
       continue;
     } catch (...) {
-      std::cerr << "lint: rule [" << rule.name
+      std::cerr << "lint: rule [" << rule.idName
                 << "] threw unknown exception; skipping\n";
       continue;
     }
 
-    CommitDiags(diags, rule.name, autofix);
+    CommitDiags(diags, rule.idName, autofix);
   }
 }
 
 static void RunFixableGlobalRules(
     SL::Design* design, SL::ErrorContainer* errors, SL::SymbolTable* symbols,
-    const std::array<FixableGlobalRule, AllFixableGlobalRulesSize>& rules,
+    const std::unordered_set<std::string_view>& ruleSet,
     AutofixContext* autofix) {
-  if (design == nullptr) {
-    return;
-  }
-
   FixSourceManager empty_sm;
   FixSourceManager& sm = (autofix != nullptr && autofix->source_mgr != nullptr)
                              ? *autofix->source_mgr
@@ -216,8 +194,8 @@ static void RunFixableGlobalRules(
     }
   }
 
-  for (const auto& rule : rules) {
-    if (!rule.enabled) {
+  for (const auto& rule : RuleInfo::fixableGlobalRules) {
+    if (ruleSet.find(rule.idName) == ruleSet.end() && rule.check != nullptr) {
       continue;
     }
 
@@ -225,23 +203,24 @@ static void RunFixableGlobalRules(
     try {
       diags = rule.check(design, errors, symbols, sm);
     } catch (const std::exception& e) {
-      std::cerr << "lint: rule [" << rule.name
+      std::cerr << "lint: rule [" << rule.idName
                 << "] threw exception: " << e.what()
                 << "\nlint: skipping rule\n";
       continue;
     } catch (...) {
-      std::cerr << "lint: rule [" << rule.name
+      std::cerr << "lint: rule [" << rule.idName
                 << "] threw unknown exception; skipping\n";
       continue;
     }
 
-    CommitDiags(diags, rule.name, autofix);
+    CommitDiags(diags, rule.idName, autofix);
   }
 }
 
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols,
-                         const std::filesystem::path& configFile, AutofixContext* autofix ) {
+                         const std::filesystem::path& configFile,
+                         AutofixContext* autofix) {
   if (design == nullptr) {
     return;
   }
@@ -253,8 +232,8 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
       continue;
     }
 
-    RunAllRules(fileContent, errors, symbols, kAllRules);
-    RunFixableRulesOnFile(fileContent, errors, symbols, kFixableRules, autofix);
+    RunAllRules(fileContent, errors, symbols, kRuleSet);
+    RunFixableRulesOnFile(fileContent, errors, symbols, kRuleSet, autofix);
   }
 
   for (const auto& rule : RuleInfo::globalRules) {
@@ -262,8 +241,9 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
       continue;
     }
     rule.check(design, errors, symbols);
-    RunFixableGlobalRules(design, errors, symbols, kFixableGlobalRules, autofix);
   }
+
+  RunFixableGlobalRules(design, errors, symbols, kRuleSet, autofix);
 
   for (const auto& rule : RuleInfo::uhdmRules) {
     if (kRuleSet.find(rule.idName) == kRuleSet.end() && rule.check != nullptr) {

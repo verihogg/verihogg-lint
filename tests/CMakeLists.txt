@@ -1,6 +1,7 @@
 add_executable(autofix_unit_tests
     unit/test_replacements.cpp
     unit/test_source_manager.cpp
+    unit/test_yaml_roundtrip.cpp
 )
 
 target_link_libraries(autofix_unit_tests PUBLIC verihoggLintLib)
@@ -17,6 +18,26 @@ target_include_directories(autofix_unit_tests
 
 include(GoogleTest)
 gtest_discover_tests(autofix_unit_tests)
+
+add_executable(autofix_check_test autofix_check.cpp)
+
+target_link_libraries(autofix_check_test PUBLIC verihoggLintLib)
+target_link_libraries(autofix_check_test PUBLIC gtest gtest_main)
+target_link_libraries(autofix_check_test PUBLIC ${GTEST_LIBRARY})
+
+target_include_directories(autofix_check_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
+
+target_compile_definitions(autofix_check_test PRIVATE
+  VERIHOGG_TEST_NON_STANDARD_ROOT="${NON_STANDARD_CHECK_ROOT}"
+)
+
+gtest_discover_tests(autofix_check_test)
 
 add_executable(class_checks_test $<TARGET_OBJECTS:verihoggLintLib> class_checks_test.cpp utils.cpp)
 

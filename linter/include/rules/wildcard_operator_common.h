@@ -12,6 +12,7 @@
 
 #include "fix/source_manager.h"
 #include "main/lint_diagnostics.h"
+#include "main/lint_rules.h"
 
 enum class WildcardOperatorKind : std::uint8_t {
   kUnknown = 0,
@@ -30,8 +31,10 @@ struct WildcardOpStrings {
   std::string_view correctOp;
 };
 
-auto CheckWildcardOperatorFixableImpl(
-    const SURELOG::FileContent* fileContent, SURELOG::ErrorContainer* errors,
-    SURELOG::SymbolTable* symbols, WildcardOperatorKind targetKind,
-    SURELOG::ErrorDefinition::ErrorType ruleId, WildcardOpStrings strings)
+auto CheckWildcardOperatorFixableImpl(const SURELOG::FileContent* fileContent,
+                                      SURELOG::ErrorContainer* errors,
+                                      SURELOG::SymbolTable* symbols,
+                                      WildcardOperatorKind targetKind,
+                                      verihogg_lint::LintId ruleId,
+                                      WildcardOpStrings strings)
     -> std::vector<LintDiagnostic>;

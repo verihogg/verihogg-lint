@@ -112,7 +112,7 @@ auto CheckWildcardOperatorFixableImpl(const SL::FileContent* fileContent,
                                       SL::ErrorContainer* errors,
                                       SL::SymbolTable* symbols,
                                       WildcardOperatorKind targetKind,
-                                      SL::ErrorDefinition::ErrorType ruleId,
+                                      verihogg_lint::LintId ruleId,
                                       WildcardOpStrings strings)
     -> std::vector<LintDiagnostic> {
   std::vector<LintDiagnostic> diags;

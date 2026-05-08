@@ -139,6 +139,63 @@ You can also pass multiple files or use wildcards:
 
 You can run `./build/bin/verihogg-lint --help` to see all available options.
 
+---
+
+## Autofix
+
+Several rules support automatic fix suggestions. The linter can apply them directly or export them for later review.
+
+### Fixable rules
+
+| Rule | Fix |
+|------|-----|
+| `CLASS_VARIABLE_LIFETIME` | Removes `automatic` keyword |
+| `TIME_VALUE` | Removes whitespace between number and time unit |
+| `EXPONENT_FORMAT_TIME_VALUE` | Converts exponent notation to plain integer (e.g. `1.0e6` → `1000000`) |
+| `WILDCARD_EQUALITY_OPERATOR` | Replaces `=?=` with `==?` |
+| `WILDCARD_INEQUALITY_OPERATOR` | Replaces `!?=` with `!=?` |
+| `TYPE_CASTING` | Inserts missing `'` before cast expression |
+| `ASSIGNMENT_PATTERN` | Replaces concatenation with assignment pattern `'{...}` |
+| `MULTIPLE_DOT_STAR_CONNECTIONS` | Removes duplicate `.*` port connections |
+| `VOID_CAST_OF_VOID_FUNCTION` | Removes `void'(...)` wrapper from void function calls |
+| `METHOD_OVERRIDE_ARGUMENT_NAME` | Renames mismatched argument names to match the prototype |
+
+### Autofix flags
+
+```
+--fix                         Apply all fixable suggestions in-place
+--fix-dry-run                 Print a diff to stdout without modifying files
+--show-suggestions            Print fix hints with before/after snippets
+--export-fixes=<file>         Export fixes to a YAML file without applying
+--apply-fixes-from=<file>     Apply fixes from a previously exported YAML file
+--backup-suffix=<suffix>      Save original files before --fix (e.g. --backup-suffix=.bak)
+```
+
+### Examples
+
+Apply fixes directly:
+```bash
+verihogg-lint --fix file.sv -nobuiltin
+```
+
+Preview changes without modifying files:
+```bash
+verihogg-lint --fix-dry-run file.sv -nobuiltin
+```
+
+Export fixes for review, then apply separately:
+```bash
+verihogg-lint --export-fixes=fixes.yaml file.sv -nobuiltin
+verihogg-lint --apply-fixes-from=fixes.yaml
+```
+
+Apply fixes with backup:
+```bash
+verihogg-lint --fix --backup-suffix=.bak file.sv -nobuiltin
+```
+
+---
+
 ## Testing
 
 You can launch local tests, which are build using GTest framework
