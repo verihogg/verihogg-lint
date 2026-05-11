@@ -148,9 +148,7 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "EXPONENT_FORMAT_TIME_VALUE",
      .description = "Unexpected exponent format for time value",
      .check = CheckExponentFormatTimeValue},
-    {.idName = "EXTEND_CLASS",
-     .description = "extending non existing class",
-     .check = CheckExtendClass},
+
     {.idName = "MODPORT_IMPORT_EXPORT_PORT",
      .description = "еxpected method name instead of interface signal name",
      .check = CheckModportImportExportPort},
@@ -338,6 +336,9 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "COVERPOINT_EXPRESSION_TYPE",
      .description = "Coverpoint expression should be of an integral data type",
      .check = CheckCoverpointExpressionType},
+    {.idName = "EXTEND_CLASS",
+     .description = "extending non existing class",
+     .check = CheckExtendClass},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();

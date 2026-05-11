@@ -33,7 +33,7 @@ auto BasePath() -> const fs::path {
 TEST(ExtendClassTest, NoError) {
   const fs::path tests_path{BasePath() / "ExtendClass" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckExtendClass);
+  global::CheckWithNoErrorsExpected(tests_path, CheckExtendClass);
 }
 
 TEST(ExtendClassTest, RaiseError) {
@@ -42,8 +42,8 @@ TEST(ExtendClassTest, RaiseError) {
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::COMP_UNDEFINED_BASE_CLASS};
 
-  test::CheckWithErrorsExpected(tests_path, verihogg_lint::LINT_EXTEND_CLASS,
-                                ignoreList, CheckExtendClass);
+  global::CheckWithErrorsExpected(tests_path, verihogg_lint::LINT_EXTEND_CLASS,
+                                  ignoreList, CheckExtendClass);
 }
 
 TEST(DuplicateClassTest, NoError) {
