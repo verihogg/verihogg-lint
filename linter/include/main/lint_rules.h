@@ -83,6 +83,7 @@ enum LintIdEnum : uint16_t {
   LINT_DUPLICATE_COVERPOINT,
   LINT_ILLEGAL_NET_DATATYPE,
   LINT_ILLEGAL_CUNIT_REFERENCE,
+  LINT_ILLEGAL_TYPE_REFERENCE,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -299,6 +300,8 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{.type = LINT_ILLEGAL_CUNIT_REFERENCE,
                  .text = "Explicit reference to compilation unit scope "
                          "'$unit::' is non-portable: %s"},
+    LintRuleInfo{.type = LINT_ILLEGAL_TYPE_REFERENCE,
+                 .text = "Illegal type reference in this context: %s"},
 };
 
 inline void RegisterLintRules() {

@@ -46,6 +46,7 @@
 #include "rules/hierarchical_interface_identifier.h"
 #include "rules/illegal_cunit_reference.h"
 #include "rules/illegal_net_datatype.h"
+#include "rules/illegal_type_reference.h"
 #include "rules/implement_class.h"
 #include "rules/implement_interface_class.h"
 #include "rules/implicit_data_type.h"
@@ -249,6 +250,9 @@ const auto allRules = std::to_array<Rule>({
      .description = "Explicit reference to compilation unit scope "
                     "'$unit::' is non-portable",
      .check = CheckIllegalCunitReference},
+    {.idName = "ILLEGAL_TYPE_REFERENCE",
+     .description = "Type used in context where it is forbidden by spec",
+     .check = CheckIllegalTypeReference},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
