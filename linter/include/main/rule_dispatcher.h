@@ -44,6 +44,7 @@
 #include "rules/function_implementation_return_type.h"
 #include "rules/function_implemention_scope.h"
 #include "rules/hierarchical_interface_identifier.h"
+#include "rules/illegal_cunit_reference.h"
 #include "rules/illegal_net_datatype.h"
 #include "rules/implement_class.h"
 #include "rules/implement_interface_class.h"
@@ -244,6 +245,10 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "ILLEGAL_NET_DATATYPE",
      .description = "Net declaration must use an integral data type",
      .check = CheckIllegalNetDatatype},
+    {.idName = "ILLEGAL_CUNIT_REFERENCE",
+     .description = "Explicit reference to compilation unit scope "
+                    "'$unit::' is non-portable",
+     .check = CheckIllegalCunitReference},
 });
 
 constexpr size_t AllRulesSize = allRules.size();

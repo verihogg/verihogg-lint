@@ -82,6 +82,7 @@ enum LintIdEnum : uint16_t {
   LINT_DUPLICATE_COVERGROUP,
   LINT_DUPLICATE_COVERPOINT,
   LINT_ILLEGAL_NET_DATATYPE,
+  LINT_ILLEGAL_CUNIT_REFERENCE,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -295,6 +296,9 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{.type = LINT_ILLEGAL_NET_DATATYPE,
                  .text = "Net '%s' has illegal data type "
                          "(real/string/chandle/event not allowed)"},
+    LintRuleInfo{.type = LINT_ILLEGAL_CUNIT_REFERENCE,
+                 .text = "Explicit reference to compilation unit scope "
+                         "'$unit::' is non-portable: %s"},
 };
 
 inline void RegisterLintRules() {

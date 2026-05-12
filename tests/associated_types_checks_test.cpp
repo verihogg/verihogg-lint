@@ -17,6 +17,7 @@
 #include <unordered_set>
 
 #include "main/lint_rules.h"
+#include "rules/illegal_cunit_reference.h"
 #include "rules/illegal_net_datatype.h"
 #include "utils/init.h"
 
@@ -113,6 +114,23 @@ TEST(IllegalNetDatatypeTest, RaiseError) {
   testCheckWithErrorsExpected(tests_path,
                               verihogg_lint::LINT_ILLEGAL_NET_DATATYPE,
                               ignoreList, CheckIllegalNetDatatype);
+}
+
+TEST(IllegalCunitReferenceTest, NoError) {
+  const fs::path tests_path{BasePath() / "IllegalCunitReference" / "NoError"};
+
+  testCheckWithNoErrorsExpected(tests_path, CheckIllegalCunitReference);
+}
+
+TEST(IllegalCunitReferenceTest, RaiseError) {
+  const fs::path tests_path{BasePath() / "IllegalCunitReference" /
+                            "RaiseError"};
+
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
+
+  testCheckWithErrorsExpected(tests_path,
+                              verihogg_lint::LINT_ILLEGAL_CUNIT_REFERENCE,
+                              ignoreList, CheckIllegalCunitReference);
 }
 
 }  // namespace
