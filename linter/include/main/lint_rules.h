@@ -81,6 +81,7 @@ enum LintIdEnum : uint16_t {
   LINT_DUPLICATE_COVER_CROSS,
   LINT_DUPLICATE_COVERGROUP,
   LINT_DUPLICATE_COVERPOINT,
+  LINT_ILLEGAL_NET_DATATYPE,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -291,6 +292,9 @@ inline constexpr std::array kLintRules = {
                  .text = "Duplicate covergroup name: %s"},
     LintRuleInfo{.type = LINT_DUPLICATE_COVERPOINT,
                  .text = "Duplicate coverpoint label: %s"},
+    LintRuleInfo{.type = LINT_ILLEGAL_NET_DATATYPE,
+                 .text = "Net '%s' has illegal data type "
+                         "(real/string/chandle/event not allowed)"},
 };
 
 inline void RegisterLintRules() {
