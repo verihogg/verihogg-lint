@@ -97,6 +97,22 @@ target_include_directories(cover_group_checks_test
     ${GTEST_INCLUDE_DIR}
 )
 
+add_executable(associated_types_checks_test $<TARGET_OBJECTS:verihoggLintLib> associated_types_checks_test.cpp)
+
+target_link_libraries(associated_types_checks_test PUBLIC verihoggLintLib)
+target_link_libraries(associated_types_checks_test PUBLIC gtest gtest_main)
+target_link_libraries(associated_types_checks_test PUBLIC ${GTEST_LIBRARY})
+
+target_include_directories(associated_types_checks_test
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/linter/include>
+    ${SURELOG_INCLUDE_DIR}
+    ${GTEST_INCLUDE_DIR}
+)
+
+gtest_discover_tests(associated_types_checks_test)
+
 include(GoogleTest)
 gtest_discover_tests(class_checks_test)
 gtest_discover_tests(non_standard_checks_test)
