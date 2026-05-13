@@ -44,13 +44,18 @@ auto TryParseInt(std::string_view sv) -> std::optional<int64_t> {
 }
 
 auto ParseRangeWidth(const SL::FileContent* fc, SL::NodeId dimNode) -> int32_t {
-  const SL::NodeId kRange =
+  SL::NodeId range =
       FindChildOfType(fc, dimNode, SL::VObjectType::paConstant_range);
-  if (!kRange) {
-    return -1;
+  if (!range) {
+    const auto ranges =
+        fc->sl_collect_all(dimNode, SL::VObjectType::paConstant_range);
+    if (ranges.empty()) {
+      return -1;
+    }
+    range = ranges.front();
   }
 
-  const SL::NodeId kLeft = fc->Child(kRange);
+  const SL::NodeId kLeft = fc->Child(range);
   if (!kLeft) {
     return -1;
   }
@@ -84,8 +89,8 @@ auto ParseRangeWidth(const SL::FileContent* fc, SL::NodeId dimNode) -> int32_t {
   return static_cast<int32_t>(hi - lo + 1);
 }
 
-auto CountStructMembers(const SL::FileContent* fc, SL::NodeId structNode)
-    -> int32_t {
+auto CountStructMembers(const SL::FileContent* fc,
+                        SL::NodeId structNode) -> int32_t {
   const SL::NodeId kDataType = fc->Parent(structNode);
   if (!kDataType) {
     return -1;
@@ -122,22 +127,52 @@ auto FindStructByTypeName(const SL::FileContent* fc, SL::NodeId root,
   return SL::InvalidNodeId;
 }
 
+auto ParseDimSize(const SL::FileContent* fc, SL::NodeId dimNode) -> int32_t {
+  const int32_t kRange = ParseRangeWidth(fc, dimNode);
+  if (kRange >= 0) {
+    return kRange;
+  }
+  for (const auto& kI :
+       fc->sl_collect_all(dimNode, SL::VObjectType::slIntConst)) {
+    const auto val = TryParseInt(fc->SymName(kI));
+    if (val) {
+      return static_cast<int32_t>(*val);
+    }
+  }
+  return -1;
+}
+
+auto FindUnpackedDim(const SL::FileContent* fc,
+                     SL::NodeId nameNode) -> SL::NodeId {
+  const SL::NodeId kUnpacked =
+      FindSiblingOfType(fc, nameNode, SL::VObjectType::paUnpacked_dimension);
+  if (kUnpacked) {
+    return kUnpacked;
+  }
+  return FindSiblingOfType(fc, nameNode, SL::VObjectType::paVariable_dimension);
+}
+
 auto ExpectedCount(const SL::FileContent* fc, SL::NodeId moduleRoot,
                    std::string_view varName) -> int32_t {
   const SL::NodeId kFileRoot = fc->getRootNode();
 
   auto checkDecl = [&](SL::NodeId decl, SL::VObjectType assignType) -> int32_t {
-    bool found = false;
+    SL::NodeId matchedName = SL::InvalidNodeId;
     for (const auto& kAssign : fc->sl_collect_all(decl, assignType)) {
       const SL::NodeId kName = fc->Child(kAssign);
       if (kName && fc->Type(kName) == SL::VObjectType::slStringConst &&
           fc->SymName(kName) == varName) {
-        found = true;
+        matchedName = kName;
         break;
       }
     }
-    if (!found) {
+    if (!matchedName) {
       return -1;
+    }
+
+    const SL::NodeId kUnpackedDim = FindUnpackedDim(fc, matchedName);
+    if (kUnpackedDim) {
+      return ParseDimSize(fc, kUnpackedDim);
     }
 
     const auto structs =
