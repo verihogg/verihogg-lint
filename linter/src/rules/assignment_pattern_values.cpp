@@ -89,8 +89,8 @@ auto ParseRangeWidth(const SL::FileContent* fc, SL::NodeId dimNode) -> int32_t {
   return static_cast<int32_t>(hi - lo + 1);
 }
 
-auto CountStructMembers(const SL::FileContent* fc,
-                        SL::NodeId structNode) -> int32_t {
+auto CountStructMembers(const SL::FileContent* fc, SL::NodeId structNode)
+    -> int32_t {
   const SL::NodeId kDataType = fc->Parent(structNode);
   if (!kDataType) {
     return -1;
@@ -142,8 +142,8 @@ auto ParseDimSize(const SL::FileContent* fc, SL::NodeId dimNode) -> int32_t {
   return -1;
 }
 
-auto FindUnpackedDim(const SL::FileContent* fc,
-                     SL::NodeId nameNode) -> SL::NodeId {
+auto FindUnpackedDim(const SL::FileContent* fc, SL::NodeId nameNode)
+    -> SL::NodeId {
   const SL::NodeId kUnpacked =
       FindSiblingOfType(fc, nameNode, SL::VObjectType::paUnpacked_dimension);
   if (kUnpacked) {
