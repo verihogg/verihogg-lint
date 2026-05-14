@@ -52,6 +52,23 @@ auto GetModuleVariables(const SL::FileContent* fileContent)
   for (SL::NodeId const kVarDeclId :
        fileContent->sl_collect_all(fileContent->getRootNode(),
                                    SL::VObjectType::paVariable_declaration)) {
+    bool packageScoped = false;
+    for (SL::NodeId p = fileContent->Parent(kVarDeclId); p;
+         p = fileContent->Parent(p)) {
+      SL::VObjectType const kPType = fileContent->Type(p);
+      if (kPType == SL::VObjectType::paClass_declaration ||
+          kPType == SL::VObjectType::paModule_declaration) {
+        break;
+      }
+      if (kPType == SL::VObjectType::paPackage_declaration) {
+        packageScoped = true;
+        break;
+      }
+    }
+    if (packageScoped) {
+      continue;
+    }
+
     for (SL::NodeId const kAssignId : fileContent->sl_collect_all(
              kVarDeclId, SL::VObjectType::paVariable_decl_assignment, false)) {
       SL::NodeId const kNameNode = fileContent->Child(kAssignId);
@@ -114,7 +131,7 @@ void CheckBinsInCoverpoint(
   for (SL::NodeId const kBinsOptId : fileContent->sl_collect_all(
            coverpointNode, SL::VObjectType::paBins_or_options, false)) {
     bool foundBinType = false;
-    std::string_view binName = "unknown";
+    SL::NodeId binNameNode = SL::InvalidNodeId;
 
     for (SL::NodeId node = fileContent->Child(kBinsOptId); node;
          node = fileContent->Sibling(node)) {
@@ -128,14 +145,20 @@ void CheckBinsInCoverpoint(
       }
 
       if (foundBinType && kType == SL::VObjectType::slStringConst &&
-          binName == "<unknown>") {
-        binName = fileContent->SymName(node);
+          binNameNode == SL::InvalidNodeId) {
+        binNameNode = node;
         continue;
       }
     }
 
-    CheckIdentifiersRecursive(fileContent, kBinsOptId, allowedArgs, moduleVars,
-                              errors, symbols);
+    for (SL::NodeId child = fileContent->Child(kBinsOptId); child;
+         child = fileContent->Sibling(child)) {
+      if (child == binNameNode) {
+        continue;
+      }
+      CheckIdentifiersRecursive(fileContent, child, allowedArgs, moduleVars,
+                                errors, symbols);
+    }
   }
 }
 }  // namespace

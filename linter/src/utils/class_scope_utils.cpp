@@ -23,6 +23,20 @@ constexpr std::array kScopeContainerTypes = {
     SL::VObjectType::paPackage_declaration,
     SL::VObjectType::paModule_declaration,
 };
+auto GetClassKeyword(const SL::FileContent* fileContent, SL::NodeId classDecl)
+    -> SL::NodeId {
+  SL::NodeId kw = fileContent->Child(classDecl);
+  if (!kw) {
+    return SL::InvalidNodeId;
+  }
+  if (fileContent->Type(kw) == SL::VObjectType::paVIRTUAL) {
+    kw = fileContent->Sibling(kw);
+  }
+  if (!kw || fileContent->Type(kw) != SL::VObjectType::paCLASS) {
+    return SL::InvalidNodeId;
+  }
+  return kw;
+}
 }  // namespace
 
 auto FindScopeContainer(const SL::FileContent* fileContent, SL::NodeId node)
@@ -91,8 +105,8 @@ auto BuildClassScopeMap(const SL::FileContent* fileContent)
 
   for (SL::NodeId const kClassDecl : fileContent->sl_collect_all(
            kRoot, SL::VObjectType::paClass_declaration)) {
-    SL::NodeId const kClassKw = fileContent->Child(kClassDecl);
-    if (!kClassKw || fileContent->Type(kClassKw) != SL::VObjectType::paCLASS) {
+    SL::NodeId const kClassKw = GetClassKeyword(fileContent, kClassDecl);
+    if (!kClassKw) {
       continue;
     }
     SL::NodeId const kClassNameNode = fileContent->Sibling(kClassKw);
@@ -128,8 +142,8 @@ auto CollectClassDeclInfos(const SL::FileContent* fileContent)
 
   for (SL::NodeId const kClassDecl : fileContent->sl_collect_all(
            kRoot, SL::VObjectType::paClass_declaration)) {
-    SL::NodeId const kClassKw = fileContent->Child(kClassDecl);
-    if (!kClassKw || fileContent->Type(kClassKw) != SL::VObjectType::paCLASS) {
+    SL::NodeId const kClassKw = GetClassKeyword(fileContent, kClassDecl);
+    if (!kClassKw) {
       continue;
     }
     SL::NodeId const kClassNameNode = fileContent->Sibling(kClassKw);
@@ -199,11 +213,12 @@ auto ExtractClassScopedMember(const SL::FileContent* fileContent,
 
 auto ScopesMatch(const ClassScopeInfo& implScope,
                  const ClassScopeInfo& classScope) -> bool {
+  if (implScope.scopeType == SL::VObjectType::paSource_text &&
+      classScope.scopeType == SL::VObjectType::paSource_text) {
+    return true;
+  }
   if (implScope.scopeType != classScope.scopeType) {
     return false;
-  }
-  if (implScope.scopeType == SL::VObjectType::paSource_text) {
-    return true;
   }
   return implScope.scopeName == classScope.scopeName;
 }
@@ -220,8 +235,8 @@ auto MakeClassMethodKey(std::string_view className, std::string_view funcName)
 
 auto GetClassNameFromDecl(const SL::FileContent* fc, SL::NodeId classDecl)
     -> std::string_view {
-  SL::NodeId const kClassKw = fc->Child(classDecl);
-  if (!kClassKw || fc->Type(kClassKw) != SL::VObjectType::paCLASS) {
+  SL::NodeId const kClassKw = GetClassKeyword(fc, classDecl);
+  if (!kClassKw) {
     return {};
   }
   SL::NodeId const kNameNode = fc->Sibling(kClassKw);

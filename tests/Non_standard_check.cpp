@@ -569,10 +569,6 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
        .expected_error = verihogg_lint::LINT_REPETITION_IN_SEQUENCE,
        .check = CheckRepetitionInSequence,
        .ignore_errors = {}},
-      {.folder = "CoverpointExpressionType",
-       .expected_error = verihogg_lint::LINT_COVERPOINT_EXPRESSION_TYPE,
-       .check = CheckCoverpointExpressionType,
-       .ignore_errors = {}},
       {.folder = "CovergroupExpression",
        .expected_error = verihogg_lint::LINT_COVERGROUP_EXPRESSION,
        .check = CheckCovergroupExpression,
@@ -739,6 +735,10 @@ auto GlobalRuleSpecs() -> const std::vector<RuleSpecGlobal>& {
        .expected_error =
            verihogg_lint::LINT_METHOD_IMPLEMENTATION_ARGUMENT_TYPE,
        .check = CheckMethodImplementationArgumentType,
+       .ignore_errors = {}},
+      {.folder = "CoverpointExpressionType",
+       .expected_error = verihogg_lint::LINT_COVERPOINT_EXPRESSION_TYPE,
+       .check = CheckCoverpointExpressionType,
        .ignore_errors = {}},
   };
   return specs;

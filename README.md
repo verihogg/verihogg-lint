@@ -5,8 +5,6 @@ The project is intended for static code analysis and checking compliance with co
 
 ---
 
-=======
->>>>>>> 64f7e7f (Change Documentation)
 ## Project structure
 
 - `linter/src` – implementation of linter rules.  

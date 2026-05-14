@@ -40,16 +40,21 @@ void CheckRepetitionInSequence(const SL::FileContent* fileContent,
              .empty();
 
     if (hasGoto || hasNonConsecutive) {
-      std::string_view name = "<unknown>";
+      std::string_view name;
 
       SL::NodeId parent = kSeqExprId;
       while (parent) {
-        if (fileContent->Type(parent) ==
-            SL::VObjectType::paProperty_declaration) {
+        SL::VObjectType const kPType = fileContent->Type(parent);
+        if (kPType == SL::VObjectType::paProperty_declaration ||
+            kPType == SL::VObjectType::paSequence_declaration) {
           name = ExtractName(fileContent, parent);
           break;
         }
         parent = fileContent->Parent(parent);
+      }
+
+      if (name.empty()) {
+        continue;
       }
 
       ReportError(fileContent, kSeqExprId, name,

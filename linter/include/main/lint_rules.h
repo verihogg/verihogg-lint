@@ -129,8 +129,8 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{.type = LINT_PROTOTYPE_RETURN_DATA_TYPE,
                  .text = "Function prototype \"%s\" missing return data type"},
     LintRuleInfo{.type = LINT_REPETITION_IN_SEQUENCE,
-                 .text = "sequence \"%s\" uses both goto '[->]' and "
-                         "non-consecutive '[=]' repetitions"},
+                 .text = "sequence \"%s\": goto repeat '[->]' and "
+                         "non-consecutive repeat '[=]' operators not allowed"},
     LintRuleInfo{.type = LINT_FATAL_SYSTEM_TASK_FIRST_ARGUMENT,
                  .text = "$fatal system call violation: %s"},
     LintRuleInfo{

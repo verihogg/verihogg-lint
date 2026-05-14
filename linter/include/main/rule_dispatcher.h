@@ -138,9 +138,6 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "MULTIPLE_BINS",
      .description = "Specification of multiple bins dimension not allowed",
      .check = CheckMultipleBins},
-    {.idName = "COVERPOINT_EXPRESSION_TYPE",
-     .description = "Coverpoint expression should be of an integral data type",
-     .check = CheckCoverpointExpressionType},
     {.idName = "DPI_DECLARATION_STRING",
      .description = R"(Expecting "DPI" or "DPI-C")",
      .check = CheckDpiDeclarationString},
@@ -224,7 +221,9 @@ const auto allRules = std::to_array<Rule>({
      .description = "Expecting return data type or void for function prototype",
      .check = CheckPrototypeReturnDataType},
     {.idName = "REPETITION_IN_SEQUENCE",
-     .description = "Goto '[-> and non-consecutive '[= operators not allowed",
+     .description =
+         "Goto repeat '[->]' and non-consecutive repeat '[=]' operators not "
+         "allowed",
      .check = CheckRepetitionInSequence},
     {.idName = "SCALAR_ASSIGNMENT_PATTERN",
      .description = "Variable of 1-bit scalar type not allowed as assignment "
@@ -341,6 +340,9 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "DUPLICATE_COVERPOINT",
      .description = "Duplicate coverpoint #, already declared at line # file #",
      .check = CheckDuplicateCoverpoint},
+    {.idName = "COVERPOINT_EXPRESSION_TYPE",
+     .description = "Coverpoint expression should be of an integral data type",
+     .check = CheckCoverpointExpressionType},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
