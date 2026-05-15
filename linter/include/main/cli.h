@@ -8,7 +8,7 @@
 
 namespace cli {
 
-inline constexpr const char* kVersion = "0.1.0";
+inline constexpr const char* kVersion = "0.2.0";
 
 struct Options {
   bool dump_config = false;
