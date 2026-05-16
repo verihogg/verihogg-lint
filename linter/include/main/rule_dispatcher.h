@@ -47,6 +47,7 @@
 #include "rules/illegal_cunit_reference.h"
 #include "rules/illegal_net_datatype.h"
 #include "rules/illegal_type_reference.h"
+#include "rules/illegal_type_reference_uhdm.h"
 #include "rules/implement_class.h"
 #include "rules/implement_interface_class.h"
 #include "rules/implicit_data_type.h"
@@ -362,6 +363,10 @@ const auto uhdmRules = std::to_array<UhdmRule>({
     {.idName = "FATAL_SYSTEM_TASK_FIRST_ARGUMENT",
      .description = "$fatal system call violation",
      .check = CheckFatalSyscall},
+    {.idName = "ILLEGAL_TYPE_REFERENCE_UHDM",
+     .description =
+         "Type used in context where it is forbidden by spec (UHDM-resolved)",
+     .check = CheckIllegalTypeReferenceUhdm},
 });
 
 constexpr size_t AllUhdmRulesSize = uhdmRules.size();

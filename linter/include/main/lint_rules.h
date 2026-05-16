@@ -84,6 +84,7 @@ enum LintIdEnum : uint16_t {
   LINT_ILLEGAL_NET_DATATYPE,
   LINT_ILLEGAL_CUNIT_REFERENCE,
   LINT_ILLEGAL_TYPE_REFERENCE,
+  LINT_ILLEGAL_TYPE_REFERENCE_UHDM,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -94,6 +95,7 @@ class LintId {
 
   /*implicit*/ constexpr operator LintIdEnum() const { return e; }
   /*implicit*/ constexpr operator ED::ErrorType() const {
+    // NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange)
     return static_cast<ED::ErrorType>(e);
   }
   // NOLINTEND(google-explicit-constructor, hicpp-explicit-conversions)
@@ -301,6 +303,8 @@ inline constexpr std::array kLintRules = {
                  .text = "Explicit reference to compilation unit scope "
                          "'$unit::' is non-portable: %s"},
     LintRuleInfo{.type = LINT_ILLEGAL_TYPE_REFERENCE,
+                 .text = "Illegal type reference in this context: %s"},
+    LintRuleInfo{.type = LINT_ILLEGAL_TYPE_REFERENCE_UHDM,
                  .text = "Illegal type reference in this context: %s"},
 };
 
