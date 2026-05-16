@@ -6,6 +6,7 @@
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <gtest/gtest.h>
+#include <uhdm/vpi_user.h>
 
 #include <array>
 #include <exception>
@@ -20,6 +21,7 @@
 #include "rules/illegal_cunit_reference.h"
 #include "rules/illegal_net_datatype.h"
 #include "rules/illegal_type_reference.h"
+#include "rules/illegal_type_reference_uhdm.h"
 #include "utils/init.h"
 
 namespace SL = SURELOG;
@@ -48,6 +50,27 @@ auto getFileContentFromPath(const fs::path& path, SL::ErrorContainer* errors,
     const auto compiler = start_compiler(clp.get());
     const auto vec = get_design(compiler)->getAllFileContents();
     return vec.at(0).second;
+  } catch (const std::exception& e) {
+    std::cerr << "Compiler error: " << e.what() << '\n';
+    return nullptr;
+  }
+}
+
+auto getUhdmDesignFromPath(const fs::path& path, SL::ErrorContainer* errors,
+                           SL::SymbolTable* symbols) -> vpiHandle {
+  const auto clp = std::make_unique<SURELOG::CommandLineParser>(errors, symbols,
+                                                                false, false);
+  InitCommandLineParser(clp.get());
+
+  const std::string path_str = path.string();
+  std::array<const char*, 2> argv = {"", path_str.c_str()};
+  if (!clp->parseCommandLine(2, argv.data())) {
+    std::cerr << "Can't parse command line" << "\n";
+  }
+
+  try {
+    const auto compiler = start_compiler(clp.get());
+    return get_uhdm_design(compiler);
   } catch (const std::exception& e) {
     std::cerr << "Compiler error: " << e.what() << '\n';
     return nullptr;
@@ -84,6 +107,53 @@ void testCheckWithErrorsExpected(
     const SL::FileContent* fC =
         getFileContentFromPath(file_path, errors.get(), symbols.get());
     check_func(fC, errors.get(), symbols.get());
+    errors->printMessages();
+
+    auto errorVector = errors.get()->getErrors();
+    ASSERT_NE(errorVector.size(), 0);
+    bool hasError = false;
+    for (auto& error : errorVector) {
+      const SURELOG::ErrorDefinition::ErrorType type = error.getType();
+      if (ignoreList.count(type) > 0) {
+        continue;
+      }
+      hasError = true;
+      ASSERT_EQ(type, errorIdExpected);
+    }
+    ASSERT_EQ(hasError, true);
+  }
+}
+
+void testUhdmCheckWithNoErrorsExpected(
+    const fs::path& tests_path,
+    const std::function<void(const vpiHandle&, SL::ErrorContainer*,
+                             SL::SymbolTable*)>& check_func) {
+  for (auto& file_path : fs::directory_iterator{tests_path}) {
+    std::cout << "TESTING FILE:" << file_path << "\n";
+    auto symbols = std::make_unique<SURELOG::SymbolTable>();
+    auto errors = std::make_unique<SURELOG::ErrorContainer>(symbols.get());
+
+    const vpiHandle uhdmDesign =
+        getUhdmDesignFromPath(file_path, errors.get(), symbols.get());
+    check_func(uhdmDesign, errors.get(), symbols.get());
+    errors->printMessages();
+    ASSERT_EQ(errors.get()->getErrors().size(), 0);
+  }
+}
+
+void testUhdmCheckWithErrorsExpected(
+    const fs::path& tests_path, verihogg_lint::LintId errorIdExpected,
+    const std::unordered_set<SURELOG::ErrorDefinition::ErrorType>& ignoreList,
+    const std::function<void(const vpiHandle&, SL::ErrorContainer*,
+                             SL::SymbolTable*)>& check_func) {
+  for (auto& file_path : fs::directory_iterator{tests_path}) {
+    std::cout << "TESTING FILE:" << file_path << "\n";
+    auto symbols = std::make_unique<SURELOG::SymbolTable>();
+    auto errors = std::make_unique<SURELOG::ErrorContainer>(symbols.get());
+
+    const vpiHandle uhdmDesign =
+        getUhdmDesignFromPath(file_path, errors.get(), symbols.get());
+    check_func(uhdmDesign, errors.get(), symbols.get());
     errors->printMessages();
 
     auto errorVector = errors.get()->getErrors();
@@ -148,6 +218,24 @@ TEST(IllegalTypeReferenceTest, RaiseError) {
   testCheckWithErrorsExpected(tests_path,
                               verihogg_lint::LINT_ILLEGAL_TYPE_REFERENCE,
                               ignoreList, CheckIllegalTypeReference);
+}
+
+TEST(IllegalTypeReferenceUhdmTest, NoError) {
+  const fs::path tests_path{BasePath() / "IllegalTypeReferenceUhdm" /
+                            "NoError"};
+
+  testUhdmCheckWithNoErrorsExpected(tests_path, CheckIllegalTypeReferenceUhdm);
+}
+
+TEST(IllegalTypeReferenceUhdmTest, RaiseError) {
+  const fs::path tests_path{BasePath() / "IllegalTypeReferenceUhdm" /
+                            "RaiseError"};
+
+  const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
+
+  testUhdmCheckWithErrorsExpected(
+      tests_path, verihogg_lint::LINT_ILLEGAL_TYPE_REFERENCE_UHDM, ignoreList,
+      CheckIllegalTypeReferenceUhdm);
 }
 
 }  // namespace

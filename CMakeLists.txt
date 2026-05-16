@@ -220,6 +220,7 @@ set(LINTER_SRC
     linter/src/rules/illegal_net_datatype.cpp
     linter/src/rules/illegal_cunit_reference.cpp
     linter/src/rules/illegal_type_reference.cpp
+    linter/src/rules/illegal_type_reference_uhdm.cpp
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})
