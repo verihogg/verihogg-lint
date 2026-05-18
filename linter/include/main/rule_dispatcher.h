@@ -156,10 +156,6 @@ const auto allRules = std::to_array<Rule>({
      .description = "еxpected singular data type for event control expression "
                     "instead of type",
      .check = CheckEventControlExpression},
-    {.idName = "EXTEND_INTERFACE_CLASS",
-     .description =
-         "extending interface class by non-interface class not allowed",
-     .check = CheckExtendInterfaceClass},
     {.idName = "EXTERN_CONSTRAINT_UNDECLARED",
      .description = "outer class constraint was not declared extern",
      .check = CheckExternConstraintUndeclared},
@@ -339,6 +335,10 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "EXTEND_CLASS",
      .description = "extending non existing class",
      .check = CheckExtendClass},
+    {.idName = "EXTEND_INTERFACE_CLASS",
+     .description =
+         "extending interface class by non-interface class not allowed",
+     .check = CheckExtendInterfaceClass},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();

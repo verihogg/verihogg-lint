@@ -16,6 +16,7 @@
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
+#include "utils/design_utils.h"
 #include "utils/location_utils.h"
 
 namespace {
@@ -39,63 +40,76 @@ auto GetSuperclassStringsFromInterfaceClasses(
 }
 }  // namespace
 
-void CheckExtendInterfaceClass(const SURELOG::FileContent* fileContent,
+void CheckExtendInterfaceClass(SURELOG::Design* design,
                                SURELOG::ErrorContainer* errors,
                                SURELOG::SymbolTable* symbols) {
-  if (fileContent == nullptr) {
+  if (design == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
-
-  const SURELOG::NodeId kRootNode = fileContent->getRootNode();
-  const std::vector<SURELOG::NodeId> kInterfaceClassDeclarations =
-      fileContent->sl_collect_all(
-          kRootNode, SURELOG::VObjectType::paInterface_class_declaration);
-
   std::map<std::string, std::vector<SURELOG::NodeId>> interfaceClassMap;
-  for (const auto& node : kInterfaceClassDeclarations) {
-    const std::string kClassName = GetStringConst(fileContent, node);
-    interfaceClassMap[kClassName].push_back(node);
-  }
+  DesignUtils::ForEachFileContent(
+      design, [&](const SL::FileContent* fileContent) {
+        const SURELOG::NodeId kRootNode = fileContent->getRootNode();
+        const std::vector<SURELOG::NodeId> kInterfaceClassDeclarations =
+            fileContent->sl_collect_all(
+                kRootNode, SURELOG::VObjectType::paInterface_class_declaration);
 
-  for (const auto& interfaceId : kInterfaceClassDeclarations) {
-    const std::string className = GetStringConst(fileContent, interfaceId);
-    const std::string kMainPrefix = GetPrefix(fileContent, interfaceId);
-    const std::vector<std::string> kSuperclasses =
-        GetSuperclassStringsFromInterfaceClasses(fileContent, interfaceId);
-
-    for (const auto& superclassName : kSuperclasses) {
-      if (IsBuiltinClass(className) || superclassName == "") {
-        continue;
-      }
-
-      const SURELOG::NodeId kExtendsId =
-          fileContent->sl_get(interfaceId, SURELOG::VObjectType::paEXTENDS);
-      if (!kExtendsId) {
-        continue;
-      }
-
-      const std::vector<SURELOG::NodeId> kSuperIdVector =
-          interfaceClassMap[superclassName];
-      bool found = false;
-      for (const auto& superId : kSuperIdVector) {
-        const std::string kSuperPrefix = GetPrefix(fileContent, superId);
-
-        const size_t kSuperSize = kSuperPrefix.size();
-        const size_t kMainSize = kSuperPrefix.size();
-        if (kSuperSize <= kMainSize &&
-            std::string_view(kMainPrefix).substr(0, kSuperSize) ==
-                kSuperPrefix) {
-          found = true;
-          break;
+        for (const auto& node : kInterfaceClassDeclarations) {
+          const std::string kClassName = GetStringConst(fileContent, node);
+          interfaceClassMap[kClassName].push_back(node);
         }
-      }
+      });
 
-      if (found) {
-        continue;
-      }
+  DesignUtils::ForEachFileContent(
 
-      ReportError(fileContent, interfaceId, className,
-                  verihogg_lint::LINT_EXTEND_INTERFACE_CLASS, errors, symbols);
-    }
-  }
+      design, [&](const SL::FileContent* fileContent) {
+        const SURELOG::NodeId kRootNode = fileContent->getRootNode();
+        const std::vector<SURELOG::NodeId> kInterfaceClassDeclarations =
+            fileContent->sl_collect_all(
+                kRootNode, SURELOG::VObjectType::paInterface_class_declaration);
+        for (const auto& interfaceId : kInterfaceClassDeclarations) {
+          const std::string className =
+              GetStringConst(fileContent, interfaceId);
+          const std::string kMainPrefix = GetPrefix(fileContent, interfaceId);
+          const std::vector<std::string> kSuperclasses =
+              GetSuperclassStringsFromInterfaceClasses(fileContent,
+                                                       interfaceId);
+
+          for (const auto& superclassName : kSuperclasses) {
+            if (IsBuiltinClass(className) || superclassName == "") {
+              continue;
+            }
+
+            const SURELOG::NodeId kExtendsId = fileContent->sl_get(
+                interfaceId, SURELOG::VObjectType::paEXTENDS);
+            if (!kExtendsId) {
+              continue;
+            }
+
+            const std::vector<SURELOG::NodeId> kSuperIdVector =
+                interfaceClassMap[superclassName];
+            bool found = false;
+            for (const auto& superId : kSuperIdVector) {
+              const std::string kSuperPrefix = GetPrefix(fileContent, superId);
+
+              const size_t kSuperSize = kSuperPrefix.size();
+              const size_t kMainSize = kSuperPrefix.size();
+              if (kSuperSize <= kMainSize &&
+                  std::string_view(kMainPrefix).substr(0, kSuperSize) ==
+                      kSuperPrefix) {
+                found = true;
+                break;
+              }
+            }
+
+            if (found) {
+              continue;
+            }
+
+            ReportError(fileContent, interfaceId, className,
+                        verihogg_lint::LINT_EXTEND_INTERFACE_CLASS, errors,
+                        symbols);
+          }
+        }
+      });
 }

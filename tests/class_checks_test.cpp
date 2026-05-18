@@ -135,7 +135,7 @@ TEST(ExternTaskUndeclaredTest, RaiseError) {
 TEST(ExtendInterfaceClassTest, NoError) {
   const fs::path tests_path{BasePath() / "ExtendInterfaceClass" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckExtendInterfaceClass);
+  global::CheckWithNoErrorsExpected(tests_path, CheckExtendInterfaceClass);
 }
 
 TEST(ExtendInterfaceClassTest, RaiseError) {
@@ -145,9 +145,9 @@ TEST(ExtendInterfaceClassTest, RaiseError) {
       SURELOG::ErrorDefinition::COMP_UNDEFINED_BASE_CLASS,
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
-  test::CheckWithErrorsExpected(tests_path,
-                                verihogg_lint::LINT_EXTEND_INTERFACE_CLASS,
-                                ignoreList, CheckExtendInterfaceClass);
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_EXTEND_INTERFACE_CLASS,
+                                  ignoreList, CheckExtendInterfaceClass);
 }
 
 TEST(ImplementClassTest, NoError) {
