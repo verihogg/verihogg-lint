@@ -185,20 +185,24 @@ auto GetFullName(const SL::FileContent* fileContent, SL::NodeId node)
   return kPrefix + kName;
 }
 
-auto GetClassIds(const SL::FileContent* fileContent)
+auto GetClassIds(SL::Design* design)
     -> std::unordered_map<std::string, SL::NodeId> {
-  const std::vector<SL::NodeId> kClassDeclarations =
-      fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  SL::VObjectType::paClass_declaration);
   std::unordered_map<std::string, SL::NodeId> classes;
 
-  for (const SL::NodeId classId : kClassDeclarations) {
-    const std::string kClassName = GetFullName(fileContent, classId);
-    if (IsBuiltinClass(kClassName)) {
-      continue;
-    }
-    classes[kClassName] = classId;
-  }
+  DesignUtils::ForEachFileContent(
+      design, [&](const SL::FileContent* fileContent) {
+        const std::vector<SL::NodeId> kClassDeclarations =
+            fileContent->sl_collect_all(fileContent->getRootNode(),
+                                        SL::VObjectType::paClass_declaration);
+
+        for (const SL::NodeId classId : kClassDeclarations) {
+          const std::string kClassName = GetFullName(fileContent, classId);
+          if (IsBuiltinClass(kClassName)) {
+            continue;
+          }
+          classes[kClassName] = classId;
+        }
+      });
   return classes;
 }
 

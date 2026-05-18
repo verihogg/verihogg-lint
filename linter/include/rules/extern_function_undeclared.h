@@ -2,6 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-void CheckExternFunctionUndeclared(const SURELOG::FileContent* fileContent,
+void CheckExternFunctionUndeclared(SURELOG::Design* design,
                                    SURELOG::ErrorContainer* errors,
                                    SURELOG::SymbolTable* symbols);

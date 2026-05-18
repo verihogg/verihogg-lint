@@ -17,6 +17,7 @@
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
+#include "utils/design_utils.h"
 #include "utils/location_utils.h"
 
 namespace {
@@ -153,54 +154,60 @@ auto DependencyGraph::FindCyclicDependencies() -> std::unordered_set<unsigned> {
 
 }  // namespace
 
-void CheckCircularInheritance(const SURELOG::FileContent* fileContent,
+void CheckCircularInheritance(SURELOG::Design* design,
                               SURELOG::ErrorContainer* errors,
                               SURELOG::SymbolTable* symbols) {
-  if (fileContent == nullptr) {
+  if (design == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
 
   DependencyGraph dependencyGraph;
   const std::unordered_map<std::string, SURELOG::NodeId> kClassSet =
-      GetClassIds(fileContent);
+      GetClassIds(design);
+  DesignUtils::ForEachFileContent(
+      design, [&](const SL::FileContent* fileContent) {
+        const std::vector<SURELOG::NodeId> kClassDeclarations =
+            fileContent->sl_collect_all(
+                fileContent->getRootNode(),
+                SURELOG::VObjectType::paClass_declaration);
 
-  const std::vector<SURELOG::NodeId> kClassDeclarations =
-      fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  SURELOG::VObjectType::paClass_declaration);
+        for (const auto& classId : kClassDeclarations) {
+          const std::string kClassName = GetStringConst(fileContent, classId);
+          if (IsBuiltinClass(kClassName)) {
+            continue;
+          }
 
-  for (const auto& classId : kClassDeclarations) {
-    const std::string kClassName = GetStringConst(fileContent, classId);
-    if (IsBuiltinClass(kClassName)) {
-      continue;
-    }
+          if (!dependencyGraph.AddVertex(classId)) {
+            throw std::runtime_error("Failed to add vertex: " +
+                                     std::to_string(sizeof(classId)));
+          }
 
-    if (!dependencyGraph.AddVertex(classId)) {
-      throw std::runtime_error("Failed to add vertex: " +
-                               std::to_string(sizeof(classId)));
-    }
+          const std::string kSuperName =
+              GetSuperclassString(fileContent, classId);
+          if (kSuperName == "") {
+            continue;
+          }
 
-    const std::string kSuperName = GetSuperclassString(fileContent, classId);
-    if (kSuperName == "") {
-      continue;
-    }
-
-    const std::string kFullName = GetPrefix(fileContent, classId) + kSuperName;
-    if (kClassSet.find(kFullName) == kClassSet.end()) {
-      continue;
-    }
-    const SURELOG::NodeId kSuperId = kClassSet.at(kFullName);
-    if (!dependencyGraph.AddVertex(kSuperId)) {
-      throw std::runtime_error("Failed to add vertex: " +
-                               std::to_string(sizeof(kSuperId)));
-    }
-    dependencyGraph.AddEdge(classId, kSuperId);
-  }
-  const std::unordered_set cyclicDependencies =
-      dependencyGraph.FindCyclicDependencies();
-  for (const auto& numOfId : cyclicDependencies) {
-    const SURELOG::NodeId kNode(numOfId);
-    const std::string kName = GetStringConst(fileContent, kNode);
-    ReportError(fileContent, kNode, kName,
-                verihogg_lint::LINT_CIRCULAR_INHERITANCE, errors, symbols);
-  }
+          const std::string kFullName =
+              GetPrefix(fileContent, classId) + kSuperName;
+          if (kClassSet.find(kFullName) == kClassSet.end()) {
+            continue;
+          }
+          const SURELOG::NodeId kSuperId = kClassSet.at(kFullName);
+          if (!dependencyGraph.AddVertex(kSuperId)) {
+            throw std::runtime_error("Failed to add vertex: " +
+                                     std::to_string(sizeof(kSuperId)));
+          }
+          dependencyGraph.AddEdge(classId, kSuperId);
+        }
+        const std::unordered_set cyclicDependencies =
+            dependencyGraph.FindCyclicDependencies();
+        for (const auto& numOfId : cyclicDependencies) {
+          const SURELOG::NodeId kNode(numOfId);
+          const std::string kName = GetStringConst(fileContent, kNode);
+          ReportError(fileContent, kNode, kName,
+                      verihogg_lint::LINT_CIRCULAR_INHERITANCE, errors,
+                      symbols);
+        }
+      });
 }

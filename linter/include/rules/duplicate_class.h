@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Surelog/Design/FileContent.h"
+#include "Surelog/Design/Design.h"
 
-void CheckDuplicateClass(const SURELOG::FileContent* fileContent,
+void CheckDuplicateClass(SURELOG::Design* design,
                          SURELOG::ErrorContainer* errors,
                          SURELOG::SymbolTable* symbols);

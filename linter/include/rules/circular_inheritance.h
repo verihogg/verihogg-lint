@@ -2,6 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-void CheckCircularInheritance(const SURELOG::FileContent* fileContent,
+void CheckCircularInheritance(SURELOG::Design* design,
                               SURELOG::ErrorContainer* errors,
                               SURELOG::SymbolTable* symbols);

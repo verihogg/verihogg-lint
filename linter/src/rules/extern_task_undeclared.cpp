@@ -14,62 +14,68 @@
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
+#include "utils/design_utils.h"
 #include "utils/location_utils.h"
 
-void CheckExternTaskUndeclared(const SURELOG::FileContent* fileContent,
+void CheckExternTaskUndeclared(SURELOG::Design* design,
                                SURELOG::ErrorContainer* errors,
                                SURELOG::SymbolTable* symbols) {
-  if (fileContent == nullptr) {
+  if (design == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
+
   const std::unordered_map<std::string, SURELOG::NodeId> kClasses =
-      GetClassIds(fileContent);
+      GetClassIds(design);
 
-  const std::vector<SURELOG::NodeId> kTaskDeclarations =
-      fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  SURELOG::VObjectType::paTask_declaration);
+  DesignUtils::ForEachFileContent(design, [&](const SL::FileContent*
+                                                  fileContent) {
+    const std::vector<SURELOG::NodeId> kTaskDeclarations =
+        fileContent->sl_collect_all(fileContent->getRootNode(),
+                                    SURELOG::VObjectType::paTask_declaration);
 
-  for (const auto& taskId : kTaskDeclarations) {
-    const SURELOG::NodeId kParent = fileContent->Parent(taskId);
-    if (fileContent->Type(kParent) == SURELOG::VObjectType::paClass_method) {
-      continue;
-    }
-
-    const SURELOG::NodeId kTaskBodyId = fileContent->sl_get(
-        taskId, SURELOG::VObjectType::paTask_body_declaration);
-
-    const SURELOG::NodeId kClassScopeId =
-        fileContent->sl_get(kTaskBodyId, SURELOG::VObjectType::paClass_scope);
-    if (!kClassScopeId) {
-      continue;
-    }
-
-    const std::string fullName =
-        GetFullNameFromScope(fileContent, kClassScopeId);
-    if (!kClasses.contains(fullName)) {
-      continue;
-    }
-
-    const SURELOG::NodeId kClassId = kClasses.at(fullName);
-    const std::string kFuncName = GetStringConst(fileContent, kTaskBodyId);
-    const std::vector<SURELOG::NodeId> kMethodIds = fileContent->sl_collect_all(
-        kClassId, SURELOG::VObjectType::paClass_method);
-    bool found = false;
-    for (const auto& methodId : kMethodIds) {
-      const SURELOG::NodeId kExternId = fileContent->sl_collect(
-          methodId, SURELOG::VObjectType::paExtern_qualifier);
-      const SURELOG::NodeId kProtoId = fileContent->sl_collect(
-          methodId, SURELOG::VObjectType::paTask_prototype);
-      const std::string kProtoName = GetStringConst(fileContent, kProtoId);
-      if (kProtoName == kFuncName && kExternId) {
-        found = true;
-        break;
+    for (const auto& taskId : kTaskDeclarations) {
+      const SURELOG::NodeId kParent = fileContent->Parent(taskId);
+      if (fileContent->Type(kParent) == SURELOG::VObjectType::paClass_method) {
+        continue;
       }
+
+      const SURELOG::NodeId kTaskBodyId = fileContent->sl_get(
+          taskId, SURELOG::VObjectType::paTask_body_declaration);
+
+      const SURELOG::NodeId kClassScopeId =
+          fileContent->sl_get(kTaskBodyId, SURELOG::VObjectType::paClass_scope);
+      if (!kClassScopeId) {
+        continue;
+      }
+
+      const std::string fullName =
+          GetFullNameFromScope(fileContent, kClassScopeId);
+      if (!kClasses.contains(fullName)) {
+        continue;
+      }
+
+      const SURELOG::NodeId kClassId = kClasses.at(fullName);
+      const std::string kFuncName = GetStringConst(fileContent, kTaskBodyId);
+      const std::vector<SURELOG::NodeId> kMethodIds =
+          fileContent->sl_collect_all(kClassId,
+                                      SURELOG::VObjectType::paClass_method);
+      bool found = false;
+      for (const auto& methodId : kMethodIds) {
+        const SURELOG::NodeId kExternId = fileContent->sl_collect(
+            methodId, SURELOG::VObjectType::paExtern_qualifier);
+        const SURELOG::NodeId kProtoId = fileContent->sl_collect(
+            methodId, SURELOG::VObjectType::paTask_prototype);
+        const std::string kProtoName = GetStringConst(fileContent, kProtoId);
+        if (kProtoName == kFuncName && kExternId) {
+          found = true;
+          break;
+        }
+      }
+      if (found) {
+        continue;
+      }
+      ReportError(fileContent, taskId, kFuncName,
+                  verihogg_lint::LINT_EXTERN_TASK_UNDECLARED, errors, symbols);
     }
-    if (found) {
-      continue;
-    }
-    ReportError(fileContent, taskId, kFuncName,
-                verihogg_lint::LINT_EXTERN_TASK_UNDECLARED, errors, symbols);
-  }
+  });
 }

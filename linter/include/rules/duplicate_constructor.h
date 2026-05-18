@@ -2,6 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-void CheckDuplicateConstructor(const SURELOG::FileContent* fileContent,
+void CheckDuplicateConstructor(SURELOG::Design* design,
                                SURELOG::ErrorContainer* errors,
                                SURELOG::SymbolTable* symbols);

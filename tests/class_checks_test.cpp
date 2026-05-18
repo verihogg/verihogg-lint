@@ -49,7 +49,7 @@ TEST(ExtendClassTest, RaiseError) {
 TEST(DuplicateClassTest, NoError) {
   const fs::path tests_path{BasePath() / "DuplicateClass" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckDuplicateClass);
+  global::CheckWithNoErrorsExpected(tests_path, CheckDuplicateClass);
 }
 
 TEST(DuplicateClassTest, RaiseError) {
@@ -57,14 +57,15 @@ TEST(DuplicateClassTest, RaiseError) {
 
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
-  test::CheckWithErrorsExpected(tests_path, verihogg_lint::LINT_DUPLICATE_CLASS,
-                                ignoreList, CheckDuplicateClass);
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_DUPLICATE_CLASS,
+                                  ignoreList, CheckDuplicateClass);
 }
 
 TEST(DuplicateConstructorTest, NoError) {
   const fs::path tests_path{BasePath() / "DuplicateConstructor" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckDuplicateConstructor);
+  global::CheckWithNoErrorsExpected(tests_path, CheckDuplicateConstructor);
 }
 
 TEST(DuplicateConstructorTest, RaiseError) {
@@ -72,16 +73,17 @@ TEST(DuplicateConstructorTest, RaiseError) {
 
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
-  test::CheckWithErrorsExpected(tests_path,
-                                verihogg_lint::LINT_DUPLICATE_CONSTRUCTOR,
-                                ignoreList, CheckDuplicateConstructor);
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_DUPLICATE_CONSTRUCTOR,
+                                  ignoreList, CheckDuplicateConstructor);
 }
 
 TEST(ExternConstraintUndeclaredTest, NoError) {
   const fs::path tests_path{BasePath() / "ExternConstraintUndeclared" /
                             "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckExternConstraintUndeclared);
+  global::CheckWithNoErrorsExpected(tests_path,
+                                    CheckExternConstraintUndeclared);
 }
 
 TEST(ExternConstraintUndeclaredTest, RaiseError) {
@@ -91,7 +93,7 @@ TEST(ExternConstraintUndeclaredTest, RaiseError) {
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
-  test::CheckWithErrorsExpected(
+  global::CheckWithErrorsExpected(
       tests_path, verihogg_lint::LINT_EXTERN_CONSTRAINT_UNDECLARED, ignoreList,
       CheckExternConstraintUndeclared);
 }
@@ -100,7 +102,7 @@ TEST(ExternFunctionUndeclaredTest, NoError) {
   const fs::path tests_path{BasePath() / "ExternFunctionUndeclared" /
                             "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckExternFunctionUndeclared);
+  global::CheckWithNoErrorsExpected(tests_path, CheckExternFunctionUndeclared);
 }
 
 TEST(ExternFunctionUndeclaredTest, RaiseError) {
@@ -110,15 +112,15 @@ TEST(ExternFunctionUndeclaredTest, RaiseError) {
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
-  test::CheckWithErrorsExpected(tests_path,
-                                verihogg_lint::LINT_EXTERN_FUNCTION_UNDECLARED,
-                                ignoreList, CheckExternFunctionUndeclared);
+  global::CheckWithErrorsExpected(
+      tests_path, verihogg_lint::LINT_EXTERN_FUNCTION_UNDECLARED, ignoreList,
+      CheckExternFunctionUndeclared);
 }
 
 TEST(ExternTaskUndeclaredTest, NoError) {
   const fs::path tests_path{BasePath() / "ExternTaskUndeclared" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckExternTaskUndeclared);
+  global::CheckWithNoErrorsExpected(tests_path, CheckExternTaskUndeclared);
 }
 
 TEST(ExternTaskUndeclaredTest, RaiseError) {
@@ -127,9 +129,9 @@ TEST(ExternTaskUndeclaredTest, RaiseError) {
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       SURELOG::ErrorDefinition::PA_SYNTAX_ERROR};
 
-  test::CheckWithErrorsExpected(tests_path,
-                                verihogg_lint::LINT_EXTERN_TASK_UNDECLARED,
-                                ignoreList, CheckExternTaskUndeclared);
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_EXTERN_TASK_UNDECLARED,
+                                  ignoreList, CheckExternTaskUndeclared);
 }
 
 TEST(ExtendInterfaceClassTest, NoError) {
@@ -187,7 +189,7 @@ TEST(ImplementInterfaceClassTest, RaiseError) {
 TEST(ImplementCircularInheritanceTest, NoError) {
   const fs::path tests_path{BasePath() / "CircularInheritance" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckCircularInheritance);
+  global::CheckWithNoErrorsExpected(tests_path, CheckCircularInheritance);
 }
 
 TEST(ImplementCircularInheritanceTest, RaiseError) {
@@ -195,9 +197,9 @@ TEST(ImplementCircularInheritanceTest, RaiseError) {
 
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
-  test::CheckWithErrorsExpected(tests_path,
-                                verihogg_lint::LINT_CIRCULAR_INHERITANCE,
-                                ignoreList, CheckCircularInheritance);
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_CIRCULAR_INHERITANCE,
+                                  ignoreList, CheckCircularInheritance);
 }
 
 }  // namespace

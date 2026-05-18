@@ -46,7 +46,7 @@ auto IsBuiltinClass(const std::string& className) -> bool;
 auto GetFullName(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string;
 
-auto GetClassIds(const SL::FileContent* fileContent)
+auto GetClassIds(SL::Design* design)
     -> std::unordered_map<std::string, SL::NodeId>;
 
 auto GetClassDeclByName(const SL::FileContent* fileContent,
