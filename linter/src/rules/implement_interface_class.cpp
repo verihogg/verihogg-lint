@@ -14,6 +14,7 @@
 
 #include "main/lint_rules.h"
 #include "utils/ast_utils.h"
+#include "utils/design_utils.h"
 #include "utils/location_utils.h"
 
 namespace {
@@ -31,39 +32,43 @@ auto GetSuperInterfaceString(const SURELOG::FileContent* fileContent,
 }
 }  // namespace
 
-void CheckImplementInterfaceClass(const SURELOG::FileContent* fileContent,
+void CheckImplementInterfaceClass(SURELOG::Design* design,
                                   SURELOG::ErrorContainer* errors,
                                   SURELOG::SymbolTable* symbols) {
-  if (fileContent == nullptr) {
+  if (design == nullptr || errors == nullptr || symbols == nullptr) {
     return;
   }
 
-  const std::unordered_set<std::string> classSet = GetClassSet(fileContent);
+  const std::unordered_set<std::string> classSet = GetClassSet(design);
   const std::unordered_set<std::string> interfaceClassSet =
-      GetInterfaceClassSet(fileContent);
+      GetInterfaceClassSet(design);
 
-  const std::vector<SURELOG::NodeId> kClassDeclarations =
-      fileContent->sl_collect_all(fileContent->getRootNode(),
-                                  SURELOG::VObjectType::paClass_declaration);
+  DesignUtils::ForEachFileContent(
+      design, [&](const SL::FileContent* fileContent) {
+        const std::vector<SURELOG::NodeId> kClassDeclarations =
+            fileContent->sl_collect_all(
+                fileContent->getRootNode(),
+                SURELOG::VObjectType::paClass_declaration);
 
-  for (const auto& classId : kClassDeclarations) {
-    const SURELOG::NodeId kImplementsId =
-        fileContent->sl_get(classId, SURELOG::VObjectType::paIMPLEMENTS);
-    if (!kImplementsId) {
-      continue;
-    }
+        for (const auto& classId : kClassDeclarations) {
+          const SURELOG::NodeId kImplementsId =
+              fileContent->sl_get(classId, SURELOG::VObjectType::paIMPLEMENTS);
+          if (!kImplementsId) {
+            continue;
+          }
 
-    const std::string kSuperInterfaceName =
-        GetSuperInterfaceString(fileContent, classId);
-    if (kSuperInterfaceName == "") {
-      continue;
-    }
+          const std::string kSuperInterfaceName =
+              GetSuperInterfaceString(fileContent, classId);
+          if (kSuperInterfaceName == "") {
+            continue;
+          }
 
-    if (!interfaceClassSet.contains(kSuperInterfaceName)) {
-      const std::string className = GetStringConst(fileContent, classId);
-      ReportError(fileContent, classId, className,
-                  verihogg_lint::LINT_IMPLEMENT_INTERFACE_CLASS, errors,
-                  symbols);
-    }
-  }
+          if (!interfaceClassSet.contains(kSuperInterfaceName)) {
+            const std::string className = GetStringConst(fileContent, classId);
+            ReportError(fileContent, classId, className,
+                        verihogg_lint::LINT_IMPLEMENT_INTERFACE_CLASS, errors,
+                        symbols);
+          }
+        }
+      });
 }

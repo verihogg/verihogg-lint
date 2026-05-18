@@ -2,6 +2,6 @@
 
 #include "Surelog/Design/Design.h"
 
-void CheckImplementInterfaceClass(const SURELOG::FileContent* fileContent,
+void CheckImplementInterfaceClass(SURELOG::Design* design,
                                   SURELOG::ErrorContainer* errors,
                                   SURELOG::SymbolTable* symbols);

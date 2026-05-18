@@ -172,12 +172,6 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "HIERARCHICAL_INTERFACE_IDENTIFIER",
      .description = "Hierarchical interface identifier not allowed",
      .check = CheckHierarchicalInterfaceIdentifier},
-    {.idName = "IMPLEMENT_CLASS",
-     .description = "implementing non-interface class by class not allowed",
-     .check = CheckImplementClass},
-    {.idName = "IMPLEMENT_INTERFACE_CLASS",
-     .description = "implementing non existing interface class",
-     .check = CheckImplementInterfaceClass},
     {.idName = "IMPLICIT_DATA_TYPE_IN_DECLARATION",
      .description =
          "Expecting net type (e.g. wire) or 'var' before implicit data type",
@@ -339,6 +333,12 @@ const auto globalRules = std::to_array<GlobalRule>({
      .description =
          "extending interface class by non-interface class not allowed",
      .check = CheckExtendInterfaceClass},
+    {.idName = "IMPLEMENT_CLASS",
+     .description = "implementing non-interface class by class not allowed",
+     .check = CheckImplementClass},
+    {.idName = "IMPLEMENT_INTERFACE_CLASS",
+     .description = "implementing non existing interface class",
+     .check = CheckImplementInterfaceClass},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();

@@ -153,7 +153,7 @@ TEST(ExtendInterfaceClassTest, RaiseError) {
 TEST(ImplementClassTest, NoError) {
   const fs::path tests_path{BasePath() / "ImplementClass" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckImplementClass);
+  global::CheckWithNoErrorsExpected(tests_path, CheckImplementClass);
 }
 
 TEST(ImplementClassTest, RaiseError) {
@@ -162,14 +162,15 @@ TEST(ImplementClassTest, RaiseError) {
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{
       verihogg_lint::LINT_EXTERN_FUNCTION_UNDECLARED};
 
-  test::CheckWithErrorsExpected(tests_path, verihogg_lint::LINT_IMPLEMENT_CLASS,
-                                ignoreList, CheckImplementClass);
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_IMPLEMENT_CLASS,
+                                  ignoreList, CheckImplementClass);
 }
 
 TEST(ImplementInterfaceClassTest, NoError) {
   const fs::path tests_path{BasePath() / "ImplementInterfaceClass" / "NoError"};
 
-  test::CheckWithNoErrorsExpected(tests_path, CheckImplementInterfaceClass);
+  global::CheckWithNoErrorsExpected(tests_path, CheckImplementInterfaceClass);
 }
 
 TEST(ImplementInterfaceClassTest, RaiseError) {
@@ -178,9 +179,9 @@ TEST(ImplementInterfaceClassTest, RaiseError) {
 
   const std::unordered_set<SURELOG::ErrorDefinition::ErrorType> ignoreList{};
 
-  test::CheckWithErrorsExpected(tests_path,
-                                verihogg_lint::LINT_IMPLEMENT_INTERFACE_CLASS,
-                                ignoreList, CheckImplementInterfaceClass);
+  global::CheckWithErrorsExpected(tests_path,
+                                  verihogg_lint::LINT_IMPLEMENT_INTERFACE_CLASS,
+                                  ignoreList, CheckImplementInterfaceClass);
 }
 
 TEST(ImplementCircularInheritanceTest, NoError) {

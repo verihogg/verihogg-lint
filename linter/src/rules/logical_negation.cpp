@@ -134,7 +134,7 @@ void CheckLogicalNegation(const SL::FileContent* fileContent,
     return;
   }
 
-  auto const kClassSet = GetClassSet(fileContent);
+  auto const kClassSet = GetClassSetFromFileContent(fileContent);
   if (kClassSet.empty()) {
     return;
   }

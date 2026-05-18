@@ -20,6 +20,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "utils/design_utils.h"
+
 namespace SL = SURELOG;
 
 auto FindEnclosingModule(const SL::FileContent* fileContent, SL::NodeId node)
@@ -215,31 +217,52 @@ auto GetClassDeclByName(const SL::FileContent* fileContent,
   return SL::InvalidNodeId;
 }
 
-auto GetInterfaceClassSet(const SL::FileContent* fileContent)
+auto GetInterfaceClassSet(SL::Design* design)
     -> std::unordered_set<std::string> {
-  const std::vector<SL::NodeId> kInterfaceClassDeclarations =
-      fileContent->sl_collect_all(
-          fileContent->getRootNode(),
-          SL::VObjectType::paInterface_class_declaration);
   std::unordered_set<std::string> interfaceClassSet;
-  for (const auto& interfaceClass : kInterfaceClassDeclarations) {
-    const std::string interfaceClassName =
-        GetStringConst(fileContent, interfaceClass);
-    interfaceClassSet.insert(interfaceClassName);
-  }
+  DesignUtils::ForEachFileContent(
+      design, [&](const SL::FileContent* fileContent) {
+        const std::vector<SL::NodeId> kInterfaceClassDeclarations =
+            fileContent->sl_collect_all(
+                fileContent->getRootNode(),
+                SL::VObjectType::paInterface_class_declaration);
+
+        for (const auto& interfaceClass : kInterfaceClassDeclarations) {
+          const std::string interfaceClassName =
+              GetStringConst(fileContent, interfaceClass);
+          interfaceClassSet.insert(interfaceClassName);
+        }
+      });
   return interfaceClassSet;
 }
 
-auto GetClassSet(const SL::FileContent* fileContent)
+auto GetClassSetFromFileContent(const SL::FileContent* fileContent)
     -> std::unordered_set<std::string> {
+  std::unordered_set<std::string> classSet;
   const std::vector<SL::NodeId> kClassDeclarations =
       fileContent->sl_collect_all(fileContent->getRootNode(),
                                   SL::VObjectType::paClass_declaration);
-  std::unordered_set<std::string> classSet;
+
   for (const auto& classId : kClassDeclarations) {
     const std::string className = GetStringConst(fileContent, classId);
     classSet.insert(className);
   }
+  return classSet;
+}
+
+auto GetClassSet(SL::Design* design) -> std::unordered_set<std::string> {
+  std::unordered_set<std::string> classSet;
+  DesignUtils::ForEachFileContent(
+      design, [&](const SL::FileContent* fileContent) {
+        const std::vector<SL::NodeId> kClassDeclarations =
+            fileContent->sl_collect_all(fileContent->getRootNode(),
+                                        SL::VObjectType::paClass_declaration);
+
+        for (const auto& classId : kClassDeclarations) {
+          const std::string className = GetStringConst(fileContent, classId);
+          classSet.insert(className);
+        }
+      });
   return classSet;
 }
 

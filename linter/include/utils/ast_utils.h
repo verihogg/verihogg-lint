@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Surelog/Common/NodeId.h>
+#include <Surelog/Design/Design.h>
 #include <Surelog/Design/FileContent.h>
 #include <Surelog/ErrorReporting/ErrorContainer.h>
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
@@ -51,12 +52,13 @@ auto GetClassIds(const SL::FileContent* fileContent)
 auto GetClassDeclByName(const SL::FileContent* fileContent,
                         std::string_view className) -> SL::NodeId;
 
-auto GetInterfaceClassSet(const SL::FileContent* fileContent)
+auto GetInterfaceClassSet(SL::Design* design)
     -> std::unordered_set<std::string>;
 
-auto GetClassSet(const SL::FileContent* fileContent)
-    -> std::unordered_set<std::string>;
+auto GetClassSet(SL::Design* design) -> std::unordered_set<std::string>;
 
+auto GetClassSetFromFileContent(const SL::FileContent* fileContent)
+    -> std::unordered_set<std::string>;
 auto GetFullNameFromScope(const SL::FileContent* fileContent, SL::NodeId node)
     -> std::string;
 
