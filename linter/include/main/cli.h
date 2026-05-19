@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <gsl/span>
+#include <string>
 #include <string_view>
 #include <unordered_set>
 #include <vector>
@@ -19,6 +20,8 @@ struct Options {
 
   std::filesystem::path config_file;
   std::vector<const char*> surelog_args;
+
+  std::string error_message;
 };
 
 auto ParseArgs(gsl::span<const char*> args) -> Options;

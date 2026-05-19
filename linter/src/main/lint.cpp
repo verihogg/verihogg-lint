@@ -25,6 +25,12 @@ auto main(int argc, const char** argv) -> int {
   const auto args = gsl::span{argv, static_cast<size_t>(argc)};
   const cli::Options kOpts = cli::ParseArgs(args);
 
+  if (!kOpts.error_message.empty()) {
+    std::cerr << kOpts.error_message << '\n'
+              << "Try '" << args[0] << " --help' for usage.\n";
+    return 1;
+  }
+
   if (kOpts.dump_config) {
     cli::DumpConfig();
     return 0;
@@ -72,6 +78,7 @@ auto main(int argc, const char** argv) -> int {
   }
 
   if (!kSuccess) {
+    errors->printMessages(clp->muteStdout());
     std::cerr << "Try '" << args[0] << " --help' for usage.\n";
     return 1;
   }
