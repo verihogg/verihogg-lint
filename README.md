@@ -64,13 +64,13 @@ cd /path/to/project
 docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest verihogg-lint file1.sv file2.sv file3.sv -nobuiltin
 
 # All .sv files in current directory
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint *.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest verihogg-lint *.sv -nobuiltin
 
 # All .sv files recursively
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint **/*.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest verihogg-lint **/*.sv -nobuiltin
 
 # Specific directory
-docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest lint /path/to/project/**/*.sv -nobuiltin
+docker run --rm -v "$(pwd)":/data -w /data ghcr.io/verihogg/verihogg-lint:latest verihogg-lint /path/to/project/**/*.sv -nobuiltin
 ```
 
 ---
@@ -94,7 +94,7 @@ nix-build
 To lint a single SystemVerilog file:
 
 ```bash
-./result/bin/lint /path/to/your_file/my_sv_code.sv -nobuiltin
+./result/bin/verihogg-lint /path/to/your_file/my_sv_code.sv -nobuiltin
 ```
 
 #### Using filelist (.f)
@@ -116,7 +116,7 @@ rtl/core/regfile.sv
 Run with filelist:
 
 ```bash
-./build/bin/lint -f files.f -nobuiltin
+./build/bin/verihogg-lint -f files.f -nobuiltin
 ```
 
 #### Alternative: Multiple files or wildcards
@@ -125,19 +125,19 @@ You can also pass multiple files or use wildcards:
 
 ```bash
 # Multiple files
-./build/bin/lint file1.sv file2.sv file3.sv -nobuiltin
+./build/bin/verihogg-lint file1.sv file2.sv file3.sv -nobuiltin
 
 # All .sv files in current directory
-./build/bin/lint *.sv -nobuiltin
+./build/bin/verihogg-lint *.sv -nobuiltin
 
 # All .sv files recursively
-./build/bin/lint **/*.sv -nobuiltin
+./build/bin/verihogg-lint **/*.sv -nobuiltin
 
 # Specific directory
-./build/bin/lint /path/to/project/**/*.sv -nobuiltin
+./build/bin/verihogg-lint /path/to/project/**/*.sv -nobuiltin
 ```
 
-You can run `./build/bin/lint --help` to see all available options.
+You can run `./build/bin/verihogg-lint --help` to see all available options.
 
 ## Testing
 
