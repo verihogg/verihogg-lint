@@ -7,6 +7,7 @@
 #include <string_view>
 
 #include "main/rule_dispatcher.h"
+#include "main/surelog_flags.h"
 
 namespace cli {
 
@@ -37,7 +38,8 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
           "verihogg-lint: option '--config-file' requires '=<path>'";
       return opts;
     } else if (std::strncmp(arg, "--config-file=", CONFIG_FLAG_LEN + 1) == 0) {
-      const std::string config_file{arg + CONFIG_FLAG_LEN + 1};
+      const std::string config_file{
+          std::string_view{arg}.substr(CONFIG_FLAG_LEN + 1)};
       const std::filesystem::path config_path{config_file};
       if (!std::filesystem::exists(config_path)) {
         opts.error_message = "verihogg-lint: cannot open config file '" +
@@ -45,10 +47,6 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
         return opts;
       }
       opts.config_file = config_path;
-    } else if (std::strncmp(arg, "--", 2) == 0) {
-      opts.error_message =
-          std::string{"verihogg-lint: unrecognized option '"} + arg + "'";
-      return opts;
     } else {
       opts.surelog_args.push_back(arg);
     }
@@ -59,20 +57,21 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
     return opts;
   }
 
-  for (size_t i = 1; i < opts.surelog_args.size(); ++i) {
-    const std::string_view a{opts.surelog_args[i]};
+  for (size_t i = 1; i < opts.surelog_args.size();) {
+    const std::string_view a{opts.surelog_args.at(i)};
 
     if (a == "-f" && i + 1 < opts.surelog_args.size()) {
-      const std::string filelist{opts.surelog_args[++i]};
+      const std::string filelist{opts.surelog_args.at(i + 1)};
       if (!std::filesystem::exists(filelist)) {
         opts.error_message = "verihogg-lint: cannot open filelist '" +
                              filelist + "': No such file or directory";
         return opts;
       }
+      i += 2;
       continue;
     }
 
-    if (!a.empty() && a[0] != '-' && a[0] != '+' &&
+    if (!a.empty() && a.front() != '-' && a.front() != '+' &&
         (a.ends_with(".sv") || a.ends_with(".svh") || a.ends_with(".v") ||
          a.ends_with(".vh"))) {
       const std::string source_file{a};
@@ -81,7 +80,31 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
                              source_file + "': No such file or directory";
         return opts;
       }
+      i += 1;
+      continue;
     }
+
+    const auto kind = ClassifySurelogFlag(a);
+    if (kind == SurelogFlagKind::NoArg) {
+      i += 1;
+      continue;
+    }
+    if (kind == SurelogFlagKind::OneArg) {
+      i += 2;
+      continue;
+    }
+    if (kind == SurelogFlagKind::TwoArg) {
+      i += 3;
+      continue;
+    }
+
+    if (!a.empty() && a.front() == '-') {
+      opts.error_message = std::string{"verihogg-lint: unrecognized option '"} +
+                           std::string{a} + "'";
+      return opts;
+    }
+
+    i += 1;
   }
 
   return opts;
