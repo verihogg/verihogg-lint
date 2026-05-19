@@ -32,13 +32,55 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
       opts.show_rules = true;
     } else if (std::strcmp(arg, "--surelog-help") == 0) {
       opts.show_surelog_help = true;
-    } else if (std::strncmp(arg, "--config-file", CONFIG_FLAG_LEN) == 0) {
-      const std::string strArg{arg};
-      const std::string config_file =
-          strArg.substr(CONFIG_FLAG_LEN + 1, strArg.size());
-      opts.config_file = std::filesystem::path{config_file};
+    } else if (std::strcmp(arg, "--config-file") == 0) {
+      opts.error_message =
+          "verihogg-lint: option '--config-file' requires '=<path>'";
+      return opts;
+    } else if (std::strncmp(arg, "--config-file=", CONFIG_FLAG_LEN + 1) == 0) {
+      const std::string config_file{arg + CONFIG_FLAG_LEN + 1};
+      const std::filesystem::path config_path{config_file};
+      if (!std::filesystem::exists(config_path)) {
+        opts.error_message = "verihogg-lint: cannot open config file '" +
+                             config_file + "': No such file or directory";
+        return opts;
+      }
+      opts.config_file = config_path;
+    } else if (std::strncmp(arg, "--", 2) == 0) {
+      opts.error_message =
+          std::string{"verihogg-lint: unrecognized option '"} + arg + "'";
+      return opts;
     } else {
       opts.surelog_args.push_back(arg);
+    }
+  }
+
+  if (opts.show_help || opts.show_version || opts.show_rules ||
+      opts.show_surelog_help) {
+    return opts;
+  }
+
+  for (size_t i = 1; i < opts.surelog_args.size(); ++i) {
+    const std::string_view a{opts.surelog_args[i]};
+
+    if (a == "-f" && i + 1 < opts.surelog_args.size()) {
+      const std::string filelist{opts.surelog_args[++i]};
+      if (!std::filesystem::exists(filelist)) {
+        opts.error_message = "verihogg-lint: cannot open filelist '" +
+                             filelist + "': No such file or directory";
+        return opts;
+      }
+      continue;
+    }
+
+    if (!a.empty() && a[0] != '-' && a[0] != '+' &&
+        (a.ends_with(".sv") || a.ends_with(".svh") || a.ends_with(".v") ||
+         a.ends_with(".vh"))) {
+      const std::string source_file{a};
+      if (!std::filesystem::exists(source_file)) {
+        opts.error_message = "verihogg-lint: cannot open source file '" +
+                             source_file + "': No such file or directory";
+        return opts;
+      }
     }
   }
 
