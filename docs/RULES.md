@@ -117,9 +117,6 @@
 - `MULTIPLE_BINS`
   Specification of multiple bins dimension not allowed
 
-- `ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE`
-  Expecting attribute instance after block identifier # for procedural assertion statement
-
 - `SYSTEM_FUNCTION_ARGUMENTS`
   Maximum number of arguments for # system function is #
 

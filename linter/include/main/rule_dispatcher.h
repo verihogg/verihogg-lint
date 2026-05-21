@@ -12,7 +12,6 @@
 #include <string_view>
 
 #include "main/lint_rules.h"
-#include "rules/assertion_statement_atribute_instance.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
 #include "rules/assignment_pattern_values.h"
@@ -110,10 +109,6 @@ struct UhdmRule {
 };
 
 const auto allRules = std::to_array<Rule>({
-    {.idName = "ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE",
-     .description = "Expecting attribute instance after block identifier "
-                    "for assertion",
-     .check = CheckAssertionStatementAttributeInstance},
     {.idName = "ASSIGNMENT_PATTERN",
      .description =
          "Expecting assignment pattern '{...}' instead of concatenation",

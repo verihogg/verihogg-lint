@@ -41,7 +41,6 @@ enum LintIdEnum : uint16_t {
   LINT_TYPE_CASTING,
   LINT_TIME_VALUE,
   LINT_MULTIPLE_BINS,
-  LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
   LINT_SYSTEM_FUNCTION_ARGUMENTS,
   LINT_WILDCARD_EQUALITY_OPERATOR,
   LINT_WILDCARD_INEQUALITY_OPERATOR,
@@ -189,9 +188,6 @@ inline constexpr std::array kLintRules = {
     LintRuleInfo{
         .type = LINT_MULTIPLE_BINS,
         .text = "Specification of multiple bins dimension not allowed: %s"},
-    LintRuleInfo{.type = LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
-                 .text = "Expecting attribute instance after block identifier "
-                         "# for procedural assertion statement: %s"},
     LintRuleInfo{.type = LINT_SYSTEM_FUNCTION_ARGUMENTS,
                  .text = "Maximum number of arguments for %s"},
     LintRuleInfo{

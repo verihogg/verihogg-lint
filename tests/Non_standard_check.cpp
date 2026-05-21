@@ -22,7 +22,6 @@
 #include <vector>
 
 #include "main/lint_rules.h"
-#include "rules/assertion_statement_atribute_instance.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
 #include "rules/class_variable_lifetime.h"
@@ -649,11 +648,6 @@ auto RuleSpecs() -> const std::vector<RuleSpec>& {
       {.folder = "MultipleBins",
        .expected_error = verihogg_lint::LINT_MULTIPLE_BINS,
        .check = CheckMultipleBins,
-       .ignore_errors = {}},
-      {.folder = "AssertionStatementAttributeInstance",
-       .expected_error =
-           verihogg_lint::LINT_ASSERTION_STATEMENT_ATTRIBUTE_INSTANCE,
-       .check = CheckAssertionStatementAttributeInstance,
        .ignore_errors = {}},
       {.folder = "SystemFunctionArguments",
        .expected_error = verihogg_lint::LINT_SYSTEM_FUNCTION_ARGUMENTS,
