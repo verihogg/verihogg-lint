@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <gsl/span>
 #include <string>
+#include <optional>
 #include <string_view>
 #include <unordered_set>
 #include <vector>
@@ -11,12 +12,22 @@ namespace cli {
 
 inline constexpr const char* kVersion = "0.2.0";
 
+enum class UvmMode : std::uint8_t {
+  None,
+  Builtin,
+  Custom,
+};
+
 struct Options {
   bool dump_config = false;
   bool show_help = false;
   bool show_version = false;
   bool show_rules = false;
   bool show_surelog_help = false;
+  bool show_uvm_version = false;
+
+  UvmMode uvm_mode = UvmMode::None;
+  std::optional<std::filesystem::path> uvm_path;
 
   bool apply_fixes = false;
   bool fix_dry_run = false;
@@ -35,6 +46,7 @@ void DumpConfig();
 
 void PrintHelp(const char* programName);
 void PrintVersion();
+void PrintUvmVersion();
 void PrintRules();
 
 }  // namespace cli

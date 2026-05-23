@@ -8,6 +8,7 @@
 #include <array>
 #include <filesystem>
 #include <functional>
+#include <optional>
 #include <string_view>
 
 #include "fix/replacement.h"
@@ -436,4 +437,5 @@ void RunAllRulesOnDesign(SURELOG::Design* design, const vpiHandle& uhdmDesign,
                          SURELOG::ErrorContainer* errors,
                          SURELOG::SymbolTable* symbols,
                          const std::filesystem::path& configFile,
-                         AutofixContext* autofix = nullptr);
+                         AutofixContext* autofix = nullptr,
+                        std::optional<std::filesystem::path> uvmDir = std::nullopt);

@@ -1,8 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
 let
-  shared = import ./nix/shared.nix {
-    inherit pkgs;
-  };
+  shared  = import ./nix/shared.nix { inherit pkgs; };
+  uvm-src = import ./nix/uvm.nix    { inherit pkgs; };
 in
 pkgs.mkShell {
   packages =
@@ -10,7 +9,8 @@ pkgs.mkShell {
     ++ shared.buildInputs
     ++ shared.shellOnlyPackages;
 
-    shellHook = ''
+  shellHook = ''
     export SURELOG_ROOT=${pkgs.surelog}
+    export VERIHOGG_UVM_PATH=${uvm-src}/src
   '';
 }
