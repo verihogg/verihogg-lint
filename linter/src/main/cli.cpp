@@ -16,6 +16,7 @@ constexpr size_t CONFIG_FLAG_LEN = 13;
 inline constexpr std::string_view kConfigFilePrefix = "--config-file=";
 inline constexpr std::string_view kBackupSuffixPrefix = "--backup-suffix=";
 inline constexpr std::string_view kDryRunPrefix = "--fix-dry-run=";
+constexpr size_t UVM_FLAG_LEN = 5;
 
 auto ParseArgs(const gsl::span<const char*> args) -> Options {
   Options opts;
@@ -70,6 +71,14 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
       std::string_view sv(arg);
       opts.backup_suffix = std::string(sv.substr(kBackupSuffixPrefix.size()));
 
+    } else if (std::strcmp(arg, "--uvm-version") == 0) {
+      opts.show_uvm_version = true;
+    } else if (std::strcmp(arg, "--uvm") == 0) {
+      opts.uvm_mode = UvmMode::Builtin;
+    } else if (std::strncmp(arg, "--uvm=", UVM_FLAG_LEN + 1) == 0) {
+      opts.uvm_mode = UvmMode::Custom;
+      opts.uvm_path =
+          std::filesystem::path{std::string{arg}.substr(UVM_FLAG_LEN + 1)};
     } else {
       opts.surelog_args.push_back(arg);
     }
@@ -145,6 +154,14 @@ void DumpConfig() {
 
 void PrintVersion() { std::cout << "verihogg-lint " << kVersion << "\n"; }
 
+void PrintUvmVersion() {
+#ifdef UVM_BUILTIN_AVAILABLE
+  std::cout << "built-in UVM: " << UVM_BUILTIN_VERSION << "\n";
+#else
+  std::cout << "built-in UVM: not available (built without UVM support)\n";
+#endif
+}
+
 void PrintHelp(const char* programName) {
   // clang-format off
   std::cout
@@ -168,6 +185,10 @@ void PrintHelp(const char* programName) {
     << "                                Compatible with 'patch -p1' and 'git apply'.\n"
     << "  --show-suggestions            Print fix hints with before/after snippets\n"
     << "  --backup-suffix=<suffix>      Save originals before --fix (e.g. .bak)\n"
+    << "UVM:\n"
+    << "  --uvm               Add built-in UVM library to include path\n"
+    << "  --uvm=<dir>         Add <dir> as UVM include path (custom version)\n"
+    << "  --uvm-version       Show built-in UVM version and exit\n"
     << "\n"
     << "INPUT:\n"
     << "  <file>.sv           SystemVerilog source file\n"
@@ -190,6 +211,8 @@ void PrintHelp(const char* programName) {
     << "  " << programName << " -f files.f -nobuiltin\n"
     << "  " << programName << " --fix-dry-run file.sv | git apply\n"
     << "  " << programName << " --fix-dry-run=fixes.patch file.sv\n"
+    << "  " << programName << " -f files.f --uvm -nobuiltin\n"
+    << "  " << programName << " -f files.f --uvm=/opt/uvm/src -nobuiltin\n"
     << "  " << programName << " --list-rules\n"
     << "\n"
     << "All other flags are forwarded to Surelog (parser/elaboration).\n"

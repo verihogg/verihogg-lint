@@ -22,6 +22,7 @@
 #include "main/lint_rules.h"
 #include "main/rule_dispatcher.h"
 #include "utils/init.h"
+#include "utils/uvm_path.h"
 
 namespace SL = SURELOG;
 
@@ -54,6 +55,11 @@ auto main(int argc, const char** argv) -> int {
     return 0;
   }
 
+  if (kOpts.show_uvm_version) {
+    cli::PrintUvmVersion();
+    return 0;
+  }
+
   auto symbolTable = std::make_unique<SL::SymbolTable>();
   auto errors = std::make_unique<SL::ErrorContainer>(symbolTable.get());
   auto clp = std::make_unique<SL::CommandLineParser>(
@@ -71,6 +77,40 @@ auto main(int argc, const char** argv) -> int {
   }
 
   std::vector<const char*> slArgv = kOpts.surelog_args;
+
+  std::string uvm_incdir_arg;
+  std::string uvm_pkg_arg;
+  std::optional<std::filesystem::path> uvm_dir;
+  if (kOpts.uvm_mode != cli::UvmMode::None) {
+    std::filesystem::path resolved;
+    if (kOpts.uvm_mode == cli::UvmMode::Custom) {
+      if (!kOpts.uvm_path.has_value()) {
+        return 1;
+      }
+      std::error_code ec;
+      if (!std::filesystem::is_directory(*kOpts.uvm_path, ec)) {
+        std::cerr << "error: --uvm=" << *kOpts.uvm_path
+                  << " is not a directory\n";
+        return 1;
+      }
+      resolved = *kOpts.uvm_path;
+    } else {
+      auto maybe = uvm::ResolveUvmPath();
+      if (!maybe.has_value()) {
+        std::cerr << "error: built-in UVM not found.\n"
+                  << "  Set VERIHOGG_UVM_PATH or use --uvm=<path>.\n";
+        return 1;
+      }
+      resolved = std::move(*maybe);
+    }
+    uvm_dir = resolved;
+
+    uvm_incdir_arg = "+incdir+" + resolved.string();
+    uvm_pkg_arg = (resolved / "uvm_pkg.sv").string();
+
+    slArgv.insert(slArgv.begin() + 1, uvm_incdir_arg.c_str());
+    slArgv.insert(slArgv.begin() + 2, uvm_pkg_arg.c_str());
+  }
 
   const int kSlArgc = static_cast<int>(slArgv.size());
   const bool kSuccess = clp->parseCommandLine(kSlArgc, slArgv.data());
@@ -136,7 +176,7 @@ auto main(int argc, const char** argv) -> int {
   AutofixContext* autofix_ptr = kNeedCollector ? &autofix_ctx : nullptr;
 
   RunAllRulesOnDesign(theDesign, uhdmDesign, errors.get(), symbolTable.get(),
-                      kOpts.config_file, autofix_ptr);
+                      kOpts.config_file, autofix_ptr, uvm_dir);
 
   errors->printMessages(clp->muteStdout());
 

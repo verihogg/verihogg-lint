@@ -15,6 +15,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(SURELOG_ROOT "" CACHE PATH "Path to Surelog installation prefix")
 
+set(UVM_SRC_DIR "" CACHE PATH "Path to UVM src/ directory (enables --uvm flag)")
+set(UVM_BUILTIN_VERSION "IEEE 1800.2-2020 (2020.3.1)" CACHE STRING "Human-readable UVM version string shown by --uvm-version")
+
+if(NOT UVM_SRC_DIR AND DEFINED ENV{VERIHOGG_UVM_PATH})
+  set(UVM_SRC_DIR "$ENV{VERIHOGG_UVM_PATH}")
+  message(STATUS "UVM_SRC_DIR set from VERIHOGG_UVM_PATH: ${UVM_SRC_DIR}")
+endif()
+
 find_path(SURELOG_INCLUDE_DIR
   NAMES Surelog/API/Surelog.h
   HINTS ${SURELOG_ROOT} ENV SURELOG_ROOT
@@ -136,6 +144,7 @@ add_subdirectory(tests)
 set(LINTER_SRC
     linter/src/main/cli.cpp
     linter/src/utils/ast_utils.cpp
+    linter/src/utils/uvm_path.cpp
     linter/src/utils/location_utils.cpp
     linter/src/utils/name_utils.cpp
     linter/src/utils/string_utils.cpp
@@ -280,3 +289,12 @@ endif()
 include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+if(UVM_SRC_DIR)
+  install(DIRECTORY "${UVM_SRC_DIR}/"
+          DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/verihogg-lint/uvm/src")
+  target_compile_definitions(verihoggLintLib PRIVATE
+    UVM_BUILTIN_VERSION="${UVM_BUILTIN_VERSION}"
+    UVM_BUILTIN_AVAILABLE=1
+  )
+endif()

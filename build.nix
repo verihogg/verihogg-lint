@@ -1,8 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
 let
-  shared = import ./nix/shared.nix {
-    inherit pkgs;
-  };
+  shared  = import ./nix/shared.nix { inherit pkgs; };
+  uvm-src = import ./nix/uvm.nix    { inherit pkgs; };
 in
 pkgs.stdenv.mkDerivation {
   pname = "verihogg-lint";
@@ -16,6 +15,10 @@ pkgs.stdenv.mkDerivation {
   enableParallelChecking = false;
 
   buildInputs = shared.buildInputs;
+
+  cmakeFlags = [
+    "-DUVM_SRC_DIR=${uvm-src}/src"
+  ];
 
   meta = with pkgs.lib; {
     description = "SystemVerilog linter powered by Surelog";

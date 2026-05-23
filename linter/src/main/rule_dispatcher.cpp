@@ -18,6 +18,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <optional>
 
 namespace SL = SURELOG;
 
@@ -221,6 +222,7 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols,
                          const std::filesystem::path& configFile,
                          AutofixContext* autofix) {
+                         std::optional<std::filesystem::path> uvmDir) {
   if (design == nullptr) {
     return;
   }
@@ -231,7 +233,15 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     if (fileContent == nullptr) {
       continue;
     }
-
+    if (uvmDir.has_value()) {
+      const std::filesystem::path filePath =
+          SL::FileSystem::getInstance()->toPath(name);
+      std::error_code ec;
+      const auto rel = std::filesystem::relative(filePath, *uvmDir, ec);
+      if (!ec && !rel.empty() && rel.native().front() != '.') {
+        continue;
+      }
+    }
     RunAllRules(fileContent, errors, symbols, kRuleSet);
     RunFixableRulesOnFile(fileContent, errors, symbols, kRuleSet, autofix);
   }
