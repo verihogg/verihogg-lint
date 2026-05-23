@@ -38,6 +38,7 @@ static constexpr std::array kValidContexts = {
     SL::VObjectType::paVariable_decl_assignment,
     SL::VObjectType::paParam_assignment,
     SL::VObjectType::paContinuous_assign,
+    SL::VObjectType::paJump_statement,
 };
 
 static constexpr std::array kAssignmentLvalueTypes = {
