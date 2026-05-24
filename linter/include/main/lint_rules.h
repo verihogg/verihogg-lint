@@ -86,6 +86,7 @@ enum LintIdEnum : uint16_t {
   LINT_ILLEGAL_TYPE_REFERENCE,
   LINT_ILLEGAL_TYPE_REFERENCE_UHDM,
   LINT_DUPLICATE_CHECKER,
+  LINT_UNDECLARED_CHECKER,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -309,6 +310,8 @@ inline constexpr std::array kLintRules = {
                  .text = "Illegal type reference in this context: %s"},
     LintRuleInfo{.type = LINT_DUPLICATE_CHECKER,
                  .text = "Duplicate checker %s, already declared"},
+    LintRuleInfo{.type = LINT_UNDECLARED_CHECKER,
+                 .text = "Undeclared checker '%s'"},
 };
 
 inline void RegisterLintRules() {

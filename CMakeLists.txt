@@ -222,6 +222,7 @@ set(LINTER_SRC
     linter/src/rules/illegal_type_reference.cpp
     linter/src/rules/illegal_type_reference_uhdm.cpp
     linter/src/rules/duplicate_checker.cpp
+    linter/src/rules/undeclared_checker.cpp
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})
