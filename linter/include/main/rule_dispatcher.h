@@ -81,6 +81,7 @@
 #include "rules/time_value.h"
 #include "rules/type_casting.h"
 #include "rules/undeclared_cell.h"
+#include "rules/undeclared_checker.h"
 #include "rules/undeclared_configuration.h"
 #include "rules/undeclared_design.h"
 #include "rules/void_cast_of_void_function.h"
@@ -359,6 +360,9 @@ const auto globalRules = std::to_array<GlobalRule>({
     {.idName = "DUPLICATE_CONSTRUCTOR",
      .description = "duplicate constructor already declared",
      .check = CheckDuplicateConstructor},
+    {.idName = "UNDECLARED_CHECKER",
+     .description = "Checker is not declared",
+     .check = CheckUndeclaredChecker},
 });
 
 constexpr size_t AllGlobalRulesSize = globalRules.size();
