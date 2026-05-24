@@ -49,6 +49,7 @@
 #include "rules/illegal_net_datatype.h"
 #include "rules/illegal_type_reference.h"
 #include "rules/illegal_type_reference_uhdm.h"
+#include "rules/illegal_checker_instance.h"
 #include "rules/implement_class.h"
 #include "rules/implement_interface_class.h"
 #include "rules/implicit_data_type.h"
@@ -259,6 +260,10 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "DUPLICATE_CHECKER",
      .description = "Duplicate checker is already declared",
      .check = CheckDuplicateChecker},
+    {.idName = "ILLEGAL_CHECKER_INSTANCE",
+     .description =
+         "Instance  of checker is not allowed in procedural code of checker",
+     .check = CheckIllegalCheckerInstance},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
