@@ -22,6 +22,7 @@
 #include "rules/covergroup_expression.h"
 #include "rules/coverpoint_expression_type.h"
 #include "rules/dpi_decl_string.h"
+#include "rules/duplicate_checker.h"
 #include "rules/duplicate_class.h"
 #include "rules/duplicate_constructor.h"
 #include "rules/duplicate_cover_cross.h"
@@ -254,6 +255,9 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "ILLEGAL_TYPE_REFERENCE",
      .description = "Type used in context where it is forbidden by spec",
      .check = CheckIllegalTypeReference},
+    {.idName = "DUPLICATE_CHECKER",
+     .description = "Duplicate checker is already declared",
+     .check = CheckDuplicateChecker},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
