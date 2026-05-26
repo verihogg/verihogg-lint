@@ -17,10 +17,14 @@
 void CheckIllegalCheckerInstance(const SURELOG::FileContent* fileContent,
                                  SURELOG::ErrorContainer* errors,
                                  SURELOG::SymbolTable* symbols) {
-  if (!fileContent || !errors || !symbols) return;
+  if (!fileContent || !errors || !symbols) {
+    return;
+  }
 
   SURELOG::NodeId root = fileContent->getRootNode();
-  if (!root) return;
+  if (!root) {
+    return;
+  }
 
   std::vector<SURELOG::NodeId> allInst;
 
@@ -50,7 +54,9 @@ void CheckIllegalCheckerInstance(const SURELOG::FileContent* fileContent,
       anc = fileContent->Parent(anc);
     }
 
-    if (anc == SURELOG::InvalidNodeId) continue;
+    if (anc == SURELOG::InvalidNodeId) {
+      continue;
+    }
     std::string instName;
     auto strings = fileContent->sl_collect_all(
         instNode, SURELOG::VObjectType::slStringConst);
@@ -69,7 +75,9 @@ void CheckIllegalCheckerInstance(const SURELOG::FileContent* fileContent,
       }
     }
 
-    if (instName.empty()) continue;
+    if (instName.empty()) {
+      continue;
+    }
 
     std::string_view checkerName = ExtractName(fileContent, anc);
     std::string msg = "Instance '" + instName +
