@@ -20,7 +20,9 @@
 void CheckUndeclaredChecker(SURELOG::Design* design,
                             SURELOG::ErrorContainer* errors,
                             SURELOG::SymbolTable* symbols) {
-  if (!design || !errors || !symbols) return;
+  if (!design || !errors || !symbols) {
+    return;
+  }
 
   std::unordered_set<std::string> declaredCheckers;
   std::unordered_set<std::string> declaredModules;
@@ -28,26 +30,38 @@ void CheckUndeclaredChecker(SURELOG::Design* design,
       instantiations;
 
   for (const auto& [_, fileContent] : design->getAllFileContents()) {
-    if (!fileContent) continue;
+    if (!fileContent) {
+      continue;
+    }
     SURELOG::NodeId root = fileContent->getRootNode();
-    if (!root) continue;
+    if (!root) {
+      continue;
+    }
 
     for (SURELOG::NodeId modNode : fileContent->sl_collect_all(
              root, SURELOG::VObjectType::paModule_declaration)) {
       std::string_view name = ExtractName(fileContent, modNode);
-      if (!name.empty()) declaredModules.emplace(name);
+      if (!name.empty()) {
+        declaredModules.emplace(name);
+      }
     }
     for (SURELOG::NodeId chkNode : fileContent->sl_collect_all(
              root, SURELOG::VObjectType::paChecker_declaration)) {
       std::string_view name = ExtractName(fileContent, chkNode);
-      if (!name.empty()) declaredCheckers.emplace(name);
+      if (!name.empty()) {
+        declaredCheckers.emplace(name);
+      }
     }
   }
 
   for (const auto& [_, fileContent] : design->getAllFileContents()) {
-    if (!fileContent) continue;
+    if (!fileContent) {
+      continue;
+    }
     SURELOG::NodeId root = fileContent->getRootNode();
-    if (!root) continue;
+    if (!root) {
+      continue;
+    }
 
     for (SURELOG::NodeId instNode : fileContent->sl_collect_all(
              root, SURELOG::VObjectType::paModule_instantiation)) {
