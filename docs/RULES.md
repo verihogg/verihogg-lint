@@ -200,4 +200,12 @@
 
 - `DUPLICATE_COVERPOINT`
    Duplicate coverpoint #, already declared at line # file #
+   
+- `DUPLICATE_CHECKER`
+   Duplicate checker #, already declared at line # file #
 
+- `UNDECLARED_CHECKER`
+   Checker # is not declared
+   
+- `ILLEGAL_CHECKER_INSTANCE`
+   Instance # of checker # not allowed in procedural code of checker
