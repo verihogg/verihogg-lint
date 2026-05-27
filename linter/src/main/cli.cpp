@@ -134,6 +134,8 @@ void PrintHelp(const char* programName) {
     << "  -h, --help          Show this help and exit\n"
     << "  --version           Show version and exit\n"
     << "  --list-rules        List all available lint rules\n"
+    << "  --config-file=<path>\n"
+    << "                      Use lint config from <path> (default: ./" << DefaultConfigFileName << ")\n"
     << "  --surelog-help      Show full Surelog parser/elaboration options\n"
     << "\n"
     << "INPUT:\n"
