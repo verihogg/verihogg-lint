@@ -133,6 +133,13 @@ void IllegalTypeReferenceListener::CheckNet(const UHDM::nets* net) {
     return;
   }
   seen_.insert(net);
+  // Surelog attaches a phantom net (net type 0) to every signal declaration,
+  // including plain variables (var real, real arrays, typedef'd real vars).
+  // Only a real net carries a net type; skip phantoms so legal non-integral
+  // variables are not flagged.
+  if (net->VpiNetType() == 0) {
+    return;
+  }
   const UHDM::ref_typespec* ref = net->Typespec();
   if (ref == nullptr) {
     return;
