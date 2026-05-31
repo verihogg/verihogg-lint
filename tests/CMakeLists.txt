@@ -1,7 +1,7 @@
 add_executable(autofix_unit_tests
     unit/test_replacements.cpp
     unit/test_source_manager.cpp
-    unit/test_yaml_roundtrip.cpp
+    unit/test_diff.cpp
 )
 
 target_link_libraries(autofix_unit_tests PUBLIC verihoggLintLib)
@@ -18,6 +18,8 @@ target_include_directories(autofix_unit_tests
 
 include(GoogleTest)
 gtest_discover_tests(autofix_unit_tests)
+
+set(NON_STANDARD_CHECK_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/NonStandardChecks")
 
 add_executable(autofix_check_test autofix_check.cpp)
 

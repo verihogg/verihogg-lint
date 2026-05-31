@@ -221,15 +221,12 @@ set(LINTER_SRC
     linter/src/rules/illegal_cunit_reference.cpp
     linter/src/rules/illegal_type_reference.cpp
     linter/src/rules/illegal_type_reference_uhdm.cpp
-<<<<<<< HEAD
     linter/src/rules/duplicate_checker.cpp
     linter/src/rules/undeclared_checker.cpp
     linter/src/rules/illegal_checker_instance.cpp
-=======
     linter/src/fix/source_manager.cpp
     linter/src/fix/replacement.cpp
     linter/src/fix/suggestion_printer.cpp
->>>>>>> 0b6eff5 (feat: add autofix infrastructure (FixIt, LintDiagnostic, FixSourceManager, FixableRule pipeline))
 )
 
 add_library(verihoggLintLib ${LINTER_SRC})
@@ -276,7 +273,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC verihoggLintLib)
 if(MSVC)
     target_compile_options(verihoggLintLib PRIVATE /W4 /bigobj)
 else()
-    target_compile_options(verihoggLintLib PRIVATE -Wall -Wextra -Wpedantic)
+    target_compile_options(verihoggLintLib PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
 # Install rule

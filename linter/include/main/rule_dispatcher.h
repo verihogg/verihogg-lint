@@ -135,17 +135,10 @@ struct UhdmRule {
 };
 
 const auto allRules = std::to_array<Rule>({
-    {.idName = "ASSIGNMENT_PATTERN",
-     .description =
-         "Expecting assignment pattern '{...}' instead of concatenation",
-     .check = CheckAssignmentPattern},
     {.idName = "ASSIGNMENT_PATTERN_CONTEXT",
      .description =
          "Assignment pattern not allowed outside assignment-like context",
      .check = CheckAssignmentPatternContext},
-    {.idName = "CIRCULAR_INHERITANCE",
-     .description = "Classes cannot have circular inheritance",
-     .check = CheckCircularInheritance},
     {.idName = "CONCATENATION_MULTIPLIER",
      .description = "Expecting constant expression as concatenation multiplier",
      .check = CheckConcatenationMultiplier},
@@ -163,9 +156,6 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "EMPTY_ASSIGNMENT_PATTERN",
      .description = "Empty assignment pattern '{}' not allowed",
      .check = CheckEmptyAssignmentPattern},
-    {.idName = "EXTEND_CLASS",
-     .description = "extending non existing class",
-     .check = CheckExtendClass},
     {.idName = "MODPORT_IMPORT_EXPORT_PORT",
      .description = "еxpected method name instead of interface signal name",
      .check = CheckModportImportExportPort},

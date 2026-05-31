@@ -1,6 +1,7 @@
 #pragma once
 
 #include <compare>
+#include <iosfwd>
 #include <map>
 #include <string>
 #include <vector>
@@ -60,11 +61,7 @@ class FileReplacements {
                 std::vector<std::string>* failed = nullptr,
                 const std::string& backup_suffix = "") const;
 
-  void printDiff() const;
-
-  [[nodiscard]] auto exportToYaml(const std::string& output_path) const -> bool;
-
-  [[nodiscard]] auto importFromYaml(const std::string& input_path) -> bool;
+  void printDiff(std::ostream& out) const;
 
   [[nodiscard]] auto empty() const -> bool { return by_file_.empty(); }
 

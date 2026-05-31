@@ -1,16 +1,15 @@
 #include "fix/replacement.h"
 
-#include <yaml-cpp/yaml.h>
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <limits>
 #include <ranges>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 auto fixItToReplacement(const FixIt& fix, FixSourceManager& sm) -> Replacement {
   fix.range.validate();
@@ -188,7 +187,237 @@ void FileReplacements::applyAll(std::vector<std::string>* fixed,
   }
 }
 
-void FileReplacements::printDiff() const {
+namespace {
+
+auto splitLines(const std::string& text) -> std::vector<std::string> {
+  std::vector<std::string> lines;
+  std::istringstream ss(text);
+  std::string line;
+  while (std::getline(ss, line)) {
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+    lines.push_back(std::move(line));
+  }
+  return lines;
+}
+
+auto makeRelativePath(const std::string& filepath) -> std::string {
+  std::error_code ec;
+  const auto rel =
+      std::filesystem::relative(filepath, std::filesystem::current_path(), ec);
+  if (!ec && !rel.empty()) {
+    return rel.generic_string();
+  }
+  return filepath;
+}
+
+auto computeLCS(const std::vector<std::string>& a,
+                const std::vector<std::string>& b)
+    -> std::vector<std::pair<int, int>> {
+  const int n = static_cast<int>(a.size());
+  const int m = static_cast<int>(b.size());
+
+  std::vector<std::vector<int>> dp(n + 1, std::vector<int>(m + 1, 0));
+  for (int i = 1; i <= n; ++i) {
+    for (int j = 1; j <= m; ++j) {
+      dp.at(i).at(j) = (a.at(i - 1) == b.at(j - 1))
+                           ? dp.at(i - 1).at(j - 1) + 1
+                           : std::max(dp.at(i - 1).at(j), dp.at(i).at(j - 1));
+    }
+  }
+
+  std::vector<std::pair<int, int>> matches;
+  for (int i = n, j = m; i > 0 && j > 0;) {
+    if (a.at(i - 1) == b.at(j - 1)) {
+      matches.emplace_back(i - 1, j - 1);
+      --i;
+      --j;
+    } else if (dp.at(i - 1).at(j) >= dp.at(i).at(j - 1)) {
+      --i;
+    } else {
+      --j;
+    }
+  }
+  std::ranges::reverse(matches);
+  return matches;
+}
+
+struct DiffEdit {
+  enum class Kind : std::uint8_t { Context, Remove, Add } kind;
+  std::string text;
+  int orig_lineno;
+  int new_lineno;
+};
+
+auto buildEdits(const std::vector<std::string>& orig,
+                const std::vector<std::string>& fixed)
+    -> std::vector<DiffEdit> {
+  const auto matches = computeLCS(orig, fixed);
+
+  std::vector<DiffEdit> edits;
+  edits.reserve(orig.size() + fixed.size());
+  int oi = 0, ni = 0;
+
+  for (const auto& [om, nm] : matches) {
+    while (oi < om) {
+      edits.push_back({.kind = DiffEdit::Kind::Remove,
+                       .text = orig.at(oi),
+                       .orig_lineno = oi + 1,
+                       .new_lineno = -1});
+      ++oi;
+    }
+    while (ni < nm) {
+      edits.push_back({.kind = DiffEdit::Kind::Add,
+                       .text = fixed.at(ni),
+                       .orig_lineno = -1,
+                       .new_lineno = ni + 1});
+      ++ni;
+    }
+    edits.push_back({.kind = DiffEdit::Kind::Context,
+                     .text = orig.at(oi),
+                     .orig_lineno = oi + 1,
+                     .new_lineno = ni + 1});
+    ++oi;
+    ++ni;
+  }
+  while (std::cmp_less(oi, orig.size())) {
+    edits.push_back({.kind = DiffEdit::Kind::Remove,
+                     .text = orig.at(oi),
+                     .orig_lineno = oi + 1,
+                     .new_lineno = -1});
+    ++oi;
+  }
+  while (std::cmp_less(ni, fixed.size())) {
+    edits.push_back({.kind = DiffEdit::Kind::Add,
+                     .text = fixed.at(ni),
+                     .orig_lineno = -1,
+                     .new_lineno = ni + 1});
+    ++ni;
+  }
+  return edits;
+}
+
+struct Hunk {
+  int orig_start = 0;
+  int orig_count = 0;
+  int new_start = 0;
+  int new_count = 0;
+  std::vector<DiffEdit> edits;
+};
+
+auto buildHunks(const std::vector<DiffEdit>& edits, int context)
+    -> std::vector<Hunk> {
+  const int n = static_cast<int>(edits.size());
+
+  std::vector<int> changes;
+  for (int i = 0; i < n; ++i) {
+    if (edits.at(i).kind != DiffEdit::Kind::Context) {
+      changes.push_back(i);
+    }
+  }
+  if (changes.empty()) {
+    return {};
+  }
+
+  std::vector<std::pair<int, int>> windows;
+  int ws = std::max(0, changes.at(0) - context);
+  int we = std::min(n - 1, changes.at(0) + context);
+
+  for (int k = 1; std::cmp_less(k, changes.size()); ++k) {
+    const int ns = std::max(0, changes.at(k) - context);
+    const int ne = std::min(n - 1, changes.at(k) + context);
+    if (ns <= we + 1) {
+      we = ne;
+    } else {
+      windows.emplace_back(ws, we);
+      ws = ns;
+      we = ne;
+    }
+  }
+  windows.emplace_back(ws, we);
+
+  std::vector<Hunk> hunks;
+  for (const auto& [rs, re] : windows) {
+    Hunk h;
+    int orig_start_found = -1;
+    int new_start_found = -1;
+
+    for (int i = rs; i <= re; ++i) {
+      const auto& e = edits.at(i);
+      h.edits.push_back(e);
+      if (e.kind != DiffEdit::Kind::Add) {
+        if (orig_start_found == -1) {
+          orig_start_found = e.orig_lineno;
+        }
+        ++h.orig_count;
+      }
+      if (e.kind != DiffEdit::Kind::Remove) {
+        if (new_start_found == -1) {
+          new_start_found = e.new_lineno;
+        }
+        ++h.new_count;
+      }
+    }
+
+    if (orig_start_found == -1) {
+      h.orig_start = 0;
+      for (int i = rs - 1; i >= 0; --i) {
+        if (edits.at(i).kind != DiffEdit::Kind::Add) {
+          h.orig_start = edits.at(i).orig_lineno;
+          break;
+        }
+      }
+    } else {
+      h.orig_start = orig_start_found;
+    }
+
+    if (new_start_found == -1) {
+      h.new_start = 0;
+      for (int i = rs - 1; i >= 0; --i) {
+        if (edits.at(i).kind != DiffEdit::Kind::Remove) {
+          h.new_start = edits.at(i).new_lineno;
+          break;
+        }
+      }
+    } else {
+      h.new_start = new_start_found;
+    }
+
+    hunks.push_back(std::move(h));
+  }
+  return hunks;
+}
+
+void emitHunk(std::ostream& out, const Hunk& h) {
+  out << "@@ -" << h.orig_start;
+  if (h.orig_count != 1) {
+    out << ',' << h.orig_count;
+  }
+  out << " +" << h.new_start;
+  if (h.new_count != 1) {
+    out << ',' << h.new_count;
+  }
+  out << " @@\n";
+
+  for (const auto& e : h.edits) {
+    switch (e.kind) {
+      case DiffEdit::Kind::Context:
+        out << ' ' << e.text << '\n';
+        break;
+      case DiffEdit::Kind::Remove:
+        out << '-' << e.text << '\n';
+        break;
+      case DiffEdit::Kind::Add:
+        out << '+' << e.text << '\n';
+        break;
+    }
+  }
+}
+
+}  // namespace
+
+void FileReplacements::printDiff(std::ostream& out) const {
   for (const auto& [filepath, repls] : by_file_) {
     if (repls.empty()) {
       continue;
@@ -218,139 +447,20 @@ void FileReplacements::printDiff() const {
       continue;
     }
 
-    std::cout << "--- " << filepath << " (original)\n";
-    std::cout << "+++ " << filepath << " (fixed)\n";
+    const auto orig_lines = splitLines(source);
+    const auto fixed_lines = splitLines(fixed);
+    const auto edits = buildEdits(orig_lines, fixed_lines);
+    const auto hunks = buildHunks(edits, 3);
 
-    std::istringstream src_ss(source);
-    std::istringstream fix_ss(fixed);
-    std::string src_line;
-    std::string fix_line;
-    unsigned lineno = 1;
-
-    const auto stripCR = [](std::string& s) {
-      if (!s.empty() && s.back() == '\r') {
-        s.pop_back();
-      }
-    };
-
-    bool src_ok = true;
-    bool fix_ok = true;
-    while (src_ok || fix_ok) {
-      src_ok = static_cast<bool>(std::getline(src_ss, src_line));
-      fix_ok = static_cast<bool>(std::getline(fix_ss, fix_line));
-      if (!src_ok && !fix_ok) {
-        break;
-      }
-
-      if (src_ok) {
-        stripCR(src_line);
-      }
-      if (fix_ok) {
-        stripCR(fix_line);
-      }
-
-      const std::string& src_display = src_ok ? src_line : "";
-      const std::string& fix_display = fix_ok ? fix_line : "";
-
-      if (src_display != fix_display) {
-        std::cout << "@@ line " << lineno << " @@\n";
-        if (src_ok) {
-          std::cout << "- " << src_display << "\n";
-        }
-        if (fix_ok) {
-          std::cout << "+ " << fix_display << "\n";
-        }
-      }
-      ++lineno;
-    }
-  }
-}
-
-auto FileReplacements::importFromYaml(const std::string& input_path) -> bool {
-  YAML::Node doc;
-  try {
-    doc = YAML::LoadFile(input_path);
-  } catch (const YAML::Exception& e) {
-    std::cerr << "autofix: failed to load YAML: " << input_path << ": "
-              << e.what() << "\n";
-    return false;
-  }
-
-  const YAML::Node& repls_node = doc["Replacements"];
-  if (!repls_node || !repls_node.IsSequence()) {
-    std::cerr << "autofix: invalid YAML format in: " << input_path
-              << " (expected top-level 'Replacements' sequence)\n";
-    return false;
-  }
-
-  for (const auto& node : repls_node) {
-    if (!node["FilePath"] || !node["Offset"] || !node["Length"]) {
-      std::cerr << "autofix: skipping malformed entry in: " << input_path
-                << " (missing FilePath/Offset/Length)\n";
+    if (hunks.empty()) {
       continue;
     }
 
-    Replacement r;
-    try {
-      r.filename = node["FilePath"].as<std::string>();
-      r.offset = node["Offset"].as<unsigned>();
-      r.length = node["Length"].as<unsigned>();
-      r.text = node["ReplacementText"]
-                   ? node["ReplacementText"].as<std::string>()
-                   : "";
-    } catch (const YAML::Exception& e) {
-      std::cerr << "autofix: skipping entry with bad values in: " << input_path
-                << ": " << e.what() << "\n";
-      continue;
-    }
-
-    std::string conflict_msg;
-    if (!add(r, &conflict_msg)) {
-      std::cerr << "autofix: import conflict: " << conflict_msg << "\n";
+    const std::string rel = makeRelativePath(filepath);
+    out << "--- a/" << rel << "\n";
+    out << "+++ b/" << rel << "\n";
+    for (const auto& hunk : hunks) {
+      emitHunk(out, hunk);
     }
   }
-
-  return true;
-}
-
-auto FileReplacements::exportToYaml(const std::string& output_path) const
-    -> bool {
-  const auto parent = std::filesystem::path(output_path).parent_path();
-  if (!parent.empty()) {
-    std::error_code ec;
-    std::filesystem::create_directories(parent, ec);
-    if (ec) {
-      std::cerr << "autofix: cannot create directory: " << parent.string()
-                << " (" << ec.message() << ")\n";
-      return false;
-    }
-  }
-
-  YAML::Emitter out;
-  out << YAML::BeginMap;
-  out << YAML::Key << "Replacements" << YAML::Value << YAML::BeginSeq;
-
-  for (const auto& [filepath, repls] : by_file_) {
-    for (const auto& r : std::views::reverse(repls)) {
-      out << YAML::BeginMap;
-      out << YAML::Key << "FilePath" << YAML::Value << filepath;
-      out << YAML::Key << "Offset" << YAML::Value << r.offset;
-      out << YAML::Key << "Length" << YAML::Value << r.length;
-      out << YAML::Key << "ReplacementText" << YAML::Value << r.text;
-      if (!r.rule_id.empty()) {
-        out << YAML::Comment("rule: " + r.rule_id);
-      }
-      out << YAML::EndMap;
-    }
-  }
-
-  out << YAML::EndSeq << YAML::EndMap;
-
-  std::ofstream file(output_path, std::ios::binary);
-  if (!file.is_open()) {
-    std::cerr << "autofix: cannot open export file: " << output_path << "\n";
-    return false;
-  }
-  file << out.c_str();
-  return file.good();
 }
