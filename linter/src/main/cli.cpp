@@ -14,9 +14,8 @@ namespace cli {
 
 constexpr size_t CONFIG_FLAG_LEN = 13;
 inline constexpr std::string_view kConfigFilePrefix = "--config-file=";
-inline constexpr std::string_view kExportFixesPrefix = "--export-fixes=";
-inline constexpr std::string_view kImportFixesPrefix = "--apply-fixes-from=";
 inline constexpr std::string_view kBackupSuffixPrefix = "--backup-suffix=";
+inline constexpr std::string_view kDryRunPrefix = "--fix-dry-run=";
 
 auto ParseArgs(const gsl::span<const char*> args) -> Options {
   Options opts;
@@ -59,18 +58,12 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
     } else if (std::strcmp(arg, "--fix-dry-run") == 0) {
       opts.fix_dry_run = true;
 
+    } else if (std::strncmp(arg, "--fix-dry-run=", kDryRunPrefix.size()) == 0) {
+      opts.fix_dry_run = true;
+      opts.dry_run_file = std::string_view(arg).substr(kDryRunPrefix.size());
+
     } else if (std::strcmp(arg, "--show-suggestions") == 0) {
       opts.show_suggestions = true;
-
-    } else if (std::strncmp(
-                   arg, "--export-fixes=", kExportFixesPrefix.size()) == 0) {
-      std::string_view sv(arg);
-      opts.export_fixes = std::string(sv.substr(kExportFixesPrefix.size()));
-
-    } else if (std::strncmp(arg, "--apply-fixes-from=",
-                            kImportFixesPrefix.size()) == 0) {
-      std::string_view sv(arg);
-      opts.import_fixes = std::string(sv.substr(kImportFixesPrefix.size()));
 
     } else if (std::strncmp(
                    arg, "--backup-suffix=", kBackupSuffixPrefix.size()) == 0) {
@@ -168,12 +161,12 @@ void PrintHelp(const char* programName) {
     << "                      Use lint config from <path> (default: ./" << DefaultConfigFileName << ")\n"
     << "  --surelog-help      Show full Surelog parser/elaboration options\n"
     << "\n"
-      << "AUTOFIX:\n"
-    << "  --fix                         Apply all fixable suggestions automatically\n"
-    << "  --fix-dry-run                 Show diff in stdout without modifying files\n"
+    << "AUTOFIX:\n"
+    << "  --fix                         Apply all fixable suggestions in-place\n"
+    << "  --fix-dry-run[=<file>]        Write a unified diff without modifying files.\n"
+    << "                                Omit <file> to print to stdout.\n"
+    << "                                Compatible with 'patch -p1' and 'git apply'.\n"
     << "  --show-suggestions            Print fix hints with before/after snippets\n"
-    << "  --export-fixes=<file>         Export fixes to YAML without applying\n"
-    << "  --apply-fixes-from=<file>     Apply fixes from a previously exported YAML\n"
     << "  --backup-suffix=<suffix>      Save originals before --fix (e.g. .bak)\n"
     << "\n"
     << "INPUT:\n"
@@ -195,6 +188,8 @@ void PrintHelp(const char* programName) {
     << "EXAMPLES:\n"
     << "  " << programName << " file.sv -nobuiltin\n"
     << "  " << programName << " -f files.f -nobuiltin\n"
+    << "  " << programName << " --fix-dry-run file.sv | git apply\n"
+    << "  " << programName << " --fix-dry-run=fixes.patch file.sv\n"
     << "  " << programName << " --list-rules\n"
     << "\n"
     << "All other flags are forwarded to Surelog (parser/elaboration).\n"

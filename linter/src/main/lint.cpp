@@ -8,6 +8,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <exception>
+#include <fstream>
 #include <gsl/span>
 #include <iostream>
 #include <memory>
@@ -38,40 +39,6 @@ auto main(int argc, const char** argv) -> int {
   if (kOpts.dump_config) {
     cli::DumpConfig();
     return 0;
-  }
-
-  if (!kOpts.import_fixes.empty()) {
-    FileReplacements file_repls;
-    if (!file_repls.importFromYaml(kOpts.import_fixes)) {
-      return 1;
-    }
-    if (file_repls.empty()) {
-      std::cout << "No fixes to apply.\n";
-      return 0;
-    }
-    if (kOpts.fix_dry_run) {
-      file_repls.printDiff();
-      return 0;
-    }
-    std::vector<std::string> fixed_files;
-    std::vector<std::string> failed_files;
-    file_repls.applyAll(&fixed_files, &failed_files, kOpts.backup_suffix);
-    for (const auto& f : fixed_files) {
-      std::cout << "Fixed: " << f << "\n";
-    }
-    for (const auto& f : failed_files) {
-      std::cerr << "autofix: failed to fix: " << f << "\n";
-    }
-    if (!fixed_files.empty()) {
-      std::cout << "Applied " << file_repls.totalCount() << " fix(es) across "
-                << fixed_files.size() << " file(s).\n";
-    }
-    if (!failed_files.empty()) {
-      std::cerr << "WARNING: " << failed_files.size()
-                << " file(s) could not be fixed. "
-                << "Check file permissions and re-run.\n";
-    }
-    return failed_files.empty() ? 0 : 1;
   }
 
   if (kOpts.show_version) {
@@ -142,10 +109,9 @@ auto main(int argc, const char** argv) -> int {
     return 1;
   }
 
-  const bool kNeedCollector = kOpts.show_suggestions || kOpts.apply_fixes ||
-                              !kOpts.export_fixes.empty() || kOpts.fix_dry_run;
-  const bool kNeedReplacements =
-      kOpts.apply_fixes || !kOpts.export_fixes.empty() || kOpts.fix_dry_run;
+  const bool kNeedCollector =
+      kOpts.show_suggestions || kOpts.apply_fixes || kOpts.fix_dry_run;
+  const bool kNeedReplacements = kOpts.apply_fixes || kOpts.fix_dry_run;
   const bool kNeedSourceMgr = kNeedReplacements || kOpts.show_suggestions;
 
   std::unique_ptr<LintDiagnosticCollector> collector;
@@ -188,16 +154,24 @@ auto main(int argc, const char** argv) -> int {
   }
 
   if (kOpts.fix_dry_run && file_repls && !file_repls->empty()) {
-    std::cout << "\n";
-    file_repls->printDiff();
-  }
-
-  if (!kOpts.export_fixes.empty() && file_repls && !file_repls->empty()) {
-    if (file_repls->exportToYaml(kOpts.export_fixes)) {
-      std::cout << "Fixes exported to: " << kOpts.export_fixes << "\n";
+    if (kOpts.dry_run_file.empty()) {
+      std::cout << "\n";
+      file_repls->printDiff(std::cout);
     } else {
-      std::cerr << "autofix: failed to export fixes to: " << kOpts.export_fixes
-                << "\n";
+      std::ofstream patch_out(kOpts.dry_run_file,
+                              std::ios::binary | std::ios::trunc);
+      if (!patch_out.is_open()) {
+        std::cerr << "autofix: cannot open patch output file: "
+                  << kOpts.dry_run_file << "\n";
+        return 1;
+      }
+      file_repls->printDiff(patch_out);
+      if (!patch_out.good()) {
+        std::cerr << "autofix: write error on patch file: "
+                  << kOpts.dry_run_file << "\n";
+        return 1;
+      }
+      std::cout << "Patch written to: " << kOpts.dry_run_file << "\n";
     }
   }
 

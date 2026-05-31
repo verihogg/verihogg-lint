@@ -20,9 +20,8 @@ struct Options {
 
   bool apply_fixes = false;
   bool fix_dry_run = false;
+  std::string dry_run_file;
   bool show_suggestions = false;
-  std::string export_fixes;
-  std::string import_fixes;
   std::string backup_suffix;
 
   std::filesystem::path config_file;
