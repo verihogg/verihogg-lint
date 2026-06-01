@@ -20,6 +20,8 @@
 #include <vector>
 #include <optional>
 
+#include "utils/design_utils.h"
+
 namespace SL = SURELOG;
 
 namespace {
@@ -246,6 +248,8 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     RunFixableRulesOnFile(fileContent, errors, symbols, kRuleSet, autofix);
   }
 
+  UvmFilter::SetUvmDir(uvmDir);
+
   for (const auto& rule : RuleInfo::globalRules) {
     if (kRuleSet.find(rule.idName) == kRuleSet.end() && rule.check != nullptr) {
       continue;
@@ -261,4 +265,6 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     }
     rule.check(uhdmDesign, errors, symbols);
   }
+
+  UvmFilter::ClearUvmDir();
 }

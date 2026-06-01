@@ -4,6 +4,8 @@ set -u
 BINARY="/nix/var/nix/profiles/default/bin/verihogg-lint"
 FIXTURES_DIR="/verihogg-test-fixtures"
 
+UVM_FIXTURE="/verihogg-test-uvm/smoke.sv"
+
 PASS=0
 FAIL=0
 ERRORS=""
@@ -12,6 +14,46 @@ if [ ! -f "$BINARY" ] && [ ! -L "$BINARY" ]; then
     echo "FATAL: binary not found at $BINARY"
     exit 1
 fi
+
+echo "UVM:"
+
+"$BINARY" --uvm-version > /tmp/lint_out.txt 2>&1
+uvm_ver_exit=$?
+if [ "$uvm_ver_exit" -eq 0 ]; then
+    PASS=$((PASS + 1))
+    printf "  PASS [exit 0]  --uvm-version: %s\n" "$(cat /tmp/lint_out.txt)"
+else
+    FAIL=$((FAIL + 1))
+    printf "  FAIL [exit %s, expected 0]  --uvm-version\n%s\n" "$uvm_ver_exit" "$(cat /tmp/lint_out.txt)"
+    ERRORS="${ERRORS}\nFAIL: --uvm-version (exit $uvm_ver_exit)"
+fi
+
+if [ -f "$UVM_FIXTURE" ]; then
+    "$BINARY" --uvm -nobuiltin "$UVM_FIXTURE" > /tmp/lint_out.txt 2>&1
+    uvm_with_exit=$?
+    if [ "$uvm_with_exit" -eq 0 ]; then
+        PASS=$((PASS + 1))
+        printf "  PASS [exit 0]  --uvm resolves built-in library (%s)\n" "$UVM_FIXTURE"
+    else
+        FAIL=$((FAIL + 1))
+        printf "  FAIL [exit %s, expected 0]  --uvm %s\n%s\n" "$uvm_with_exit" "$UVM_FIXTURE" "$(cat /tmp/lint_out.txt)"
+        ERRORS="${ERRORS}\nFAIL: --uvm flag (exit $uvm_with_exit)"
+    fi
+
+    "$BINARY" -nobuiltin "$UVM_FIXTURE" > /tmp/lint_out.txt 2>&1
+    uvm_without_exit=$?
+    if [ "$uvm_without_exit" -ne 0 ]; then
+        PASS=$((PASS + 1))
+        printf "  PASS [exit non-0]  UVM fixture correctly fails without --uvm\n"
+    else
+        FAIL=$((FAIL + 1))
+        printf "  FAIL [exit 0, expected non-0]  UVM fixture should fail without --uvm\n"
+        ERRORS="${ERRORS}\nFAIL: UVM fixture unexpectedly passed without --uvm"
+    fi
+fi
+
+echo ""
+echo "Lint rules:"
 
 for rule_dir in "$FIXTURES_DIR"/*/; do
     rule_name=$(basename "$rule_dir")
