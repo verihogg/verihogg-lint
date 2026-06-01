@@ -95,6 +95,12 @@ auto main(int argc, const char** argv) -> int {
       }
       resolved = *kOpts.uvm_path;
     } else {
+#ifndef UVM_BUILTIN_AVAILABLE
+      std::cerr << "error: --uvm requires built-in UVM support.\n"
+                << "  This binary was built without UVM.\n"
+                << "  Use --uvm=<path> to specify a UVM library path.\n";
+      return 1;
+#else
       auto maybe = uvm::ResolveUvmPath();
       if (!maybe.has_value()) {
         std::cerr << "error: built-in UVM not found.\n"
@@ -102,6 +108,7 @@ auto main(int argc, const char** argv) -> int {
         return 1;
       }
       resolved = std::move(*maybe);
+#endif
     }
     uvm_dir = resolved;
 
