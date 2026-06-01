@@ -25,27 +25,32 @@ auto GetEnvVar(std::string_view name) -> std::optional<std::string> {
 }  // namespace
 
 auto ResolveUvmPath() -> std::optional<fs::path> {
+  std::error_code ec;
+
+  std::optional<fs::path> installed;
+  const fs::path exe = fs::read_symlink("/proc/self/exe", ec);
+  if (!ec) {
+    fs::path candidate = exe.parent_path().parent_path() / "share" /
+                         "verihogg-lint" / "uvm" / "src";
+    if (fs::is_directory(candidate, ec)) {
+      installed = candidate;
+    }
+  }
+
   if (auto env = GetEnvVar("VERIHOGG_UVM_PATH")) {
     fs::path p{*env};
-    std::error_code ec;
     if (fs::is_directory(p, ec)) {
+      if (installed.has_value()) {
+        std::cerr << "warning: VERIHOGG_UVM_PATH overrides built-in UVM (" << p
+                  << ")\n";
+      }
       return p;
     }
     std::cerr << "error: VERIHOGG_UVM_PATH=" << p << " is not a directory\n";
     return std::nullopt;
   }
 
-  std::error_code ec;
-  const fs::path exe = fs::read_symlink("/proc/self/exe", ec);
-  if (!ec) {
-    fs::path candidate = exe.parent_path().parent_path() / "share" /
-                         "verihogg-lint" / "uvm" / "src";
-    if (fs::is_directory(candidate, ec)) {
-      return candidate;
-    }
-  }
-
-  return std::nullopt;
+  return installed;
 }
 
 }  // namespace uvm
