@@ -81,6 +81,25 @@ TEST(CliParseArgs, PlusFlagsAccepted) {
   EXPECT_TRUE(opts.error_message.empty()) << opts.error_message;
 }
 
+TEST(CliParseArgs, UvmBuiltin) {
+  const auto opts = ParseFor({"--uvm"});
+  EXPECT_EQ(opts.uvm_mode, cli::UvmMode::Builtin);
+  EXPECT_TRUE(opts.error_message.empty()) << opts.error_message;
+}
+
+TEST(CliParseArgs, UvmCustomPath) {
+  const auto opts = ParseFor({"--uvm=/some/path"});
+  EXPECT_EQ(opts.uvm_mode, cli::UvmMode::Custom);
+  EXPECT_EQ(opts.uvm_path, std::filesystem::path{"/some/path"});
+  EXPECT_TRUE(opts.error_message.empty()) << opts.error_message;
+}
+
+TEST(CliParseArgs, UvmVersion) {
+  const auto opts = ParseFor({"--uvm-version"});
+  EXPECT_TRUE(opts.show_uvm_version);
+  EXPECT_TRUE(opts.error_message.empty()) << opts.error_message;
+}
+
 TEST(CliSurelogFlags, AllNoArgFlagsClassified) {
   for (const auto f : cli::kSurelogNoArgFlags) {
     EXPECT_EQ(cli::ClassifySurelogFlag(f), cli::SurelogFlagKind::NoArg)
