@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "main/lint_rules.h"
+#include "utils/design_utils.h"
 
 namespace SL = SURELOG;
 
@@ -138,6 +139,10 @@ void FatalListener::enterSys_func_call(const UHDM::sys_func_call* object,
   seen_.insert(object);
 
   if (object->VpiName() != "$fatal") {
+    return;
+  }
+
+  if (UvmFilter::IsUvmFile(object->VpiFile())) {
     return;
   }
 

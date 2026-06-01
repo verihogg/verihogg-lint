@@ -13,6 +13,8 @@
 #include <string>
 #include <string_view>
 
+#include "utils/design_utils.h"
+
 namespace SL = SURELOG;
 
 auto GetColumnSafe(const SL::FileContent* fileContent, SL::NodeId node)
@@ -50,6 +52,12 @@ void ReportError(const SL::FileContent* fileContent, SL::NodeId node,
                  SL::SymbolTable* symbols) {
   if (fileContent == nullptr || !node || errors == nullptr ||
       symbols == nullptr) {
+    return;
+  }
+
+  const std::string_view filePath =
+      SL::FileSystem::getInstance()->toPath(fileContent->getFileId(node));
+  if (UvmFilter::IsUvmFile(filePath)) {
     return;
   }
 
