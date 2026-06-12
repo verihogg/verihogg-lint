@@ -5,41 +5,13 @@
 #include <Surelog/SourceCompile/VObjectTypes.h>
 
 #include <cstddef>
-#include <filesystem>
 #include <functional>
-#include <optional>
-#include <string_view>
 #include <vector>
 
 #include "Surelog/Design/Design.h"
 #include "Surelog/Design/FileContent.h"
 
 namespace SL = SURELOG;
-namespace fs = std::filesystem;
-
-namespace {
-auto UvmDirStorage() -> std::optional<fs::path>& {
-  static std::optional<fs::path> s_dir;
-  return s_dir;
-}
-}  // namespace
-
-namespace UvmFilter {
-
-void SetUvmDir(const std::optional<fs::path>& dir) { UvmDirStorage() = dir; }
-void ClearUvmDir() { UvmDirStorage() = std::nullopt; }
-
-auto IsUvmFile(std::string_view pathStr) -> bool {
-  const auto& uvmDir = UvmDirStorage();
-  if (!uvmDir.has_value() || pathStr.empty()) {
-    return false;
-  }
-  std::error_code ec;
-  const auto rel = fs::relative(fs::path{pathStr}, *uvmDir, ec);
-  return !ec && !rel.empty() && rel.native().front() != '.';
-}
-
-}  // namespace UvmFilter
 
 namespace DesignUtils {
 

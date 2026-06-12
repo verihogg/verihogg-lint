@@ -433,9 +433,8 @@ struct AutofixContext {
   FixSourceManager* source_mgr = nullptr;
 };
 
-void RunAllRulesOnDesign(SURELOG::Design* design, const vpiHandle& uhdmDesign,
-                         SURELOG::ErrorContainer* errors,
-                         SURELOG::SymbolTable* symbols,
-                         const std::filesystem::path& configFile,
-                         AutofixContext* autofix = nullptr,
-                        std::optional<std::filesystem::path> uvmDir = std::nullopt);
+void RunAllRulesOnDesign(
+    SURELOG::Design* design, const vpiHandle& uhdmDesign,
+    SURELOG::ErrorContainer* errors, SURELOG::SymbolTable* symbols,
+    const std::filesystem::path& configFile, AutofixContext* autofix = nullptr,
+    std::optional<std::filesystem::path> uvmDir = std::nullopt);

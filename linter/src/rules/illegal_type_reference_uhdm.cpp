@@ -28,7 +28,6 @@
 #include <string>
 
 #include "main/lint_rules.h"
-#include "utils/design_utils.h"
 
 namespace SL = SURELOG;
 
@@ -154,10 +153,6 @@ void IllegalTypeReferenceListener::CheckNet(const UHDM::nets* net) {
     return;
   }
 
-  if (UvmFilter::IsUvmFile(net->VpiFile())) {
-    return;
-  }
-
   const std::string name(net->VpiName());
   SL::SymbolId const kSym = symbols_->registerSymbol(name);
   SL::PathId const kFileId = SL::FileSystem::getInstance()->toPathId(
@@ -185,10 +180,6 @@ void IllegalTypeReferenceListener::CheckMembers(
     }
     const UHDM::typespec* actual = ref->Actual_typespec();
     if (!IsIllegalActual(actual)) {
-      continue;
-    }
-
-    if (UvmFilter::IsUvmFile(member->VpiFile())) {
       continue;
     }
 

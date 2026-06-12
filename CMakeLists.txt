@@ -291,8 +291,8 @@ install(TARGETS ${PROJECT_NAME}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 if(UVM_SRC_DIR)
-  install(DIRECTORY "${UVM_SRC_DIR}/"
-          DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/verihogg-lint/uvm/src")
+  install(DIRECTORY "${UVM_SRC_DIR}/../"
+          DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/verihogg-lint/uvm")
   target_compile_definitions(verihoggLintLib PRIVATE
     UVM_BUILTIN_VERSION="${UVM_BUILTIN_VERSION}"
     UVM_BUILTIN_AVAILABLE=1

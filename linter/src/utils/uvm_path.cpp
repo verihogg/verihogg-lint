@@ -1,7 +1,7 @@
 #include "utils/uvm_path.h"
 
+#include <cstdlib>
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -11,16 +11,12 @@ namespace uvm {
 namespace fs = std::filesystem;
 
 namespace {
-auto GetEnvVar(std::string_view name) -> std::optional<std::string> {
-  std::ifstream envFile("/proc/self/environ", std::ios::binary);
-  std::string entry;
-  while (std::getline(envFile, entry, '\0')) {
-    if (entry.starts_with(name) && entry.size() > name.size() &&
-        entry.at(name.size()) == '=') {
-      return entry.substr(name.size() + 1);
-    }
+auto GetEnvVar(const char* name) -> std::optional<std::string> {
+  const char* val = std::getenv(name);  // NOLINT(concurrency-mt-unsafe)
+  if (val == nullptr) {
+    return std::nullopt;
   }
-  return std::nullopt;
+  return std::string{val};
 }
 }  // namespace
 
@@ -37,7 +33,7 @@ auto ResolveUvmPath() -> std::optional<fs::path> {
     }
   }
 
-  if (auto env = GetEnvVar("VERIHOGG_UVM_PATH")) {
+  if (auto env = GetEnvVar("VERIHOGG_UVM_PATH"); env.has_value()) {
     fs::path p{*env};
     if (fs::is_directory(p, ec)) {
       if (installed.has_value()) {
@@ -51,6 +47,15 @@ auto ResolveUvmPath() -> std::optional<fs::path> {
   }
 
   return installed;
+}
+
+auto IsUvmFile(std::string_view pathStr, const fs::path& uvmDir) -> bool {
+  if (pathStr.empty()) {
+    return false;
+  }
+  std::error_code ec;
+  const auto rel = fs::relative(fs::path{pathStr}, uvmDir, ec);
+  return !ec && !rel.empty() && rel.native().front() != '.';
 }
 
 }  // namespace uvm
