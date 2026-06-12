@@ -1,5 +1,7 @@
 #include <Surelog/API/Surelog.h>
 #include <Surelog/CommandLine/CommandLineParser.h>
+#include <Surelog/Common/FileSystem.h>
+#include <Surelog/ErrorReporting/Error.h>
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <uhdm/vpi_user.h>
 
@@ -76,47 +78,59 @@ auto main(int argc, const char** argv) -> int {
     return 0;
   }
 
-  std::vector<const char*> slArgv = kOpts.surelog_args;
+  struct UvmSetup {
+    std::filesystem::path dir;
+    std::string incdir_arg;
+    std::string pkg_arg;
+  };
 
-  std::string uvm_incdir_arg;
-  std::string uvm_pkg_arg;
-  std::optional<std::filesystem::path> uvm_dir;
-  if (kOpts.uvm_mode != cli::UvmMode::None) {
-    std::filesystem::path resolved;
-    if (kOpts.uvm_mode == cli::UvmMode::Custom) {
-      if (!kOpts.uvm_path.has_value()) {
-        return 1;
+  auto ResolveUvm = [](const cli::Options& opts) -> std::optional<UvmSetup> {
+    if (opts.uvm_mode == cli::UvmMode::Custom) {
+      if (!opts.uvm_path.has_value()) {
+        return std::nullopt;
       }
       std::error_code ec;
-      if (!std::filesystem::is_directory(*kOpts.uvm_path, ec)) {
-        std::cerr << "error: --uvm=" << *kOpts.uvm_path
-                  << " is not a directory\n";
-        return 1;
+      if (!std::filesystem::is_directory(*opts.uvm_path, ec)) {
+        std::cerr << "error: UVM path '" << *opts.uvm_path
+                  << "' is not a directory\n";
+        return std::nullopt;
       }
-      resolved = *kOpts.uvm_path;
-    } else {
-#ifndef UVM_BUILTIN_AVAILABLE
-      std::cerr << "error: --uvm requires built-in UVM support.\n"
-                << "  This binary was built without UVM.\n"
-                << "  Use --uvm=<path> to specify a UVM library path.\n";
-      return 1;
-#else
-      auto maybe = uvm::ResolveUvmPath();
-      if (!maybe.has_value()) {
-        std::cerr << "error: built-in UVM not found.\n"
-                  << "  Set VERIHOGG_UVM_PATH or use --uvm=<path>.\n";
-        return 1;
-      }
-      resolved = std::move(*maybe);
-#endif
+      const std::filesystem::path& dir = *opts.uvm_path;
+      return UvmSetup{.dir = dir,
+                      .incdir_arg = "+incdir+" + dir.string(),
+                      .pkg_arg = (dir / "uvm_pkg.sv").string()};
     }
-    uvm_dir = resolved;
+#ifndef UVM_BUILTIN_AVAILABLE
+    std::cerr << "error: --uvm requires built-in UVM support.\n"
+              << "  This binary was built without UVM.\n"
+              << "  Use --uvm=<path> to specify a UVM library path.\n";
+    return std::nullopt;
+#else
+    auto maybe = uvm::ResolveUvmPath();
+    if (!maybe.has_value()) {
+      std::cerr << "error: built-in UVM not found.\n"
+                << "  Set VERIHOGG_UVM_PATH or use --uvm=<path>.\n";
+      return std::nullopt;
+    }
+    const std::filesystem::path dir = std::move(*maybe);
+    return UvmSetup{.dir = dir,
+                    .incdir_arg = "+incdir+" + dir.string(),
+                    .pkg_arg = (dir / "uvm_pkg.sv").string()};
+#endif
+  };
 
-    uvm_incdir_arg = "+incdir+" + resolved.string();
-    uvm_pkg_arg = (resolved / "uvm_pkg.sv").string();
+  std::vector<const char*> slArgv = kOpts.surelog_args;
+  std::optional<UvmSetup> uvm_setup;
+  std::optional<std::filesystem::path> uvm_dir;
 
-    slArgv.insert(slArgv.begin() + 1, uvm_incdir_arg.c_str());
-    slArgv.insert(slArgv.begin() + 2, uvm_pkg_arg.c_str());
+  if (kOpts.uvm_mode != cli::UvmMode::None) {
+    uvm_setup = ResolveUvm(kOpts);
+    if (!uvm_setup.has_value()) {
+      return 1;
+    }
+    uvm_dir = uvm_setup->dir;
+    slArgv.insert(slArgv.begin() + 1, uvm_setup->incdir_arg.c_str());
+    slArgv.insert(slArgv.begin() + 2, uvm_setup->pkg_arg.c_str());
   }
 
   const int kSlArgc = static_cast<int>(slArgv.size());
@@ -185,9 +199,23 @@ auto main(int argc, const char** argv) -> int {
   RunAllRulesOnDesign(theDesign, uhdmDesign, errors.get(), symbolTable.get(),
                       kOpts.config_file, autofix_ptr, uvm_dir);
 
-  errors->printMessages(clp->muteStdout());
+  auto printErrors = std::make_unique<SL::ErrorContainer>(symbolTable.get());
+  printErrors->registerCmdLine(clp.get());
+  for (auto err : errors->getErrors()) {
+    bool fromUvm = false;
+    if (uvm_dir.has_value() && !err.getLocations().empty()) {
+      const std::string_view path = SL::FileSystem::getInstance()->toPath(
+          err.getLocations().front().m_fileId);
+      fromUvm = uvm::IsUvmFile(path, *uvm_dir);
+    }
+    if (!fromUvm) {
+      printErrors->addError(err, false);
+    }
+  }
 
-  const uint32_t kErrorCount = errors->getErrors().size();
+  printErrors->printMessages(clp->muteStdout());
+
+  const uint32_t kErrorCount = printErrors->getErrors().size();
 
   if (kErrorCount == 0) {
     std::cout << "Lint completed successfully. No issues found.\n";

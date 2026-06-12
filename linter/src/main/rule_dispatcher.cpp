@@ -15,12 +15,10 @@
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <optional>
-
-#include "utils/design_utils.h"
 
 namespace SL = SURELOG;
 
@@ -223,7 +221,7 @@ static void RunFixableGlobalRules(
 void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
                          SL::ErrorContainer* errors, SL::SymbolTable* symbols,
                          const std::filesystem::path& configFile,
-                         AutofixContext* autofix) {
+                         AutofixContext* autofix,
                          std::optional<std::filesystem::path> uvmDir) {
   if (design == nullptr) {
     return;
@@ -248,8 +246,6 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     RunFixableRulesOnFile(fileContent, errors, symbols, kRuleSet, autofix);
   }
 
-  UvmFilter::SetUvmDir(uvmDir);
-
   for (const auto& rule : RuleInfo::globalRules) {
     if (kRuleSet.find(rule.idName) == kRuleSet.end() && rule.check != nullptr) {
       continue;
@@ -265,6 +261,4 @@ void RunAllRulesOnDesign(SL::Design* design, const vpiHandle& uhdmDesign,
     }
     rule.check(uhdmDesign, errors, symbols);
   }
-
-  UvmFilter::ClearUvmDir();
 }

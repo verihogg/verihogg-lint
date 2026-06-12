@@ -12,11 +12,10 @@
 
 namespace cli {
 
-constexpr size_t CONFIG_FLAG_LEN = 13;
 inline constexpr std::string_view kConfigFilePrefix = "--config-file=";
 inline constexpr std::string_view kBackupSuffixPrefix = "--backup-suffix=";
 inline constexpr std::string_view kDryRunPrefix = "--fix-dry-run=";
-constexpr size_t UVM_FLAG_LEN = 5;
+constexpr std::string_view kUvmPrefix = "--uvm=";
 
 auto ParseArgs(const gsl::span<const char*> args) -> Options {
   Options opts;
@@ -43,9 +42,9 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
       opts.error_message =
           "verihogg-lint: option '--config-file' requires '=<path>'";
       return opts;
-    } else if (std::strncmp(arg, "--config-file=", CONFIG_FLAG_LEN + 1) == 0) {
+    } else if (std::string_view{arg}.starts_with(kConfigFilePrefix)) {
       const std::string config_file{
-          std::string_view{arg}.substr(CONFIG_FLAG_LEN + 1)};
+          std::string_view{arg}.substr(kConfigFilePrefix.size())};
       const std::filesystem::path config_path{config_file};
       if (!std::filesystem::exists(config_path)) {
         opts.error_message = "verihogg-lint: cannot open config file '" +
@@ -75,10 +74,10 @@ auto ParseArgs(const gsl::span<const char*> args) -> Options {
       opts.show_uvm_version = true;
     } else if (std::strcmp(arg, "--uvm") == 0) {
       opts.uvm_mode = UvmMode::Builtin;
-    } else if (std::strncmp(arg, "--uvm=", UVM_FLAG_LEN + 1) == 0) {
+    } else if (std::string_view{arg}.starts_with(kUvmPrefix)) {
       opts.uvm_mode = UvmMode::Custom;
-      opts.uvm_path =
-          std::filesystem::path{std::string{arg}.substr(UVM_FLAG_LEN + 1)};
+      opts.uvm_path = std::filesystem::path{
+          std::string_view{arg}.substr(kUvmPrefix.size())};
     } else {
       opts.surelog_args.push_back(arg);
     }
