@@ -10,7 +10,7 @@
 
 namespace cli {
 
-inline constexpr const char* kVersion = "0.2.0";
+inline constexpr const char* kVersion = "0.3.0";
 
 enum class UvmMode : std::uint8_t {
   None,
