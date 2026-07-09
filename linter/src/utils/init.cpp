@@ -12,4 +12,5 @@ void InitCommandLineParser(SURELOG::CommandLineParser* clp) {
   clp->setFilterInfo();
   clp->setFilterNote();
   clp->setFilterWarning();
+  clp->setWriteCache(false);
 }
