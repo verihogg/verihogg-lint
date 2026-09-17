@@ -280,5 +280,5 @@ auto main(int argc, const char** argv) -> int {
     shutdown_compiler(compiler);
   }
 
-  return (kErrorCount == 0) ? 0 : 1;
+  return (kErrorCount == 0) ? 0 : 2;
 }
