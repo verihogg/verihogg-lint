@@ -68,7 +68,7 @@
     "nixpkgs-patch-clang-tools-bash": {
       "flake": false,
       "locked": {
-        "narHash": "sha256-8fdSEwmybshH2uCV+PVqLWFk0lXAvyAIHd8Iz8InIic=",
+        "narHash": "sha256-VyT8fY0JURm4UOYtZC/1Ci4enPbKd7qzAos27ipCRU0=",
         "type": "file",
         "url": "https://github.com/NixOS/nixpkgs/pull/563394.diff"
       },
