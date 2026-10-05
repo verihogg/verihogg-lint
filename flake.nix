@@ -73,6 +73,7 @@
               "-DUVM_SRC_DIR=${uvm}/src"
             ];
 
+            doCheck = true;
             enableParallelChecking = false;
           };
 
