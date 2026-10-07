@@ -1,14 +1,17 @@
 Checks: >
   bugprone-*,
   cert-*,
+  -cert-dcl03-c, # Alias of misc-static-assert
   clang-analyzer-*,
   concurrency-*,
   cppcoreguidelines-*,
   google-*,
   hicpp-*,
+  -hicpp-static-assert, # Alias of misc-static-assert
   llvm-include-order,
   -llvm-include-order, # Handled by clang-format
   misc-*,
+  -misc-static-assert, # Gives false positives on all asserts: https://github.com/llvm/llvm-project/issues/213560
   modernize-*,
   performance-*,
   portability-*,
