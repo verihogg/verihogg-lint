@@ -233,6 +233,11 @@ set(LINTER_SRC
     linter/src/rules/duplicate_checker.cpp
     linter/src/rules/undeclared_checker.cpp
     linter/src/rules/illegal_checker_instance.cpp
+    linter/src/rules/always_event_control.cpp
+    linter/src/rules/fork_variable_access.cpp
+    linter/src/rules/named_fork.cpp
+    linter/src/rules/fork_disable.cpp
+    linter/src/rules/disable_fork.cpp
     linter/src/fix/source_manager.cpp
     linter/src/fix/replacement.cpp
     linter/src/fix/suggestion_printer.cpp

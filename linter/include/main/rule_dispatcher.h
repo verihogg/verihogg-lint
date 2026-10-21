@@ -15,6 +15,7 @@
 #include "fix/source_manager.h"
 #include "main/lint_diagnostics.h"
 #include "main/lint_rules.h"
+#include "rules/always_event_control.h"
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
 #include "rules/assignment_pattern_values.h"
@@ -24,6 +25,7 @@
 #include "rules/constraint_implemention_scope.h"
 #include "rules/covergroup_expression.h"
 #include "rules/coverpoint_expression_type.h"
+#include "rules/disable_fork.h"
 #include "rules/dpi_decl_string.h"
 #include "rules/duplicate_checker.h"
 #include "rules/duplicate_class.h"
@@ -44,6 +46,8 @@
 #include "rules/extern_task_undeclared.h"
 #include "rules/fatal_rule.h"
 #include "rules/foreach_loop_condition.h"
+#include "rules/fork_disable.h"
+#include "rules/fork_variable_access.h"
 #include "rules/function_implementation_internal_return_type.h"
 #include "rules/function_implementation_return_type.h"
 #include "rules/function_implemention_scope.h"
@@ -71,6 +75,7 @@
 #include "rules/modport_import_export_port.h"
 #include "rules/multiple_bins.h"
 #include "rules/multiple_dot_star_connection.h"
+#include "rules/named_fork.h"
 #include "rules/nof_parameter_override.h"
 #include "rules/parameter_dynamic_array.h"
 #include "rules/parameter_override.h"
@@ -91,6 +96,7 @@
 #include "rules/void_cast_of_void_function.h"
 #include "rules/wildcard_equality_operator.h"
 #include "rules/wildcard_inequality_operator.h"
+
 constexpr const char* DefaultConfigFileName = ".verihogg-lint";
 
 namespace RuleInfo {
@@ -254,6 +260,21 @@ const auto allRules = std::to_array<Rule>({
      .description =
          "Instance  of checker is not allowed in procedural code of checker",
      .check = CheckIllegalCheckerInstance},
+    {.idName = "ALWAYS_EVENT_CONTROL",
+     .description = "always block without event control is not allowed",
+     .check = CheckAlwaysEventControl},
+    {.idName = "NAMED_FORK",
+     .description = "fork block must have a name",
+     .check = CheckNamedFork},
+    {.idName = "FORK_VARIABLE_ACCESS",
+     .description = "Using %s in a fork is not allowed",
+     .check = CheckForkVariableAccess},
+    {.idName = "FORK_DISABLE",
+     .description = "Do not use disable statement with fork block name",
+     .check = CheckForkDisable},
+    {.idName = "DISABLE_FORK",
+     .description = "Do not use 'disable fork'",
+     .check = CheckDisableFork},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
