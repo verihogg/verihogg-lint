@@ -209,3 +209,13 @@
    
 - `ILLEGAL_CHECKER_INSTANCE`
    Instance # of checker # not allowed in procedural code of checker
+
+- `ILLEGAL_FILE_EXTENSION`
+   Source file must use an allowed extension (.sv, .svh)
+
+- `INCLUDE_WITH_PATH`
+   Include directive must not reference a path
+
+- `CONDITIONAL_BLOCKS_CROSS_FILE`
+   ifdef/ifndef compiler directives should have their corresponding endif directive in the same file
+   

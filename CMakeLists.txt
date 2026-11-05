@@ -201,6 +201,7 @@ set(LINTER_SRC
     linter/src/rules/method_override_argument_name.cpp
     linter/src/rules/function_implementation_return_type.cpp
     linter/src/rules/function_implementation_internal_return_type.cpp
+    linter/src/rules/legal_file_extensions.cpp
     linter/src/rules/logical_negation.cpp
     linter/src/rules/void_cast_of_void_function.cpp
     linter/src/rules/method_implementation_argument_type.cpp
@@ -233,6 +234,8 @@ set(LINTER_SRC
     linter/src/rules/duplicate_checker.cpp
     linter/src/rules/undeclared_checker.cpp
     linter/src/rules/illegal_checker_instance.cpp
+    linter/src/rules/include_without_path.cpp
+    linter/src/rules/conditional_blocks_cross_file.cpp
     linter/src/fix/source_manager.cpp
     linter/src/fix/replacement.cpp
     linter/src/fix/suggestion_printer.cpp
