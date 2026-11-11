@@ -238,6 +238,7 @@ set(LINTER_SRC
     linter/src/rules/banned_system_call_common.cpp
     linter/src/rules/banned_simulation_control_tasks.cpp
     linter/src/rules/banned_psprintf.cpp
+    linter/src/rules/banned_display_write_tasks.cpp
     linter/src/fix/source_manager.cpp
     linter/src/fix/replacement.cpp
     linter/src/fix/suggestion_printer.cpp

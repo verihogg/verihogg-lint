@@ -92,6 +92,7 @@ enum LintIdEnum : uint16_t {
   LINT_BANNED_RANDSEQUENCE,
   LINT_BANNED_SIMULATION_CONTROL_TASKS,
   LINT_BANNED_PSPRINTF,
+  LINT_BANNED_DISPLAY_WRITE_TASKS,
 };
 // NOLINTEND(cppcoreguidelines-use-enum-class)
 
@@ -324,6 +325,8 @@ inline constexpr std::array kLintRules = {
                  .text = "System simulation control task not allowed: %s"},
     LintRuleInfo{.type = LINT_BANNED_PSPRINTF,
                  .text = "Non-standard system function not allowed: %s"},
+    LintRuleInfo{.type = LINT_BANNED_DISPLAY_WRITE_TASKS,
+                 .text = "System I/O task not allowed: %s"},
 };
 
 inline void RegisterLintRules() {

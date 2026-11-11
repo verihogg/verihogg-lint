@@ -6,12 +6,15 @@
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <gtest/gtest.h>
+#include <uhdm/vpi_user.h>
 
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <string>
 
 #include "main/lint_rules.h"
+#include "rules/banned_display_write_tasks.h"
 #include "rules/banned_program_blocks.h"
 #include "rules/banned_psprintf.h"
 #include "rules/banned_randsequence.h"
@@ -128,6 +131,17 @@ TEST(BannedPsprintf, NoError) {
 TEST(BannedPsprintf, RaiseError) {
   expectError(basePath() / "BannedPsprintf" / "RaiseError",
               verihogg_lint::LINT_BANNED_PSPRINTF, CheckBannedPsprintf);
+}
+
+TEST(BannedDisplayWriteTasks, NoError) {
+  expectNoErrors(basePath() / "BannedDisplayWriteTasks" / "NoError",
+                 CheckBannedDisplayWriteTasks);
+}
+
+TEST(BannedDisplayWriteTasks, RaiseError) {
+  expectError(basePath() / "BannedDisplayWriteTasks" / "RaiseError",
+              verihogg_lint::LINT_BANNED_DISPLAY_WRITE_TASKS,
+              CheckBannedDisplayWriteTasks);
 }
 
 auto main(int argc, char** argv) -> int {

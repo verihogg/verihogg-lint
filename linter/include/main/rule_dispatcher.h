@@ -18,6 +18,7 @@
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
 #include "rules/assignment_pattern_values.h"
+#include "rules/banned_display_write_tasks.h"
 #include "rules/banned_program_blocks.h"
 #include "rules/banned_psprintf.h"
 #include "rules/banned_randsequence.h"
@@ -271,6 +272,10 @@ const auto allRules = std::to_array<Rule>({
     {.idName = "BANNED_PSPRINTF",
      .description = "Non-standard system function $psprintf not allowed",
      .check = CheckBannedPsprintf},
+    {.idName = "BANNED_DISPLAY_WRITE_TASKS",
+     .description = "System tasks $display/$write and their variants "
+                    "not allowed",
+     .check = CheckBannedDisplayWriteTasks},
 });
 
 constexpr size_t AllRulesSize = allRules.size();
