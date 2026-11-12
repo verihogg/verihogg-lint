@@ -18,6 +18,12 @@
 #include "rules/assignment_pattern.h"
 #include "rules/assignment_pattern_context.h"
 #include "rules/assignment_pattern_values.h"
+#include "rules/banned_display_write_tasks.h"
+#include "rules/banned_program_blocks.h"
+#include "rules/banned_psprintf.h"
+#include "rules/banned_randsequence.h"
+#include "rules/banned_simulation_control_tasks.h"
+#include "rules/banned_void.h"
 #include "rules/circular_inheritance.h"
 #include "rules/class_variable_lifetime.h"
 #include "rules/concatenation_multiplier.h"
@@ -254,6 +260,26 @@ const auto allRules = std::to_array<Rule>({
      .description =
          "Instance  of checker is not allowed in procedural code of checker",
      .check = CheckIllegalCheckerInstance},
+    {.idName = "BANNED_PROGRAM_BLOCKS",
+     .description = "Program blocks not allowed",
+     .check = CheckBannedProgramBlocks},
+    {.idName = "BANNED_RANDSEQUENCE",
+     .description = "randsequence not allowed",
+     .check = CheckBannedRandsequence},
+    {.idName = "BANNED_SIMULATION_CONTROL_TASKS",
+     .description = "System simulation control tasks $stop, $finish, $exit "
+                    "not allowed",
+     .check = CheckBannedSimulationControlTasks},
+    {.idName = "BANNED_PSPRINTF",
+     .description = "Non-standard system function $psprintf not allowed",
+     .check = CheckBannedPsprintf},
+    {.idName = "BANNED_DISPLAY_WRITE_TASKS",
+     .description = "System tasks $display/$write and their variants "
+                    "not allowed",
+     .check = CheckBannedDisplayWriteTasks},
+    {.idName = "BANNED_VOID",
+     .description = "Non-standard system task $void not allowed",
+     .check = CheckBannedVoid},
 });
 
 constexpr size_t AllRulesSize = allRules.size();

@@ -209,3 +209,21 @@
    
 - `ILLEGAL_CHECKER_INSTANCE`
    Instance # of checker # not allowed in procedural code of checker
+
+- `BANNED_PROGRAM_BLOCKS`
+   Program blocks not allowed
+
+- `BANNED_RANDSEQUENCE`
+   randsequence not allowed
+
+- `BANNED_SIMULATION_CONTROL_TASKS`
+   System simulation control tasks $stop, $finish, $exit not allowed
+
+- `BANNED_PSPRINTF`
+   Non-standard system function $psprintf not allowed
+
+- `BANNED_DISPLAY_WRITE_TASKS`
+   System tasks $display/$write and their variants not allowed
+
+- `BANNED_VOID`
+   Non-standard system task $void not allowed

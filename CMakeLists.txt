@@ -233,6 +233,13 @@ set(LINTER_SRC
     linter/src/rules/duplicate_checker.cpp
     linter/src/rules/undeclared_checker.cpp
     linter/src/rules/illegal_checker_instance.cpp
+    linter/src/rules/banned_program_blocks.cpp
+    linter/src/rules/banned_randsequence.cpp
+    linter/src/rules/banned_system_call_common.cpp
+    linter/src/rules/banned_simulation_control_tasks.cpp
+    linter/src/rules/banned_psprintf.cpp
+    linter/src/rules/banned_display_write_tasks.cpp
+    linter/src/rules/banned_void.cpp
     linter/src/fix/source_manager.cpp
     linter/src/fix/replacement.cpp
     linter/src/fix/suggestion_printer.cpp
