@@ -6,7 +6,6 @@
 #include <Surelog/ErrorReporting/ErrorDefinition.h>
 #include <Surelog/SourceCompile/SymbolTable.h>
 #include <gtest/gtest.h>
-#include <uhdm/vpi_user.h>
 
 #include <filesystem>
 #include <functional>
@@ -19,6 +18,7 @@
 #include "rules/banned_psprintf.h"
 #include "rules/banned_randsequence.h"
 #include "rules/banned_simulation_control_tasks.h"
+#include "rules/banned_void.h"
 #include "utils/init.h"
 
 namespace fs = std::filesystem;
@@ -142,6 +142,15 @@ TEST(BannedDisplayWriteTasks, RaiseError) {
   expectError(basePath() / "BannedDisplayWriteTasks" / "RaiseError",
               verihogg_lint::LINT_BANNED_DISPLAY_WRITE_TASKS,
               CheckBannedDisplayWriteTasks);
+}
+
+TEST(BannedVoid, NoError) {
+  expectNoErrors(basePath() / "BannedVoid" / "NoError", CheckBannedVoid);
+}
+
+TEST(BannedVoid, RaiseError) {
+  expectError(basePath() / "BannedVoid" / "RaiseError",
+              verihogg_lint::LINT_BANNED_VOID, CheckBannedVoid);
 }
 
 auto main(int argc, char** argv) -> int {
